@@ -1,0 +1,149 @@
+[[ogm-neo4j]]
+
+=== Neo4j
+
+http://www.neo4j.org[Neo4j] is a robust (fully ACID) transactional property graph database.
+At the moment only the support for the embeedded Neo4j is included in OGM.
+
+
+==== How to add Neo4j integration
+
+.1. Add the dependencies to your project
+If your project uses Maven you can add this to the pom.xml: 
+
+[source, XML]
+[subs="verbatim,attributes"]
+----
+<dependency>
+    <groupId>org.hibernate.ogm</groupId>
+    <artifactId>hibernate-ogm-neo4j</artifactId>
+    <version>{hibernate-ogm-version}</version>
+</dependency>
+----
+Alternatively you can find the required libraries in the distribution package on https://downloads.sourceforge.net/project/hibernate/hibernate-ogm/{hibernate-ogm-version}/hibernate-ogm-modules-{hibernate-ogm-version}-jbossas-72-dist.zip[SourceForge]
+
+.2. Add the following properties:
+
+[source, properties]
+[subs="verbatim,attributes"]
+----
+hibernate.ogm.datastore.provider = neo4j_embedded
+hibernate.transaction.jta.platform = org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform
+----
+
+==== Configuring Neo4j
+
+The following properties are available to configure Neo4j support:
+
+.Neo4j datastore configuration properties
+hibernate.ogm.neo4j.database.path::
+The absolute path representing the location of the Neo4j database. Example: C:\neo4jdb\mydb
+hibernate.ogm.neo4j.properties.location::
+Location of the Neo4j embedded properties file. It can be an URL or an absolute file path.
+hibernate.ogm.neo4j.index.entity::
+Name of the neo4j index containing the stored entities. Default to _nodes_ogm_index
+hibernate.ogm.neo4j.index.association::
+Name of the Neo4j index containing the stored associations. Default to _relationships_ogm_index
+hibernate.ogm.neo4j.index.sequence::
+Name of the index that stores the next available value for a sequence. Default to_sequences_ogm_index
+hibernate.ogm.neo4j.graphdb.factoryclass::
+Qualified class name for the creation of a new [classname]+org.neo4j.graphdb.GraphDatabaseService+.
+
+==== Storage principles
+
+===== Entities
+
+Entities are stored as Neo4j nodes, which means each entity property will be translated into a property of the node.
+An additional property is added to the node and it contains the name of the table representing the entity.
+
+.Example of entities and the list of properties contained in the corresponding node
+====
+[source, JAVA]
+----
+@Entity
+class Account {
+
+    @Id
+    String login;
+    String password;
+    Address homeAddress;
+
+    //...
+}
+
+@Embeddable
+class Address {
+    String city;
+    String zipCode;
+
+  //...
+}
+----
+
+[subs="verbatim,attributes"]
+----
+Node properties:
+   _table
+   id
+   login
+   password
+   homeAddress_city
+   homeAddress_zipCode
+----
+====
+The +_table+ property has been added by OGM and it contains the name of the table representing the entity (+Account+ in this simple case).
+
+===== Associations
+
+Associations are mapped using Neo4j relationships.
+A unidirectional association is mapped with a relationship betwenn two nodes that start from the node representing the owner of the association.
+The name of the association is saved as type of the relationship.
+A bidirectional association is represented by two relationships, one per direction, between the two nodes.
+
+==== Transactions
+
+OGM ships with an implementation of the [classname]+org.hibernate.service.jta.platform.spi.JtaPlatform+
+that can be used to bind Neo4j with your JTA application by setting the configuration property
++hibernate.transaction.jta.platform+ to the value +org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform+.
+
+.How to enable transaction management for applications with JTA 
+[subs="verbatim,attributes"]
+----
+hibernate.transaction.jta.platform = org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform
+----
+
+==== How to use a custom GraphDatabaseService
+
+The interface [classname]+org.neo4j.graphdb.GraphDatabaseService+ define the main access point to a runnning Neo4j instance.
+If you need to use a different implementation from the one used by OGM, you can:
+
+. implements the interafce [classname]+org.hibernate.ogm.datastore.neo4j.api.GraphDatabaseServiceFactory+;
+
+. set the property +hibernate.ogm.neo4j.graphdb.factoryclass+ to the implementation of the [classname]+GraphDatabaseServiceFactory+ you want to use.
+
+.How to use a custom GraphDatabaseServiceFactory
+====
+[source, JAVA]
+----
+package my.custom.factory
+...
+class CustomGraphServiceFactory implements GraphDatabaseServiceFactory {
+
+    @Override
+    public void initialize(Properties properties) {
+        // Here you can read the configuration properties
+    }
+
+    @Override
+    public GraphDatabaseService create() {
+        return new CustomGraphDatabaseService();
+    }
+
+}
+----
+
+[subs="verbatim,attributes"]
+----
+hibernate.ogm.neo4j.graphdb.factoryclass = my.custom.factory.CustomGraphServiceFactory
+----
+====
