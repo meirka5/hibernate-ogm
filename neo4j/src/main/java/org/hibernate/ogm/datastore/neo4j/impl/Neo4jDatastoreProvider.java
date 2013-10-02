@@ -45,7 +45,6 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.index.Index;
-import org.neo4j.tooling.GlobalGraphOperations;
 
 /**
  * Provides access to the Neo4j system.
@@ -61,8 +60,6 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 	private String relationshipIndexName = DEFAULT_NEO4J_ASSOCIATION_INDEX_NAME;
 
 	private GraphDatabaseService neo4jDb;
-
-	private GlobalGraphOperations globalOperations;
 
 	private Neo4jSequenceGenerator neo4jSequenceGenerator;
 
@@ -94,7 +91,6 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 	@Override
 	public void start() {
 		this.neo4jDb = graphDbFactory.create();
-		this.globalOperations = GlobalGraphOperations.at( neo4jDb );
 		this.neo4jSequenceGenerator = new Neo4jSequenceGenerator( neo4jDb, sequenceIndexName );
 		this.graphDbFactory = null;
 	}
@@ -114,40 +110,8 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return neo4jDb.createNode();
 	}
 
-	public void dropDatabase() {
-		Transaction tx = beginTx();
-		try {
-			removeAllRelationships();
-			removeAllNodes();
-			tx.success();
-		}
-		finally {
-			tx.finish();
-		}
-	}
-
-	private void removeAllNodes() {
-		for ( Node node : globalOperations.getAllNodes() ) {
-			node.delete();
-		}
-	}
-
-	private void removeAllRelationships() {
-		for ( Relationship relationship : globalOperations.getAllRelationships() ) {
-			relationship.delete();
-		}
-	}
-
 	public GraphDatabaseService getDataBase() {
 		return neo4jDb;
-	}
-
-	public Iterable<Relationship> getAllRelationships() {
-		return globalOperations.getAllRelationships();
-	}
-
-	public Iterable<Node> getAllNodes() {
-		return globalOperations.getAllNodes();
 	}
 
 	public int nextValue(RowKey key, int increment, int initialValue) {

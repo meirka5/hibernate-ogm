@@ -42,6 +42,7 @@ import org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform;
 import org.hibernate.ogm.grid.EntityKey;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.ResourceIterator;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
@@ -94,7 +95,6 @@ public class Neo4jTestHelper implements TestableGridDialect {
 	 * Returns a random location where to create a neo4j database
 	 */
 	public static String dbLocation() {
-		String buildDirectory = buildDirectory();
 		return ROOT_FOLDER + File.separator + "neo4j-db-" + System.currentTimeMillis();
 	}
 
@@ -105,14 +105,13 @@ public class Neo4jTestHelper implements TestableGridDialect {
 			String buildDirectory = hibProperties.getProperty( NEO4J_DATABASE_PATH );
 			return buildDirectory;
 		}
-		catch ( IOException e ) {
+		catch (IOException e) {
 			throw new RuntimeException( "Missing properties file: hibernate.properties" );
 		}
 	}
 
 	private static Neo4jDatastoreProvider getProvider(SessionFactory sessionFactory) {
-		DatastoreProvider provider = ( (SessionFactoryImplementor) sessionFactory ).getServiceRegistry().getService(
-				DatastoreProvider.class );
+		DatastoreProvider provider = ( (SessionFactoryImplementor) sessionFactory ).getServiceRegistry().getService( DatastoreProvider.class );
 		if ( !( Neo4jDatastoreProvider.class.isInstance( provider ) ) ) {
 			throw new RuntimeException( "Not testing with Neo4jDB, cannot extract underlying provider" );
 		}
@@ -120,9 +119,10 @@ public class Neo4jTestHelper implements TestableGridDialect {
 	}
 
 	public int countAssociations(SessionFactory sessionFactory) {
-		Iterable<Relationship> relationships = getProvider( sessionFactory ).getAllRelationships();
+		ResourceIterator<Relationship> relationships = getProvider( sessionFactory ).getRelationshipsIndex().query( "*:*" ).iterator();
 		Set<String> associations = new HashSet<String>();
-		for ( Relationship relationship : relationships ) {
+		while ( relationships.hasNext() ) {
+			Relationship relationship = (Relationship) relationships.next();
 			if ( !associations.contains( relationship.getType().name() ) ) {
 				associations.add( relationship.getType().name() );
 			}
@@ -131,13 +131,14 @@ public class Neo4jTestHelper implements TestableGridDialect {
 	}
 
 	public int countEntities(SessionFactory sessionFactory) {
-		Iterable<Node> nodes = getProvider( sessionFactory ).getAllNodes();
+		String allEntitiesQuery = Neo4jDialect.TABLE_PROPERTY + ":*";
+		ResourceIterator<Node> iterator = getProvider( sessionFactory ).getNodesIndex().query( allEntitiesQuery ).iterator();
 		int count = 0;
-		for ( Node node : nodes ) {
-			if ( node.hasProperty( Neo4jDialect.TABLE_PROPERTY ) ) {
-				count++;
-			}
+		while ( iterator.hasNext() ) {
+			Node node = (Node) iterator.next();
+			count++;
 		}
+		iterator.close();
 		return count;
 	}
 
