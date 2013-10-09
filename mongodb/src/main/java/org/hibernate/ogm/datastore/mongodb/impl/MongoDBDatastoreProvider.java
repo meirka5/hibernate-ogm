@@ -20,16 +20,24 @@
  */
 package org.hibernate.ogm.datastore.mongodb.impl;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.ogm.datastore.mongodb.AssociationStorageType;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.ogm.datastore.mongodb.impl.configuration.MongoDBConfiguration;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
+import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.dialect.GridDialect;
+import org.hibernate.ogm.dialect.mongodb.MassIndexingMongoDBTupleSnapshot;
 import org.hibernate.ogm.dialect.mongodb.MongoDBDialect;
 import org.hibernate.ogm.dialect.mongodb.query.parsing.MongoDBBasedQueryParserService;
+import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.hibernate.ogm.logging.mongodb.impl.Log;
 import org.hibernate.ogm.logging.mongodb.impl.LoggerFactory;
 import org.hibernate.ogm.service.impl.QueryParserService;
@@ -39,7 +47,11 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 
@@ -129,6 +141,54 @@ public class MongoDBDatastoreProvider implements DatastoreProvider, Startable, S
 		catch ( Exception e ) {
 			throw log.unableToConnectToDatastore( this.config.getHost(), this.config.getPort(), e );
 		}
+	}
+
+	@Override
+	public Iterator<Tuple> executeBackendQuery(SessionImplementor session, CustomQuery customQuery, EntityKeyMetadata[] metadatas) {
+		BasicDBObject mongodbQuery = (BasicDBObject) com.mongodb.util.JSON.parse( customQuery.getSQL() );
+		validate( metadatas );
+		DBCollection collection = getDatabase().getCollection( metadatas[0].getTable() );
+		DBCursor cursor = collection.find( mongodbQuery );
+		return new MongoDBResultsCursor( cursor, metadatas[0] );
+	}
+
+	private void validate(EntityKeyMetadata[] metadatas) {
+		if ( metadatas.length != 1 ) {
+			throw log.metadasRequired();
+		}
+	}
+
+	private static class MongoDBResultsCursor implements Iterator<Tuple>, Closeable {
+
+		private final DBCursor cursor;
+		private final EntityKeyMetadata metadata;
+
+		public MongoDBResultsCursor(DBCursor cursor, EntityKeyMetadata metadata) {
+			this.cursor = cursor;
+			this.metadata = metadata;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return cursor.hasNext();
+		}
+
+		@Override
+		public Tuple next() {
+			DBObject dbObject = cursor.next();
+			return new Tuple( new MassIndexingMongoDBTupleSnapshot( dbObject, metadata ) );
+		}
+
+		@Override
+		public void remove() {
+			cursor.remove();
+		}
+
+		@Override
+		public void close() throws IOException {
+			cursor.close();
+		}
+
 	}
 
 }

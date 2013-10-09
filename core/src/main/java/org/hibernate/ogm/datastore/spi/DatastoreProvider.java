@@ -20,8 +20,13 @@
  */
 package org.hibernate.ogm.datastore.spi;
 
+import java.util.Iterator;
+
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.options.spi.MappingFactory;
+import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.hibernate.ogm.service.impl.QueryParserService;
 import org.hibernate.service.Service;
 
@@ -54,5 +59,7 @@ public interface DatastoreProvider extends Service {
 	 * @return the {@link MappingFactory} for the creation of a mapping context
 	 */
 	Class<? extends MappingFactory<?>> getConfigurationBuilder();
+
+	Iterator<Tuple> executeBackendQuery(SessionImplementor session, CustomQuery customQuery, EntityKeyMetadata[] metadatas);
 
 }

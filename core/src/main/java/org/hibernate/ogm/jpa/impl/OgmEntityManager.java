@@ -21,6 +21,7 @@
 package org.hibernate.ogm.jpa.impl;
 
 import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -33,15 +34,21 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.ejb.AbstractEntityManagerImpl;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.ejb.QueryImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.ogm.exception.NotSupportedException;
 import org.hibernate.ogm.hibernatecore.impl.OgmSession;
 import org.hibernate.ogm.hibernatecore.impl.OgmSessionFactory;
+import org.hibernate.ogm.util.impl.Log;
+import org.hibernate.ogm.util.impl.LoggerFactory;
 
 /**
  * Delegates most method calls to the underlying EntityManager
@@ -50,6 +57,9 @@ import org.hibernate.ogm.hibernatecore.impl.OgmSessionFactory;
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
 public class OgmEntityManager implements EntityManager {
+
+	private static final Log log = LoggerFactory.make();
+
 	private final EntityManager hibernateEm;
 	private final OgmEntityManagerFactory factory;
 
@@ -204,19 +214,47 @@ public class OgmEntityManager implements EntityManager {
 		throw new NotSupportedException( "OGM-14", "typed queries are not supported yet" );
 	}
 
+
 	@Override
 	public Query createNativeQuery(String sqlString) {
-		throw new IllegalStateException( "Hibernate OGM does not support native queries" );
+		validate( hibernateEm );
+		try {
+			SQLQuery q = ( (Session) getDelegate() ).createSQLQuery( sqlString );
+			return new QueryImpl( q, (AbstractEntityManagerImpl) hibernateEm );
+		}
+		catch ( HibernateException he ) {
+			throw new RuntimeException( he );
+		}
+	}
+
+	private void validate(EntityManager em) {
+		if ( !AbstractEntityManagerImpl.class.isInstance( em ) ) {
+			throw new IllegalStateException( String.format( "Unknown entity manager type [%s]", em.getClass().getName() ) );
+		}
 	}
 
 	@Override
 	public Query createNativeQuery(String sqlString, Class resultClass) {
-		throw new IllegalStateException( "Hibernate OGM does not support native queries" );
+		try {
+			SQLQuery q = ( (Session) getDelegate() ).createSQLQuery( sqlString );
+			q.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			return new QueryImpl( q, (AbstractEntityManagerImpl) hibernateEm );
+		}
+		catch (HibernateException he) {
+			throw new RuntimeException( he );
+		}
 	}
 
 	@Override
 	public Query createNativeQuery(String sqlString, String resultSetMapping) {
-		throw new IllegalStateException( "Hibernate OGM does not support native queries" );
+		try {
+			SQLQuery q = ( (Session) getDelegate() ).createSQLQuery( sqlString );
+			q.setResultSetMapping( resultSetMapping );
+			return new QueryImpl( q, (AbstractEntityManagerImpl) hibernateEm );
+		}
+		catch ( HibernateException he ) {
+			throw new RuntimeException( he );
+		}
 	}
 
 	@Override
@@ -238,6 +276,10 @@ public class OgmEntityManager implements EntityManager {
 				.getSessionFactory();
 		final OgmSessionFactory ogmSessionFactory = new OgmSessionFactory( (SessionFactoryImplementor) sessionFactory );
 		return new OgmSession( ogmSessionFactory, (EventSource) session );
+	}
+
+	private Session getSession() {
+		return (Session) getDelegate();
 	}
 
 	@Override

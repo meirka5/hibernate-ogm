@@ -22,6 +22,8 @@ package org.hibernate.ogm.test.options.mapping;
 
 import static org.fest.assertions.Assertions.assertThat;
 
+import java.util.Iterator;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -29,7 +31,10 @@ import org.hibernate.LockMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.internal.util.collections.EmptyIterator;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.ogm.datastore.impl.DatastoreProviderInitiator;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
@@ -210,6 +215,11 @@ public class MappingServiceFactoryTest extends OgmTestCase {
 		@Override
 		public Class<? extends MappingFactory<?>> getConfigurationBuilder() {
 			return GenericMappingFactory.class;
+		}
+
+		@Override
+		public Iterator<Tuple> executeBackendQuery(SessionImplementor session, CustomQuery customQuery, EntityKeyMetadata[] metadatas) {
+			return EmptyIterator.INSTANCE;
 		}
 
 	}

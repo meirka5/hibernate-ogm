@@ -26,7 +26,9 @@ import org.hibernate.LockMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.ogm.datastore.StartStoppable;
@@ -169,4 +171,10 @@ public class DatastoreProviderGeneratingSchema implements DatastoreProvider, Sta
 	public Class<? extends MappingFactory<?>> getConfigurationBuilder() {
 		return GenericMappingFactory.class;
 	}
+
+	@Override
+	public Iterator<Tuple> executeBackendQuery(SessionImplementor session, CustomQuery customQuery, EntityKeyMetadata[] metadatas) {
+		return null;
+	}
+
 }

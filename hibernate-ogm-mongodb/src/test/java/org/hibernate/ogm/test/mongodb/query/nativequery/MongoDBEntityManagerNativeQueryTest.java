@@ -37,7 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /**
- * Test that is possible to obtain a list of entities from MongoDB using a native query.
+ * Test the execution of native queries on MongoDB using the {@link EntityManager}
  *
  * @author Davide D'Alto <davide@hibernate.org>
  */
