@@ -27,8 +27,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.Properties;
 
 import org.hibernate.ogm.datastore.neo4j.Environment;
-import org.hibernate.ogm.datastore.neo4j.api.GraphDatabaseServiceFactory;
 import org.hibernate.ogm.datastore.neo4j.impl.Neo4jGraphDatabaseServiceFactoryProvider;
+import org.hibernate.ogm.datastore.neo4j.spi.GraphDatabaseServiceFactory;
 import org.hibernate.ogm.test.utils.Neo4jTestHelper;
 import org.junit.Test;
 import org.neo4j.graphdb.GraphDatabaseService;

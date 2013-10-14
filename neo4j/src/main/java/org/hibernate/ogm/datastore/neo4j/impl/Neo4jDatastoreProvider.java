@@ -30,7 +30,7 @@ import static org.hibernate.ogm.datastore.neo4j.Environment.NEO4J_SEQUENCE_INDEX
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.ogm.datastore.neo4j.api.GraphDatabaseServiceFactory;
+import org.hibernate.ogm.datastore.neo4j.spi.GraphDatabaseServiceFactory;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.dialect.neo4j.Neo4jDialect;

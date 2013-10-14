@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.ogm.datastore.neo4j.Environment;
-import org.hibernate.ogm.datastore.neo4j.api.GraphDatabaseServiceFactory;
+import org.hibernate.ogm.datastore.neo4j.spi.GraphDatabaseServiceFactory;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseBuilder;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;

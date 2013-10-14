@@ -58,7 +58,7 @@ public interface Environment {
 	/**
 	 * Qualified class name for the creation of a new {@link org.neo4j.graphdb.GraphDatabaseService}.
 	 * <p>
-	 * The class must implement the interface {@link org.hibernate.ogm.datastore.neo4j.api.GraphDatabaseServiceFactory}.
+	 * The class must implement the interface {@link org.hibernate.ogm.datastore.neo4j.spi.GraphDatabaseServiceFactory}.
 	 */
 	String NEO4J_GRAPHDB_FACTORYCLASS = "hibernate.ogm.neo4j.graphdb.factoryclass";
 

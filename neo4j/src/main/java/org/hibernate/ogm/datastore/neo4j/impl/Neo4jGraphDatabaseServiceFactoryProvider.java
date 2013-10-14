@@ -23,7 +23,7 @@ package org.hibernate.ogm.datastore.neo4j.impl;
 import java.util.Properties;
 
 import org.hibernate.ogm.datastore.neo4j.Environment;
-import org.hibernate.ogm.datastore.neo4j.api.GraphDatabaseServiceFactory;
+import org.hibernate.ogm.datastore.neo4j.spi.GraphDatabaseServiceFactory;
 import org.hibernate.search.util.impl.ClassLoaderHelper;
 import org.neo4j.graphdb.GraphDatabaseService;
 
