@@ -5,6 +5,7 @@
 http://www.neo4j.org[Neo4j] is a robust (fully ACID) transactional property graph database.
 At the moment only the support for the embeedded Neo4j is included in OGM.
 
+This is our first version and a bit experimental. In particular we plan on using node navigation much more than index lookup in a future version.
 
 ==== How to add Neo4j integration
 
@@ -37,17 +38,15 @@ The following properties are available to configure Neo4j support:
 
 .Neo4j datastore configuration properties
 hibernate.ogm.neo4j.database.path::
-The absolute path representing the location of the Neo4j database. Example: C:\neo4jdb\mydb
-hibernate.ogm.neo4j.properties.location::
+The absolute path representing the location of the Neo4j database. Example: +C:\neo4jdb\mydb+
+hibernate.ogm.neo4j.properties.location (optional)::
 Location of the Neo4j embedded properties file. It can be an URL or an absolute file path.
-hibernate.ogm.neo4j.index.entity::
-Name of the neo4j index containing the stored entities. Default to _nodes_ogm_index
-hibernate.ogm.neo4j.index.association::
-Name of the Neo4j index containing the stored associations. Default to _relationships_ogm_index
-hibernate.ogm.neo4j.index.sequence::
-Name of the index that stores the next available value for a sequence. Default to_sequences_ogm_index
-hibernate.ogm.neo4j.graphdb.factoryclass::
-Qualified class name for the creation of a new [classname]+org.neo4j.graphdb.GraphDatabaseService+.
+hibernate.ogm.neo4j.index.entity (optional)::
+Name of the neo4j index containing the stored entities. Default to +_nodes_ogm_index+
+hibernate.ogm.neo4j.index.association (optional)::
+Name of the Neo4j index containing the stored associations. Default to +_relationships_ogm_index+
+hibernate.ogm.neo4j.index.sequence (optional)::
+Name of the index that stores the next available value for a sequence. Default to +_sequences_ogm_index+
 
 ==== Storage principles
 
@@ -102,48 +101,4 @@ A bidirectional association is represented by two relationships, one per directi
 
 ==== Transactions
 
-OGM ships with an implementation of the [classname]+org.hibernate.service.jta.platform.spi.JtaPlatform+
-that can be used to bind Neo4j with your JTA application by setting the configuration property
-+hibernate.transaction.jta.platform+ to the value +org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform+.
-
-.How to enable transaction management for applications with JTA 
-[subs="verbatim,attributes"]
-----
-hibernate.transaction.jta.platform = org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform
-----
-
-==== How to use a custom GraphDatabaseService
-
-The interface [classname]+org.neo4j.graphdb.GraphDatabaseService+ define the main access point to a runnning Neo4j instance.
-If you need to use a different implementation from the one used by OGM, you can:
-
-. implements the interafce [classname]+org.hibernate.ogm.datastore.neo4j.api.GraphDatabaseServiceFactory+;
-
-. set the property +hibernate.ogm.neo4j.graphdb.factoryclass+ to the implementation of the [classname]+GraphDatabaseServiceFactory+ you want to use.
-
-.How to use a custom GraphDatabaseServiceFactory
-====
-[source, JAVA]
-----
-package my.custom.factory
-...
-class CustomGraphServiceFactory implements GraphDatabaseServiceFactory {
-
-    @Override
-    public void initialize(Properties properties) {
-        // Here you can read the configuration properties
-    }
-
-    @Override
-    public GraphDatabaseService create() {
-        return new CustomGraphDatabaseService();
-    }
-
-}
-----
-
-[subs="verbatim,attributes"]
-----
-hibernate.ogm.neo4j.graphdb.factoryclass = my.custom.factory.CustomGraphServiceFactory
-----
-====
+//TODO
