@@ -95,7 +95,7 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 		this.graphDbFactory = null;
 	}
 
-	private Properties properties(Map configuration) {
+	private Properties properties(Map<?, ?> configuration) {
 		Properties properties = new Properties();
 		properties.putAll( configuration );
 		return properties;
