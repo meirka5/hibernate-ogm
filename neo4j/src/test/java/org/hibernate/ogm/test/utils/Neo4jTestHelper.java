@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -42,7 +43,10 @@ import org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform;
 import org.hibernate.ogm.grid.EntityKey;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.ResourceIterator;
+
+import com.tinkerpop.blueprints.CloseableIterable;
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Vertex;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
@@ -119,26 +123,29 @@ public class Neo4jTestHelper implements TestableGridDialect {
 	}
 
 	public int countAssociations(SessionFactory sessionFactory) {
-		ResourceIterator<Relationship> relationships = getProvider( sessionFactory ).getRelationshipsIndex().query( "*:*" ).iterator();
+		CloseableIterable<Edge> relationships = getProvider( sessionFactory ).getRelationshipsIndex().query( "*:*", Edge.class );
 		Set<String> associations = new HashSet<String>();
-		while ( relationships.hasNext() ) {
-			Relationship relationship = (Relationship) relationships.next();
+		Iterator<Edge> iterator = relationships.iterator();
+		while ( iterator.hasNext() ) {
+			Relationship relationship = (Relationship) iterator.next();
 			if ( !associations.contains( relationship.getType().name() ) ) {
 				associations.add( relationship.getType().name() );
 			}
 		}
+		relationships.close();
 		return associations.size();
 	}
 
 	public int countEntities(SessionFactory sessionFactory) {
 		String allEntitiesQuery = Neo4jDialect.TABLE_PROPERTY + ":*";
-		ResourceIterator<Node> iterator = getProvider( sessionFactory ).getNodesIndex().query( allEntitiesQuery ).iterator();
+		CloseableIterable<Vertex> nodes = getProvider( sessionFactory ).getNodesIndex().query( allEntitiesQuery, Vertex.class );
 		int count = 0;
+		Iterator<Vertex> iterator = nodes.iterator();
 		while ( iterator.hasNext() ) {
 			Node node = (Node) iterator.next();
 			count++;
 		}
-		iterator.close();
+		nodes.close();
 		return count;
 	}
 

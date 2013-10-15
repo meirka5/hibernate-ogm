@@ -24,7 +24,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.ogm.datastore.spi.TupleSnapshot;
-import org.neo4j.graphdb.PropertyContainer;
+
+import com.tinkerpop.blueprints.Element;
 
 /**
  * Represents the Tuple snapshot as loaded by the Neo4j datastore.
@@ -35,23 +36,24 @@ import org.neo4j.graphdb.PropertyContainer;
  */
 public final class Neo4jTupleSnapshot implements TupleSnapshot {
 
-	private final PropertyContainer node;
+	private final Element node;
 
-	public Neo4jTupleSnapshot(PropertyContainer node) {
+	public Neo4jTupleSnapshot(Element node) {
 		this.node = node;
 	}
 
 	@Override
 	public Object get(String column) {
-		if ( node.hasProperty( column ) ) {
-			return node.getProperty( column );
+		Object value = node.getProperty( column );
+		if ( value == null ) {
+			return null;
 		}
-		return null;
+		return value;
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return !node.getPropertyKeys().iterator().hasNext();
+		return node.getPropertyKeys().isEmpty();
 	}
 
 	@Override

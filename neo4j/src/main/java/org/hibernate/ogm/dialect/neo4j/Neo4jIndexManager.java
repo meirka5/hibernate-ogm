@@ -26,14 +26,16 @@ import java.util.Map;
 import org.hibernate.ogm.datastore.neo4j.impl.Neo4jDatastoreProvider;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.RowKey;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.index.Index;
-import org.neo4j.graphdb.index.IndexHits;
+
+import com.tinkerpop.blueprints.CloseableIterable;
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Index;
+import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.StringFactory;
 
 /**
- * Manages {@link Node} and {@link Relationship} indexes.
+ * Manages {@link Vertex} and {@link Edge} indexes.
  *
  * @author Davide D'Alto <davide@hibernate.org>
  */
@@ -49,23 +51,30 @@ public class Neo4jIndexManager {
 	}
 
 	/**
-	 * Index a {@link Node}.
+	 * Index a {@link Vertex}.
 	 *
 	 * @see Neo4jIndexManager#findNode(EntityKey)
 	 * @param node
-	 *            the Node to index
+	 *            the Vertex to index
 	 * @param entityKey
 	 *            the {@link EntityKey} representing the node
 	 */
-	public void index(Node node, EntityKey entityKey) {
-		Index<Node> nodeIndex = provider.getNodesIndex();
-		nodeIndex.add( node, TABLE_PROPERTY, entityKey.getTable() );
+	public void index(Vertex node, EntityKey entityKey) {
+		Index<Vertex> nodeIndex = provider.getNodesIndex();
+		nodeIndex.put( TABLE_PROPERTY, entityKey.getTable(), node );
 		for ( int i = 0; i < entityKey.getColumnNames().length; i++ ) {
-			nodeIndex.add( node, entityKey.getColumnNames()[i], entityKey.getColumnValues()[i] );
+			nodeIndex.put( entityKey.getColumnNames()[i], entityKey.getColumnValues()[i], node );
 		}
 	}
 
-	private Map<String, Object> properties(EntityKey entitykey) {
+	private String escape(String name) {
+		if ( StringFactory.ID.equals( name ) ) {
+			name = "<" + name + ">";
+		}
+		return name;
+	}
+
+	private Map<String, Object> nodeProperties(EntityKey entitykey) {
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put( TABLE_PROPERTY, entitykey.getTable() );
 		for ( int j = 0; j < entitykey.getColumnNames().length; j++ ) {
@@ -75,34 +84,22 @@ public class Neo4jIndexManager {
 	}
 
 	/**
-	 * Index a {@link Relationship}.
+	 * Index a {@link Edge}.
 	 *
 	 * @see Neo4jIndexManager#findRelationship(RelationshipType, RowKey)
 	 * @param relationship
-	 *            the Relationship to index
+	 *            the Edge to index
 	 */
-	public void index(Relationship relationship) {
-		Index<Relationship> relationshipIndex = provider.getRelationshipsIndex();
-		relationshipIndex.add( relationship, RELATIONSHIP_TYPE, relationship.getType().name() );
+	public void index(Edge relationship) {
+		Index<Edge> relationshipIndex = provider.getRelationshipsIndex();
+		relationshipIndex.put( RELATIONSHIP_TYPE, relationship.getLabel(), relationship );
 		for ( String key : relationship.getPropertyKeys() ) {
-			relationshipIndex.add( relationship, key, relationship.getProperty( key ) );
+			relationshipIndex.put( key, relationship.getProperty( key ), relationship );
 		}
 	}
 
 	/**
-	 * Remove a {@link Relationship} from the index.
-	 *
-	 * @param rel
-	 *            the Relationship is going to be removed from the index
-	 *
-	 */
-	public void remove(Relationship rel) {
-		Index<Relationship> relationshipIndex = provider.getRelationshipsIndex();
-		relationshipIndex.remove( rel );
-	}
-
-	/**
-	 * Looks for a {@link Relationship} in the index.
+	 * Looks for a {@link Edge} in the index.
 	 *
 	 * @param type
 	 *            the {@link RelationshipType} of the wanted relationship
@@ -110,10 +107,16 @@ public class Neo4jIndexManager {
 	 *            the {@link RowKey} that representing the relationship.
 	 * @return the relationship found or null
 	 */
-	public Relationship findRelationship(RelationshipType type, RowKey rowKey) {
+	public Edge findRelationship(RelationshipType type, RowKey rowKey) {
 		String query = createQuery( properties( type, rowKey ) );
-		Index<Relationship> relationshipIndex = provider.getRelationshipsIndex();
-		return relationshipIndex.query( query ).getSingle();
+		Index<Edge> relationshipIndex = provider.getRelationshipsIndex();
+		CloseableIterable<Edge> iterator = relationshipIndex.query( query, Edge.class );
+		if ( iterator.iterator().hasNext() ) {
+			Edge next = iterator.iterator().next();
+			iterator.close();
+			return next;
+		}
+		return null;
 	}
 
 	private Map<String, Object> properties(RelationshipType type, RowKey rowKey) {
@@ -126,16 +129,22 @@ public class Neo4jIndexManager {
 	}
 
 	/**
-	 * Looks for a {@link Node} in the index.
+	 * Looks for a {@link Vertex} in the index.
 	 *
 	 * @param entityKey
 	 *            the {@link EntityKey} that identify the node.
 	 * @return the node found or null
 	 */
-	public Node findNode(EntityKey entityKey) {
-		String query = createQuery( properties( entityKey ) );
-		Index<Node> nodeIndex = provider.getNodesIndex();
-		return nodeIndex.query( query ).getSingle();
+	public Vertex findNode(EntityKey entityKey) {
+		String query = createQuery( nodeProperties( entityKey ) );
+		Index<Vertex> nodeIndex = provider.getNodesIndex();
+		CloseableIterable<Vertex> iterator = nodeIndex.query( query, Vertex.class );
+		if ( iterator.iterator().hasNext() ) {
+			Vertex next = iterator.iterator().next();
+			iterator.close();
+			return next;
+		}
+		return null;
 	}
 
 	private String createQuery(Map<String, Object> properties) {
@@ -154,9 +163,25 @@ public class Neo4jIndexManager {
 		queryBuilder.append( "\"" );
 	}
 
-	public void remove(Node entityNode) {
-		Index<Node> nodeIndex = provider.getNodesIndex();
-		nodeIndex.remove( entityNode );
+	/**
+	 * Remove a {@link Edge} from the index.
+	 *
+	 * @param rel
+	 *            the Edge is going to be removed from the index
+	 *
+	 */
+	public void remove(Edge rel) {
+		Index<Edge> relationshipIndex = provider.getRelationshipsIndex();
+		for ( String key : rel.getPropertyKeys() ) {
+			relationshipIndex.remove( key, rel.getProperty( key ), rel );
+		}
+	}
+
+	public void remove(Vertex entityNode) {
+		Index<Vertex> nodeIndex = provider.getNodesIndex();
+		for ( String key : entityNode.getPropertyKeys() ) {
+			nodeIndex.remove( key, entityNode.getProperty( key ), entityNode );
+		}
 	}
 
 	/**
@@ -166,8 +191,8 @@ public class Neo4jIndexManager {
 	 *            the name of the table representing the entity
 	 * @return the nodes representing the entities
 	 */
-	public IndexHits<Node> findNodes(String tableName) {
-		Index<Node> nodeIndex = provider.getNodesIndex();
+	public CloseableIterable<Vertex> findNodes(String tableName) {
+		Index<Vertex> nodeIndex = provider.getNodesIndex();
 		return nodeIndex.get( TABLE_PROPERTY, tableName );
 	}
 

@@ -29,11 +29,11 @@ import org.hibernate.ogm.datastore.spi.AssociationSnapshot;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.RowKey;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.PropertyContainer;
-import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Element;
+import com.tinkerpop.blueprints.Vertex;
 
 /**
  * Represents the association snapshot as loaded by Neo4j.
@@ -42,11 +42,11 @@ import org.neo4j.graphdb.RelationshipType;
  */
 public final class Neo4jAssociationSnapshot implements AssociationSnapshot {
 
-	private final Node ownerNode;
+	private final Vertex ownerNode;
 	private final RelationshipType relationshipType;
 	private final AssociationKey associationKey;
 
-	public Neo4jAssociationSnapshot(Node ownerNode, RelationshipType type, AssociationKey associationKey) {
+	public Neo4jAssociationSnapshot(Vertex ownerNode, RelationshipType type, AssociationKey associationKey) {
 		this.ownerNode = ownerNode;
 		this.relationshipType = type;
 		this.associationKey = associationKey;
@@ -54,9 +54,9 @@ public final class Neo4jAssociationSnapshot implements AssociationSnapshot {
 
 	@Override
 	public Tuple get(RowKey rowKey) {
-		for ( Relationship relationship : relationships() ) {
+		for ( Edge relationship : relationships() ) {
 			if ( matches( rowKey, relationship ) ) {
-				return new Tuple( new Neo4jTupleSnapshot( relationship.getEndNode() ) );
+				return new Tuple( new Neo4jTupleSnapshot( relationship.getVertex( com.tinkerpop.blueprints.Direction.IN ) ) );
 			}
 		}
 		return null;
@@ -64,16 +64,16 @@ public final class Neo4jAssociationSnapshot implements AssociationSnapshot {
 
 	@Override
 	public boolean containsKey(RowKey rowKey) {
-		for ( Relationship relationship : relationships() ) {
+		for ( Edge relationship : relationships() ) {
 			return matches( rowKey, relationship );
 		}
 		return false;
 	}
 
-	private boolean matches(RowKey key, PropertyContainer container) {
+	private boolean matches(RowKey key, Element container) {
 		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
 			String column = key.getColumnNames()[i];
-			if ( !container.hasProperty( column ) || !key.getColumnValues()[i].equals( container.getProperty( column ) ) ) {
+			if ( container.getProperty( column ) == null || !key.getColumnValues()[i].equals( container.getProperty( column ) ) ) {
 				return false;
 			}
 		}
@@ -83,26 +83,26 @@ public final class Neo4jAssociationSnapshot implements AssociationSnapshot {
 	@Override
 	public int size() {
 		int count = 0;
-		for ( Relationship relationship : relationships() ) {
+		for ( Edge relationship : relationships() ) {
 			count++;
 		}
 		return count;
 	}
 
-	private Iterable<Relationship> relationships() {
-		return ownerNode.getRelationships( Direction.OUTGOING, relationshipType );
+	private Iterable<Edge> relationships() {
+		return ownerNode.getEdges( com.tinkerpop.blueprints.Direction.OUT, String.valueOf( relationshipType ) );
 	}
 
 	@Override
 	public Set<RowKey> getRowKeys() {
 		Set<RowKey> rowKeys = new HashSet<RowKey>();
-		for ( Relationship relationship : relationships() ) {
+		for ( Edge relationship : relationships() ) {
 			rowKeys.add( convert( relationship ) );
 		}
 		return rowKeys;
 	}
 
-	private RowKey convert(PropertyContainer container) {
+	private RowKey convert(Element container) {
 		String[] columnNames = associationKey.getRowKeyColumnNames();
 		List<String> columns = new ArrayList<String>();
 		List<Object> values = new ArrayList<Object>();

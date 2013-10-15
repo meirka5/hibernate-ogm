@@ -44,17 +44,18 @@ import org.hibernate.ogm.massindex.batchindexing.Consumer;
 import org.hibernate.ogm.type.GridType;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.index.IndexHits;
+
+import com.tinkerpop.blueprints.CloseableIterable;
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.StringFactory;
 
 /**
  * Abstracts Hibernate OGM from Neo4j.
  * <p>
- * A {@link Tuple} is saved as a {@link Node} where the columns are converted into properties of the node.<br>
- * An {@link Association} is converted into a {@link Relationship} identified by the {@link AssociationKey} and the
+ * A {@link Tuple} is saved as a {@link Vertex} where the columns are converted into properties of the node.<br>
+ * An {@link Association} is converted into an {@link Edge} identified by the {@link AssociationKey} and the
  * {@link RowKey}.
  *
  * @author Davide D'Alto <davide@hibernate.org>
@@ -82,14 +83,14 @@ public class Neo4jDialect implements GridDialect {
 
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext context) {
-		Node entityNode = findNode( key );
+		Vertex entityNode = findNode( key );
 		if ( entityNode == null ) {
 			return null;
 		}
 		return createTuple( entityNode );
 	}
 
-	private Tuple createTuple(Node entityNode) {
+	private Tuple createTuple(Vertex entityNode) {
 		return new Tuple( new Neo4jTupleSnapshot( entityNode ) );
 	}
 
@@ -100,13 +101,13 @@ public class Neo4jDialect implements GridDialect {
 
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey key) {
-		Node node = createNodeUnlessExists( key );
+		Vertex node = createNodeUnlessExists( key );
 		applyTupleOperations( node, tuple.getOperations() );
 	}
 
 	@Override
 	public void removeTuple(EntityKey key) {
-		Node entityNode = findNode( key );
+		Vertex entityNode = findNode( key );
 		if ( entityNode != null ) {
 			removeRelationships( entityNode );
 			removeNode( entityNode );
@@ -120,7 +121,7 @@ public class Neo4jDialect implements GridDialect {
 
 	@Override
 	public Association getAssociation(AssociationKey associationKey, AssociationContext associationContext) {
-		Node entityNode = findNode( associationKey.getEntityKey() );
+		Vertex entityNode = findNode( associationKey.getEntityKey() );
 		if ( entityNode == null ) {
 			return null;
 		}
@@ -153,9 +154,9 @@ public class Neo4jDialect implements GridDialect {
 	@Override
 	public void removeAssociation(AssociationKey key) {
 		if ( key != null ) {
-			Node node = findNode( key.getEntityKey() );
-			Iterable<Relationship> relationships = node.getRelationships( Direction.OUTGOING, relationshipType( key ) );
-			for ( Relationship rel : relationships ) {
+			Vertex node = findNode( key.getEntityKey() );
+			Iterable<Edge> relationships = node.getEdges( com.tinkerpop.blueprints.Direction.OUT, String.valueOf( relationshipType( key ) ) );
+			for ( Edge rel : relationships ) {
 				removeRelationship( rel );
 			}
 		}
@@ -180,42 +181,42 @@ public class Neo4jDialect implements GridDialect {
 
 	private void putAssociationOperation(AssociationKey associationKey, AssociationOperation action) {
 		RowKey rowKey = action.getKey();
-		Relationship relationship = createRelationshipUnlessExists( findNode( associationKey.getEntityKey() ), associationKey, rowKey );
-		applyTupleOperations( relationship.getEndNode(), action.getValue().getOperations() );
+		Edge relationship = createRelationshipUnlessExists( findNode( associationKey.getEntityKey() ), associationKey, rowKey );
+		applyTupleOperations( relationship.getVertex( com.tinkerpop.blueprints.Direction.IN ), action.getValue().getOperations() );
 	}
 
-	private Relationship createRelationshipUnlessExists(Node startNode, AssociationKey associationKey, RowKey rowKey) {
-		Relationship relationship = indexer.findRelationship( relationshipType( associationKey ), rowKey );
+	private Edge createRelationshipUnlessExists(Vertex startNode, AssociationKey associationKey, RowKey rowKey) {
+		Edge relationship = indexer.findRelationship( relationshipType( associationKey ), rowKey );
 		if ( relationship == null ) {
 			return createRelationship( startNode, associationKey, rowKey );
 		}
 		return relationship;
 	}
 
-	private Node findNode(EntityKey entityKey) {
+	private Vertex findNode(EntityKey entityKey) {
 		return indexer.findNode( entityKey );
 	}
 
 	private void removeAssociationOperation(AssociationKey associationKey, AssociationOperation action) {
 		RowKey rowKey = action.getKey();
-		Relationship relationship = indexer.findRelationship( relationshipType( associationKey ), rowKey );
+		Edge relationship = indexer.findRelationship( relationshipType( associationKey ), rowKey );
 		removeRelationship( relationship );
 	}
 
-	private void removeRelationship(Relationship relationship) {
+	private void removeRelationship(Edge relationship) {
 		if ( relationship != null ) {
 			indexer.remove( relationship );
-			relationship.delete();
+			relationship.remove();
 		}
 	}
 
-	private void applyTupleOperations(Node node, Set<TupleOperation> operations) {
+	private void applyTupleOperations(Vertex node, Set<TupleOperation> operations) {
 		for ( TupleOperation operation : operations ) {
 			applyOperation( node, operation );
 		}
 	}
 
-	private void applyOperation(Node node, TupleOperation operation) {
+	private void applyOperation(Vertex node, TupleOperation operation) {
 		switch ( operation.getType() ) {
 		case PUT:
 			putTupleOperation( node, operation );
@@ -229,42 +230,55 @@ public class Neo4jDialect implements GridDialect {
 		}
 	}
 
-	private void removeTupleOperation(Node node, TupleOperation operation) {
-		if ( node.hasProperty( operation.getColumn() ) ) {
+	private void removeTupleOperation(Vertex node, TupleOperation operation) {
+		if ( hasProperty( node, operation ) ) {
 			node.removeProperty( operation.getColumn() );
 		}
 	}
 
-	private void putTupleOperation(Node node, TupleOperation operation) {
-		node.setProperty( operation.getColumn(), operation.getValue() );
+	private boolean hasProperty(Vertex node, TupleOperation operation) {
+		return node.getProperty( operation.getColumn() ) != null;
 	}
 
-	private Node createNodeUnlessExists(EntityKey key) {
-		Node node = findNode( key );
+	private void putTupleOperation(Vertex node, TupleOperation operation) {
+		node.setProperty( escape( operation.getColumn() ), operation.getValue() );
+	}
+
+	private Vertex createNodeUnlessExists(EntityKey key) {
+		Vertex node = findNode( key );
 		if ( node == null ) {
 			node = createNode( key );
 		}
 		return node;
 	}
 
-	private Node createNode(EntityKey key) {
-		Node node = provider.createNode();
+	private Vertex createNode(EntityKey key) {
+		Vertex node = provider.createNode();
 		node.setProperty( TABLE_PROPERTY, key.getTable() );
 		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
-			node.setProperty( key.getColumnNames()[i], key.getColumnValues()[i] );
+			String name = key.getColumnNames()[i];
+			name = escape( name );
+			node.setProperty( name, key.getColumnValues()[i] );
 		}
 		indexer.index( node, key );
 		return node;
 	}
 
-	private void removeNode(Node entityNode) {
-		removeRelationships( entityNode );
-		indexer.remove( entityNode );
-		entityNode.delete();
+	private String escape(String name) {
+		if ( StringFactory.ID.equals( name ) ) {
+			name = "<" + name + ">";
+		}
+		return name;
 	}
 
-	private Relationship createRelationship(Node startNode, AssociationKey associationKey, RowKey rowKey) {
-		Relationship relationship = startNode.createRelationshipTo( provider.createNode(), relationshipType( associationKey ) );
+	private void removeNode(Vertex entityNode) {
+		removeRelationships( entityNode );
+		indexer.remove( entityNode );
+		entityNode.remove();
+	}
+
+	private Edge createRelationship(Vertex startNode, AssociationKey associationKey, RowKey rowKey) {
+		Edge relationship = startNode.addEdge( String.valueOf( relationshipType( associationKey ) ), provider.createNode() );
 		for ( int i = 0; i < rowKey.getColumnNames().length; i++ ) {
 			relationship.setProperty( rowKey.getColumnNames()[i], rowKey.getColumnValues()[i] );
 		}
@@ -276,9 +290,9 @@ public class Neo4jDialect implements GridDialect {
 		return DynamicRelationshipType.withName( associationKey.getCollectionRole() );
 	}
 
-	private void removeRelationships(Node node) {
+	private void removeRelationships(Vertex node) {
 		if ( node != null ) {
-			for ( Relationship rel : node.getRelationships() ) {
+			for ( Edge rel : node.getEdges( com.tinkerpop.blueprints.Direction.BOTH) ) {
 				removeRelationship( rel );
 			}
 		}
@@ -287,9 +301,9 @@ public class Neo4jDialect implements GridDialect {
 	@Override
 	public void forEachTuple(Consumer consumer, EntityKeyMetadata... entityKeyMetadatas) {
 		for ( EntityKeyMetadata entityKeyMetadata : entityKeyMetadatas ) {
-			IndexHits<Node> queryNodes = indexer.findNodes( entityKeyMetadata.getTable() );
+			CloseableIterable<Vertex> queryNodes = indexer.findNodes( entityKeyMetadata.getTable() );
 			try {
-				for ( Node node : queryNodes ) {
+				for ( Vertex node : queryNodes ) {
 					Tuple tuple = createTuple( node );
 					consumer.consume( tuple );
 				}

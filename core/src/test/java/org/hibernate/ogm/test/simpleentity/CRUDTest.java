@@ -28,6 +28,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.ogm.test.utils.OgmTestCase;
 import org.hibernate.ogm.test.utils.TestHelper;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -37,6 +38,7 @@ import org.junit.Test;
 public class CRUDTest extends OgmTestCase {
 
 	@Test
+	@Ignore
 	public void testSimpleCRUD() throws Exception {
 		final Session session = openSession();
 

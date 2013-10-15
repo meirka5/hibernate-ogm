@@ -30,11 +30,12 @@ import static org.hibernate.ogm.datastore.neo4j.Environment.NEO4J_SEQUENCE_INDEX
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.ogm.datastore.neo4j.spi.GraphDatabaseServiceFactory;
+import org.hibernate.ogm.datastore.neo4j.Environment;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.dialect.neo4j.Neo4jDialect;
 import org.hibernate.ogm.grid.RowKey;
+import org.hibernate.ogm.options.navigation.impl.GenericMappingFactory;
 import org.hibernate.ogm.options.spi.MappingFactory;
 import org.hibernate.ogm.service.impl.LuceneBasedQueryParserService;
 import org.hibernate.ogm.service.impl.QueryParserService;
@@ -42,9 +43,11 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.index.Index;
+
+import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Index;
+import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 
 /**
  * Provides access to the Neo4j system.
@@ -59,11 +62,11 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 
 	private String relationshipIndexName = DEFAULT_NEO4J_ASSOCIATION_INDEX_NAME;
 
-	private GraphDatabaseService neo4jDb;
-
 	private Neo4jSequenceGenerator neo4jSequenceGenerator;
 
-	private GraphDatabaseServiceFactory graphDbFactory;
+	private Neo4jGraph graph;
+
+	private String dbLocation;
 
 	@Override
 	public Class<? extends QueryParserService> getDefaultQueryParserServiceType() {
@@ -72,7 +75,7 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 
 	@Override
 	public void configure(Map cfg) {
-		graphDbFactory = new Neo4jGraphDatabaseServiceFactoryProvider().load( properties( cfg ) );
+		dbLocation = properties( cfg ).getProperty( Environment.NEO4J_DATABASE_PATH );
 		sequenceIndexName = defaultIfNull( cfg, NEO4J_SEQUENCE_INDEX_NAME, DEFAULT_NEO4J_SEQUENCE_INDEX_NAME );
 		nodeIndexName = defaultIfNull( cfg, NEO4J_ENTITY_INDEX_NAME, DEFAULT_NEO4J_ENTITY_INDEX_NAME );
 		relationshipIndexName = defaultIfNull( cfg, NEO4J_ASSOCIATION_INDEX_NAME, DEFAULT_NEO4J_ASSOCIATION_INDEX_NAME );
@@ -85,14 +88,13 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 
 	@Override
 	public void stop() {
-		neo4jDb.shutdown();
+		graph.shutdown();
 	}
 
 	@Override
 	public void start() {
-		this.neo4jDb = graphDbFactory.create();
-		this.neo4jSequenceGenerator = new Neo4jSequenceGenerator( neo4jDb, sequenceIndexName );
-		this.graphDbFactory = null;
+		this.graph = new Neo4jGraph( dbLocation );
+		this.neo4jSequenceGenerator = new Neo4jSequenceGenerator( graph, sequenceIndexName );
 	}
 
 	private Properties properties(Map<?, ?> configuration) {
@@ -106,29 +108,37 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return Neo4jDialect.class;
 	}
 
-	public Node createNode() {
-		return neo4jDb.createNode();
+	public Vertex createNode() {
+		return graph.addVertex( null );
 	}
 
 	public GraphDatabaseService getDataBase() {
-		return neo4jDb;
+		return graph.getRawGraph();
 	}
 
 	public int nextValue(RowKey key, int increment, int initialValue) {
 		return neo4jSequenceGenerator.nextValue( key, increment, initialValue );
 	}
 
-	public Index<Node> getNodesIndex() {
-		return neo4jDb.index().forNodes( nodeIndexName );
+	public Index<Vertex> getNodesIndex() {
+		Index<Vertex> index = graph.getIndex( nodeIndexName, Vertex.class );
+		if (index == null) {
+			return graph.createIndex( nodeIndexName, Vertex.class );
+		}
+		return index;
 	}
 
-	public Index<Relationship> getRelationshipsIndex() {
-		return neo4jDb.index().forRelationships( relationshipIndexName );
+	public Index<Edge> getRelationshipsIndex() {
+		Index<Edge> index = graph.getIndex( relationshipIndexName, Edge.class );
+		if (index == null) {
+			return graph.createIndex( relationshipIndexName, Edge.class );
+		}
+		return index;
 	}
 
 	@Override
 	public Class<? extends MappingFactory<?>> getConfigurationBuilder() {
-		return null;
+		return GenericMappingFactory.class;
 	}
 
 }

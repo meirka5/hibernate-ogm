@@ -29,6 +29,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.UniqueFactory;
 
+import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
+
 /**
  * Generates the next value in a sequence for a {@link RowKey}.
  * <p>
@@ -46,8 +48,8 @@ public class Neo4jSequenceGenerator {
 
 	private final String sequenceIndexName;
 
-	public Neo4jSequenceGenerator(GraphDatabaseService neo4jDb, String indexName) {
-		this.neo4jDb = neo4jDb;
+	public Neo4jSequenceGenerator(Neo4jGraph graph, String indexName) {
+		this.neo4jDb = graph.getRawGraph();
 		this.sequenceIndexName = indexName;
 	}
 
