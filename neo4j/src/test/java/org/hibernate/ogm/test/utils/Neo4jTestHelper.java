@@ -41,8 +41,6 @@ import org.hibernate.ogm.datastore.spi.TupleSnapshot;
 import org.hibernate.ogm.dialect.neo4j.Neo4jDialect;
 import org.hibernate.ogm.dialect.neo4j.Neo4jJtaPlatform;
 import org.hibernate.ogm.grid.EntityKey;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
 
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
@@ -78,7 +76,7 @@ public class Neo4jTestHelper implements TestableGridDialect {
 
 	@Override
 	public boolean backendSupportsTransactions() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -123,26 +121,26 @@ public class Neo4jTestHelper implements TestableGridDialect {
 	}
 
 	public int countAssociations(SessionFactory sessionFactory) {
-		CloseableIterable<Edge> relationships = getProvider( sessionFactory ).getRelationshipsIndex().query( "*:*", Edge.class );
-		Set<String> associations = new HashSet<String>();
+		CloseableIterable<Edge> relationships = getProvider( sessionFactory ).getRelationshipsIndex().query( null, "*:*" );
+		Set<String> uniqueAssociationTypes = new HashSet<String>();
 		Iterator<Edge> iterator = relationships.iterator();
 		while ( iterator.hasNext() ) {
-			Relationship relationship = (Relationship) iterator.next();
-			if ( !associations.contains( relationship.getType().name() ) ) {
-				associations.add( relationship.getType().name() );
+			Edge relationship = (Edge) iterator.next();
+			if ( !uniqueAssociationTypes.contains( relationship.getLabel() ) ) {
+				uniqueAssociationTypes.add( relationship.getLabel() );
 			}
 		}
 		relationships.close();
-		return associations.size();
+		return uniqueAssociationTypes.size();
 	}
 
 	public int countEntities(SessionFactory sessionFactory) {
 		String allEntitiesQuery = Neo4jDialect.TABLE_PROPERTY + ":*";
-		CloseableIterable<Vertex> nodes = getProvider( sessionFactory ).getNodesIndex().query( allEntitiesQuery, Vertex.class );
+		CloseableIterable<Vertex> nodes = getProvider( sessionFactory ).getNodesIndex().query( null, allEntitiesQuery );
 		int count = 0;
 		Iterator<Vertex> iterator = nodes.iterator();
 		while ( iterator.hasNext() ) {
-			Node node = (Node) iterator.next();
+			iterator.next();
 			count++;
 		}
 		nodes.close();

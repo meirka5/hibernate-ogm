@@ -32,7 +32,6 @@ import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.Vertex;
-import com.tinkerpop.blueprints.util.StringFactory;
 
 /**
  * Manages {@link Vertex} and {@link Edge} indexes.
@@ -67,13 +66,6 @@ public class Neo4jIndexManager {
 		}
 	}
 
-	private String escape(String name) {
-		if ( StringFactory.ID.equals( name ) ) {
-			name = "<" + name + ">";
-		}
-		return name;
-	}
-
 	private Map<String, Object> nodeProperties(EntityKey entitykey) {
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put( TABLE_PROPERTY, entitykey.getTable() );
@@ -94,7 +86,8 @@ public class Neo4jIndexManager {
 		Index<Edge> relationshipIndex = provider.getRelationshipsIndex();
 		relationshipIndex.put( RELATIONSHIP_TYPE, relationship.getLabel(), relationship );
 		for ( String key : relationship.getPropertyKeys() ) {
-			relationshipIndex.put( key, relationship.getProperty( key ), relationship );
+			Object property = relationship.getProperty( key );
+			relationshipIndex.put( key, property, relationship );
 		}
 	}
 
@@ -107,10 +100,10 @@ public class Neo4jIndexManager {
 	 *            the {@link RowKey} that representing the relationship.
 	 * @return the relationship found or null
 	 */
-	public Edge findRelationship(RelationshipType type, RowKey rowKey) {
-		String query = createQuery( properties( type, rowKey ) );
+	public Edge findRelationship(String label, RowKey rowKey) {
+		String query = createQuery( properties( label, rowKey ) );
 		Index<Edge> relationshipIndex = provider.getRelationshipsIndex();
-		CloseableIterable<Edge> iterator = relationshipIndex.query( query, Edge.class );
+		CloseableIterable<Edge> iterator = relationshipIndex.query( null, query );
 		if ( iterator.iterator().hasNext() ) {
 			Edge next = iterator.iterator().next();
 			iterator.close();
@@ -119,9 +112,9 @@ public class Neo4jIndexManager {
 		return null;
 	}
 
-	private Map<String, Object> properties(RelationshipType type, RowKey rowKey) {
+	private Map<String, Object> properties(String label, RowKey rowKey) {
 		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put( RELATIONSHIP_TYPE, type.name() );
+		properties.put( RELATIONSHIP_TYPE, label );
 		for ( int i = 0; i < rowKey.getColumnNames().length; i++ ) {
 			properties.put( rowKey.getColumnNames()[i], rowKey.getColumnValues()[i] );
 		}
@@ -138,7 +131,7 @@ public class Neo4jIndexManager {
 	public Vertex findNode(EntityKey entityKey) {
 		String query = createQuery( nodeProperties( entityKey ) );
 		Index<Vertex> nodeIndex = provider.getNodesIndex();
-		CloseableIterable<Vertex> iterator = nodeIndex.query( query, Vertex.class );
+		CloseableIterable<Vertex> iterator = nodeIndex.query( null, query );
 		if ( iterator.iterator().hasNext() ) {
 			Vertex next = iterator.iterator().next();
 			iterator.close();

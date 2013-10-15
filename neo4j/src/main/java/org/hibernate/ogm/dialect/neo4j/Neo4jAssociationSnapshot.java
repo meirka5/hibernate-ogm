@@ -29,7 +29,6 @@ import org.hibernate.ogm.datastore.spi.AssociationSnapshot;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.RowKey;
-import org.neo4j.graphdb.RelationshipType;
 
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Element;
@@ -43,10 +42,10 @@ import com.tinkerpop.blueprints.Vertex;
 public final class Neo4jAssociationSnapshot implements AssociationSnapshot {
 
 	private final Vertex ownerNode;
-	private final RelationshipType relationshipType;
+	private final String relationshipType;
 	private final AssociationKey associationKey;
 
-	public Neo4jAssociationSnapshot(Vertex ownerNode, RelationshipType type, AssociationKey associationKey) {
+	public Neo4jAssociationSnapshot(Vertex ownerNode, String type, AssociationKey associationKey) {
 		this.ownerNode = ownerNode;
 		this.relationshipType = type;
 		this.associationKey = associationKey;
@@ -83,14 +82,14 @@ public final class Neo4jAssociationSnapshot implements AssociationSnapshot {
 	@Override
 	public int size() {
 		int count = 0;
-		for ( Edge relationship : relationships() ) {
+		for ( @SuppressWarnings("unused") Edge relationship : relationships() ) {
 			count++;
 		}
 		return count;
 	}
 
 	private Iterable<Edge> relationships() {
-		return ownerNode.getEdges( com.tinkerpop.blueprints.Direction.OUT, String.valueOf( relationshipType ) );
+		return ownerNode.getEdges( com.tinkerpop.blueprints.Direction.OUT, relationshipType );
 	}
 
 	@Override

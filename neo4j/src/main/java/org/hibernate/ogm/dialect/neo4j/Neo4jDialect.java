@@ -44,12 +44,10 @@ import org.hibernate.ogm.massindex.batchindexing.Consumer;
 import org.hibernate.ogm.type.GridType;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
-import org.neo4j.graphdb.DynamicRelationshipType;
 
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.Vertex;
-import com.tinkerpop.blueprints.util.StringFactory;
 
 /**
  * Abstracts Hibernate OGM from Neo4j.
@@ -125,7 +123,7 @@ public class Neo4jDialect implements GridDialect {
 		if ( entityNode == null ) {
 			return null;
 		}
-		return new Association( new Neo4jAssociationSnapshot( entityNode, relationshipType( associationKey ), associationKey ) );
+		return new Association( new Neo4jAssociationSnapshot( entityNode, label( associationKey ), associationKey ) );
 	}
 
 	@Override
@@ -155,7 +153,7 @@ public class Neo4jDialect implements GridDialect {
 	public void removeAssociation(AssociationKey key) {
 		if ( key != null ) {
 			Vertex node = findNode( key.getEntityKey() );
-			Iterable<Edge> relationships = node.getEdges( com.tinkerpop.blueprints.Direction.OUT, String.valueOf( relationshipType( key ) ) );
+			Iterable<Edge> relationships = node.getEdges( com.tinkerpop.blueprints.Direction.OUT, label( key ) );
 			for ( Edge rel : relationships ) {
 				removeRelationship( rel );
 			}
@@ -186,7 +184,7 @@ public class Neo4jDialect implements GridDialect {
 	}
 
 	private Edge createRelationshipUnlessExists(Vertex startNode, AssociationKey associationKey, RowKey rowKey) {
-		Edge relationship = indexer.findRelationship( relationshipType( associationKey ), rowKey );
+		Edge relationship = indexer.findRelationship( label( associationKey ), rowKey );
 		if ( relationship == null ) {
 			return createRelationship( startNode, associationKey, rowKey );
 		}
@@ -199,7 +197,7 @@ public class Neo4jDialect implements GridDialect {
 
 	private void removeAssociationOperation(AssociationKey associationKey, AssociationOperation action) {
 		RowKey rowKey = action.getKey();
-		Edge relationship = indexer.findRelationship( relationshipType( associationKey ), rowKey );
+		Edge relationship = indexer.findRelationship( label( associationKey ), rowKey );
 		removeRelationship( relationship );
 	}
 
@@ -241,7 +239,7 @@ public class Neo4jDialect implements GridDialect {
 	}
 
 	private void putTupleOperation(Vertex node, TupleOperation operation) {
-		node.setProperty( escape( operation.getColumn() ), operation.getValue() );
+		node.setProperty( operation.getColumn(), operation.getValue() );
 	}
 
 	private Vertex createNodeUnlessExists(EntityKey key) {
@@ -256,19 +254,10 @@ public class Neo4jDialect implements GridDialect {
 		Vertex node = provider.createNode();
 		node.setProperty( TABLE_PROPERTY, key.getTable() );
 		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
-			String name = key.getColumnNames()[i];
-			name = escape( name );
-			node.setProperty( name, key.getColumnValues()[i] );
+			node.setProperty( key.getColumnNames()[i], key.getColumnValues()[i] );
 		}
 		indexer.index( node, key );
 		return node;
-	}
-
-	private String escape(String name) {
-		if ( StringFactory.ID.equals( name ) ) {
-			name = "<" + name + ">";
-		}
-		return name;
 	}
 
 	private void removeNode(Vertex entityNode) {
@@ -278,7 +267,7 @@ public class Neo4jDialect implements GridDialect {
 	}
 
 	private Edge createRelationship(Vertex startNode, AssociationKey associationKey, RowKey rowKey) {
-		Edge relationship = startNode.addEdge( String.valueOf( relationshipType( associationKey ) ), provider.createNode() );
+		Edge relationship = startNode.addEdge( label( associationKey ), provider.createNode() );
 		for ( int i = 0; i < rowKey.getColumnNames().length; i++ ) {
 			relationship.setProperty( rowKey.getColumnNames()[i], rowKey.getColumnValues()[i] );
 		}
@@ -286,8 +275,11 @@ public class Neo4jDialect implements GridDialect {
 		return relationship;
 	}
 
-	private DynamicRelationshipType relationshipType(AssociationKey associationKey) {
-		return DynamicRelationshipType.withName( associationKey.getCollectionRole() );
+	private String label(AssociationKey associationKey) {
+		StringBuilder builder = new StringBuilder(associationKey.getEntityKey().getTable());
+		builder.append( ":" );
+		builder.append( associationKey.getCollectionRole() );
+		return builder.toString();
 	}
 
 	private void removeRelationships(Vertex node) {
