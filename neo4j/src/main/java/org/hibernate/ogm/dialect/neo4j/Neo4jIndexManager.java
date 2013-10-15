@@ -26,7 +26,6 @@ import java.util.Map;
 import org.hibernate.ogm.datastore.neo4j.impl.Neo4jDatastoreProvider;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.RowKey;
-import org.neo4j.graphdb.RelationshipType;
 
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
@@ -78,7 +77,7 @@ public class Neo4jIndexManager {
 	/**
 	 * Index a {@link Edge}.
 	 *
-	 * @see Neo4jIndexManager#findRelationship(RelationshipType, RowKey)
+	 * @see Neo4jIndexManager#findRelationship(Edge)
 	 * @param relationship
 	 *            the Edge to index
 	 */
@@ -94,8 +93,8 @@ public class Neo4jIndexManager {
 	/**
 	 * Looks for a {@link Edge} in the index.
 	 *
-	 * @param type
-	 *            the {@link RelationshipType} of the wanted relationship
+	 * @param label
+	 *            the label of the wanted relationship
 	 * @param rowKey
 	 *            the {@link RowKey} that representing the relationship.
 	 * @return the relationship found or null
