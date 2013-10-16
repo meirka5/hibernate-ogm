@@ -29,6 +29,8 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.UniqueFactory;
 
+import ch.qos.logback.classic.db.names.ColumnName;
+
 import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 
 /**
@@ -73,13 +75,22 @@ public class Neo4jSequenceGenerator {
 		Transaction tx = neo4jDb.beginTx();
 		try {
 			UniqueFactory<Node> factory = nodeFactory( initialValue );
-			Node sequenceNode = factory.getOrCreate( ID_SEQUENCE_PROPERTY, key.hashCode() );
+			Node sequenceNode = factory.getOrCreate( ID_SEQUENCE_PROPERTY, generateId( key ) );
 			tx.success();
 			return sequenceNode;
 		}
 		finally {
 			tx.finish();
 		}
+	}
+
+	private Object generateId(RowKey key) {
+		StringBuilder builder = new StringBuilder( key.getTable() );
+		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
+			builder.append( key.getColumnNames()[i] );
+			builder.append( key.getColumnValues()[i] );
+		}
+		return builder.toString();
 	}
 
 	private UniqueFactory<Node> nodeFactory(final int initialValue) {
