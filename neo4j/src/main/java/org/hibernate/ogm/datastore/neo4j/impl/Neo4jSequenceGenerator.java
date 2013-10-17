@@ -29,8 +29,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.index.UniqueFactory;
 
-import ch.qos.logback.classic.db.names.ColumnName;
-
 import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 
 /**
