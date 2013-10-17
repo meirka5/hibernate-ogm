@@ -29,6 +29,7 @@ import org.hibernate.ogm.datastore.impl.EmptyAssociationSnapshot;
 import org.hibernate.ogm.datastore.impl.EmptyTupleSnapshot;
 import org.hibernate.ogm.datastore.neo4j.impl.Neo4jDatastoreProvider;
 import org.hibernate.ogm.datastore.neo4j.impl.Neo4jTypeConverter;
+import org.hibernate.ogm.datastore.neo4j.impl.PropertyNameWrapper;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.AssociationOperation;
@@ -47,7 +48,9 @@ import org.hibernate.type.Type;
 
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.wrappers.wrapped.WrappedElement;
 
 /**
  * Abstracts Hibernate OGM from Neo4j.
@@ -100,7 +103,7 @@ public class Neo4jDialect implements GridDialect {
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey key) {
 		Vertex node = createNodeUnlessExists( key );
-		applyTupleOperations( node, tuple.getOperations() );
+		applyTupleOperations( new PropertyNameWrapper( node ), tuple.getOperations() );
 	}
 
 	@Override
@@ -180,7 +183,8 @@ public class Neo4jDialect implements GridDialect {
 	private void putAssociationOperation(AssociationKey associationKey, AssociationOperation action) {
 		RowKey rowKey = action.getKey();
 		Edge relationship = createRelationshipUnlessExists( findNode( associationKey.getEntityKey() ), associationKey, rowKey );
-		applyTupleOperations( relationship.getVertex( com.tinkerpop.blueprints.Direction.IN ), action.getValue().getOperations() );
+		Vertex vertex = relationship.getVertex( com.tinkerpop.blueprints.Direction.IN );
+		applyTupleOperations( new PropertyNameWrapper( vertex ), action.getValue().getOperations() );
 	}
 
 	private Edge createRelationshipUnlessExists(Vertex startNode, AssociationKey associationKey, RowKey rowKey) {
@@ -208,13 +212,13 @@ public class Neo4jDialect implements GridDialect {
 		}
 	}
 
-	private void applyTupleOperations(Vertex node, Set<TupleOperation> operations) {
+	private void applyTupleOperations(WrappedElement node, Set<TupleOperation> operations) {
 		for ( TupleOperation operation : operations ) {
 			applyOperation( node, operation );
 		}
 	}
 
-	private void applyOperation(Vertex node, TupleOperation operation) {
+	private void applyOperation(Element node, TupleOperation operation) {
 		switch ( operation.getType() ) {
 		case PUT:
 			putTupleOperation( node, operation );
@@ -228,17 +232,17 @@ public class Neo4jDialect implements GridDialect {
 		}
 	}
 
-	private void removeTupleOperation(Vertex node, TupleOperation operation) {
+	private void removeTupleOperation(Element node, TupleOperation operation) {
 		if ( hasProperty( node, operation ) ) {
 			node.removeProperty( operation.getColumn() );
 		}
 	}
 
-	private boolean hasProperty(Vertex node, TupleOperation operation) {
+	private boolean hasProperty(Element node, TupleOperation operation) {
 		return node.getProperty( operation.getColumn() ) != null;
 	}
 
-	private void putTupleOperation(Vertex node, TupleOperation operation) {
+	private void putTupleOperation(Element node, TupleOperation operation) {
 		node.setProperty( operation.getColumn(), operation.getValue() );
 	}
 
@@ -253,26 +257,28 @@ public class Neo4jDialect implements GridDialect {
 	private Vertex createNode(EntityKey key) {
 		Vertex node = provider.createNode();
 		node.setProperty( TABLE_PROPERTY, key.getTable() );
-		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
-			node.setProperty( key.getColumnNames()[i], key.getColumnValues()[i] );
-		}
+		applyProperties( new PropertyNameWrapper( node ), key.getColumnNames(), key.getColumnValues() );
 		indexer.index( node, key );
 		return node;
+	}
+
+	private Edge createRelationship(Vertex startNode, AssociationKey associationKey, RowKey rowKey) {
+		Edge relationship = startNode.addEdge( label( associationKey ), provider.createNode() );
+		applyProperties( new PropertyNameWrapper( relationship ), rowKey.getColumnNames(), rowKey.getColumnValues() );
+		indexer.index( relationship, rowKey );
+		return relationship;
+	}
+
+	private void applyProperties( WrappedElement node, String[] names, Object[] values) {
+		for ( int i = 0; i < names.length; i++ ) {
+			node.setProperty( names[i], values[i] );
+		}
 	}
 
 	private void removeNode(Vertex entityNode) {
 		removeRelationships( entityNode );
 		indexer.remove( entityNode );
 		entityNode.remove();
-	}
-
-	private Edge createRelationship(Vertex startNode, AssociationKey associationKey, RowKey rowKey) {
-		Edge relationship = startNode.addEdge( label( associationKey ), provider.createNode() );
-		for ( int i = 0; i < rowKey.getColumnNames().length; i++ ) {
-			relationship.setProperty( rowKey.getColumnNames()[i], rowKey.getColumnValues()[i] );
-		}
-		indexer.index( relationship );
-		return relationship;
 	}
 
 	private String label(AssociationKey associationKey) {

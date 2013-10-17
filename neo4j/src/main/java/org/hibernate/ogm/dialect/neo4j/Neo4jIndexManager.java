@@ -24,11 +24,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.ogm.datastore.neo4j.impl.Neo4jDatastoreProvider;
+import org.hibernate.ogm.datastore.neo4j.impl.PropertyNameWrapper;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.RowKey;
 
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
+import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Index;
 import com.tinkerpop.blueprints.Vertex;
 
@@ -81,12 +83,12 @@ public class Neo4jIndexManager {
 	 * @param relationship
 	 *            the Edge to index
 	 */
-	public void index(Edge relationship) {
+	public void index(Edge relationship, RowKey rowKey) {
 		Index<Edge> relationshipIndex = provider.getRelationshipsIndex();
 		relationshipIndex.put( RELATIONSHIP_TYPE, relationship.getLabel(), relationship );
-		for ( String key : relationship.getPropertyKeys() ) {
-			Object property = relationship.getProperty( key );
-			relationshipIndex.put( key, property, relationship );
+		Element element = new PropertyNameWrapper( relationship );
+		for ( int j = 0; j < rowKey.getColumnNames().length; j++ ) {
+			relationshipIndex.put( rowKey.getColumnNames()[j], rowKey.getColumnValues()[j], relationship );
 		}
 	}
 

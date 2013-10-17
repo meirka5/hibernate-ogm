@@ -18,48 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.neo4j;
+package org.hibernate.ogm.datastore.neo4j.impl;
 
-import java.util.Set;
-
-import org.hibernate.ogm.datastore.neo4j.impl.PropertyNameWrapper;
-import org.hibernate.ogm.datastore.spi.TupleSnapshot;
-
-import com.tinkerpop.blueprints.Element;
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.ogm.type.AbstractGenericBasicType;
+import org.hibernate.ogm.type.descriptor.StringMappedGridTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 
 /**
- * Represents the Tuple snapshot as loaded by the Neo4j datastore.
- * <p>
- * A {@link org.neo4j.graphdb.Node} represents a {@link org.hibernate.ogm.datastore.spi.Tuple}. Columns are mapped as
- * properties of a the Node.
- *
  * @author Davide D'Alto <davide@hibernate.org>
  */
-public final class Neo4jTupleSnapshot implements TupleSnapshot {
+public class StringMaterializedBlobTypeDescriptor extends AbstractGenericBasicType<byte[]> {
 
-	private final Element node;
+	public static final StringMaterializedBlobTypeDescriptor INSTANCE = new StringMaterializedBlobTypeDescriptor();
 
-	public Neo4jTupleSnapshot(Element node) {
-		this.node = new PropertyNameWrapper( node );
+	public StringMaterializedBlobTypeDescriptor() {
+		super( StringMappedGridTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	public Object get(String column) {
-		Object value = node.getProperty( column );
-		if ( value == null ) {
-			return null;
-		}
-		return value;
+	public int getColumnSpan(Mapping mapping) throws MappingException {
+		return 1;
 	}
 
 	@Override
-	public boolean isEmpty() {
-		return node.getPropertyKeys().isEmpty();
-	}
-
-	@Override
-	public Set<String> getColumnNames() {
-		return node.getPropertyKeys();
+	public String getName() {
+		return "string_materialized_blob";
 	}
 
 }

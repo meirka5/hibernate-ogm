@@ -26,6 +26,7 @@ import java.util.Map;
 import org.hibernate.ogm.type.GridType;
 import org.hibernate.ogm.type.StringCalendarDateType;
 import org.hibernate.ogm.type.StringDateTypeDescriptor;
+import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -47,6 +48,7 @@ public class Neo4jTypeConverter {
 		conversion.put( StandardBasicTypes.DATE, StringDateTypeDescriptor.INSTANCE );
 		conversion.put( StandardBasicTypes.TIME, StringDateTypeDescriptor.INSTANCE );
 		conversion.put( StandardBasicTypes.TIMESTAMP, StringDateTypeDescriptor.INSTANCE );
+		conversion.put( MaterializedBlobType.INSTANCE, StringMaterializedBlobTypeDescriptor.INSTANCE );
 		return conversion;
 	}
 
