@@ -52,7 +52,7 @@ public class AssociationMassIndexerTest extends JpaTestCase {
 	private File baseDir;
 
 	@Test
-	@SkipByGridDialect(value = GridDialectType.MONGODB, comment = "Uses embedded key which is currently not supported by the MongoDB query parser")
+	@SkipByGridDialect(value = { GridDialectType.MONGODB, GridDialectType.HOTROD }, comment = "Uses embedded key which is currently not supported by the MongoDB query parser")
 	public void testEntityWithAssociationMassIndexing() throws Exception {
 		{
 			List<IndexedLabel> labes = Arrays.asList( new IndexedLabel( "massindex" ), new IndexedLabel( "test" ) );

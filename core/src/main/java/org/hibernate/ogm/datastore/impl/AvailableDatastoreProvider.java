@@ -29,6 +29,7 @@ package org.hibernate.ogm.datastore.impl;
  */
 public enum AvailableDatastoreProvider {
 	MAP( "org.hibernate.ogm.datastore.map.impl.MapDatastoreProvider" ),
+	HOTROD( "org.hibernate.ogm.datastore.infinispan.impl.HotRodDatastoreProvider" ),
 	INFINISPAN( "org.hibernate.ogm.datastore.infinispan.impl.InfinispanDatastoreProvider" ),
 	EHCACHE( "org.hibernate.ogm.datastore.ehcache.impl.EhcacheDatastoreProvider" ),
 	MONGODB( "org.hibernate.ogm.datastore.mongodb.impl.MongoDBDatastoreProvider" ),

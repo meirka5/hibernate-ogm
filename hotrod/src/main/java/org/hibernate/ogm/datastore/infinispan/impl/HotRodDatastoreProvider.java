@@ -23,6 +23,7 @@ package org.hibernate.ogm.datastore.infinispan.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
@@ -45,26 +46,20 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
-import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.commons.api.BasicCache;
-import org.infinispan.commons.util.FileLookupFactory;
-import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.client.hotrod.configuration.Configuration;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.util.FileLookupFactory;
 
 /**
- * Provides access to Infinispan's CacheManager; one CacheManager is needed for all caches,
- * it can be taken via JNDI or started by this ServiceProvider; in this case it will also
- * be stopped when no longer needed.
- *
+ * Provides access to Infinispan's CacheManager; one CacheManager is needed for all caches, it can be taken via JNDI or
+ * started by this ServiceProvider; in this case it will also be stopped when no longer needed.
+ * 
  * @author Sanne Grinovero
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class HotRodDatastoreProvider implements DatastoreProvider, Startable, Stoppable,
-													ServiceRegistryAwareService, Configurable {
+public class HotRodDatastoreProvider implements DatastoreProvider, Startable, Stoppable, ServiceRegistryAwareService, Configurable {
 
 	private static final Log log = LoggerFactory.make();
 
@@ -103,15 +98,15 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 			throw log.unableToInitializeInfinispan( e );
 		}
 		eagerlyInitializeCaches( cacheManager );
-		//clear resources
+		// clear resources
 		this.jtaPlatform = null;
 		this.jndiService = null;
 	}
 
 	/**
-	 * Need to make sure all needed caches are started before state transfer happens.
-	 * This prevents this node to return undefined cache errors during replication
-	 * when other nodes join this one.
+	 * Need to make sure all needed caches are started before state transfer happens. This prevents this node to return
+	 * undefined cache errors during replication when other nodes join this one.
+	 * 
 	 * @param cacheManager
 	 */
 	private void eagerlyInitializeCaches(RemoteCacheManager cacheManager) {
@@ -126,14 +121,12 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 	}
 
 	private RemoteCacheManager createCustomCacheManager(String cfgName, JtaPlatform platform) {
-		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		TransactionManagerLookupDelegator transactionManagerLookupDelegator = new TransactionManagerLookupDelegator( platform );
+		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		try {
 			InputStream configurationFile = FileLookupFactory.newInstance().lookupFileStrict( cfgName, contextClassLoader );
 			try {
-				cacheManager = null;
-				cacheManager.start();
-				return cacheManager;
+				return new RemoteCacheManager( configuration( configurationFile ) );
 			}
 			finally {
 				if ( configurationFile != null ) {
@@ -141,12 +134,24 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 				}
 			}
 		}
-		catch ( RuntimeException re ) {
+		catch (RuntimeException re) {
 			throw raiseConfigurationError( re, cfgName );
 		}
 		catch (IOException e) {
 			throw raiseConfigurationError( e, cfgName );
 		}
+	}
+
+	private Configuration configuration(InputStream configurationFile) throws IOException {
+		ConfigurationBuilder builder = new ConfigurationBuilder().withProperties( properties( configurationFile ) );
+		Configuration configuration = builder.create();
+		return configuration;
+	}
+
+	private Properties properties(InputStream configurationFile) throws IOException {
+		Properties properties = new Properties();
+		properties.load( configurationFile );
+		return properties;
 	}
 
 	public RemoteCacheManager getEmbeddedCacheManager() {
@@ -166,9 +171,7 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 	}
 
 	private HibernateException raiseConfigurationError(Exception e, String cfgName) {
-		return new HibernateException(
-				"Could not start Infinispan CacheManager using as configuration file: " + cfgName, e
-		);
+		return new HibernateException( "Could not start Infinispan CacheManager using as configuration file: " + cfgName, e );
 	}
 
 	@Override

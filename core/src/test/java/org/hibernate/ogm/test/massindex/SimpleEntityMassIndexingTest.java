@@ -46,7 +46,7 @@ import org.junit.rules.TestName;
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  */
-@SkipByGridDialect(value = GridDialectType.MONGODB, comment = "Uses embedded key which is currently not supported by the MongoDB query parser")
+@SkipByGridDialect(value = { GridDialectType.MONGODB, GridDialectType.HOTROD }, comment = "Uses embedded key which is currently not supported by the MongoDB query parser")
 public class SimpleEntityMassIndexingTest extends OgmTestCase {
 
 	@Rule

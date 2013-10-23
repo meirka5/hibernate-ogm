@@ -39,7 +39,9 @@ public class HotRodTestHelper implements TestableGridDialect {
 
 	@Override
 	public boolean assertNumberOfEntities(int numberOfEntities, SessionFactory sessionFactory) {
-		return getEntityCache( sessionFactory ).size() == numberOfEntities;
+		RemoteCache entityCache = getEntityCache( sessionFactory );
+		int size = entityCache.size();
+		return size == numberOfEntities;
 	}
 
 	@Override

@@ -45,6 +45,8 @@ public enum GridDialectType {
 
 	COUCHDB( "org.hibernate.ogm.test.utils.CouchDBTestHelper" );
 
+	HOTROD( "org.hibernate.ogm.test.utils.HotRodTestHelper" );
+
 	private final String testHelperClassName;
 
 	GridDialectType(String testHelperClassName) {

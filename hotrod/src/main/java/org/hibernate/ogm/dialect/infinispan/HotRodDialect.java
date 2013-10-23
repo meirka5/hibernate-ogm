@@ -54,6 +54,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 /**
  * @author Emmanuel Bernard
  */
+@SuppressWarnings("unchecked")
 public class HotRodDialect implements GridDialect {
 
 	private final HotRodDatastoreProvider provider;
@@ -89,17 +90,16 @@ public class HotRodDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		// TODO we don't verify that it does not yet exist assuming that this has been done before by the calling code
-		// should we improve?
-		RemoteCache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
-		Map<String, Object> atomicMap = cache.putIfAbsent( key, new ConcurrentHashMap<String, Object>() );
-		return new Tuple( new HotRodTupleSnapshot( atomicMap ) );
+		Map<String, Object> newMap = new ConcurrentHashMap<String, Object>();
+		return new Tuple( new HotRodTupleSnapshot( newMap ) );
 	}
 
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey key) {
 		Map<String, Object> atomicMap = ( (HotRodTupleSnapshot) tuple.getSnapshot() ).getAtomicMap();
 		MapHelpers.applyTupleOpsOnMap( tuple, atomicMap );
+		RemoteCache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
+		cache.put( key, atomicMap );
 	}
 
 	@Override
@@ -117,16 +117,15 @@ public class HotRodDialect implements GridDialect {
 
 	@Override
 	public Association createAssociation(AssociationKey key) {
-		// TODO we don't verify that it does not yet exist assuming that this ahs been done before by the calling code
-		// should we improve?
-		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
-		Map<RowKey, Map<String, Object>> atomicMap = cache.putIfAbsent( key, new ConcurrentHashMap<RowKey, Map<String, Object>>() );
-		return new Association( new MapAssociationSnapshot( atomicMap ) );
+		return new Association( new MapAssociationSnapshot( new ConcurrentHashMap<RowKey, Map<String, Object>>() ) );
 	}
 
 	@Override
 	public void updateAssociation(Association association, AssociationKey key) {
 		MapHelpers.updateAssociation( association, key );
+		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
+		Map<RowKey, Map<String, Object>> atomicMap = ( (MapAssociationSnapshot) association.getSnapshot() ).getUnderlyingMap();
+		cache.put( key, atomicMap );
 	}
 
 	@Override
@@ -187,7 +186,6 @@ public class HotRodDialect implements GridDialect {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void forEachTuple(Consumer consumer, EntityKeyMetadata... entityKeyMetadatas) {
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException( "It is not possible to scan the datastore using HotRod" );
 	}
-
 }
