@@ -39,6 +39,7 @@
     <modules>
         <module>core</module>
         <module>ehcache</module>
+        <module>hotrod</module>
         <module>infinispan</module>
         <module>mongodb</module>
         <module>neo4j</module>
@@ -353,6 +354,11 @@
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-lucene-directory</artifactId>
+                <version>${infinispanVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.infinispan</groupId>
+                <artifactId>infinispan-client-hotrod</artifactId>
                 <version>${infinispanVersion}</version>
             </dependency>
 
