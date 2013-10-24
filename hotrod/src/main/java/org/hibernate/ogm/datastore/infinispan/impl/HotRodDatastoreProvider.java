@@ -55,7 +55,7 @@ import org.infinispan.util.FileLookupFactory;
 /**
  * Provides access to Infinispan's CacheManager; one CacheManager is needed for all caches, it can be taken via JNDI or
  * started by this ServiceProvider; in this case it will also be stopped when no longer needed.
- * 
+ *
  * @author Sanne Grinovero
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
