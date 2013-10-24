@@ -49,8 +49,10 @@ import org.hibernate.ogm.massindex.batchindexing.Consumer;
 import org.hibernate.ogm.type.GridType;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
+import org.infinispan.AdvancedCache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.VersionedValue;
+import org.infinispan.context.Flag;
 
 /**
  * @author Emmanuel Bernard
@@ -145,28 +147,35 @@ public class HotRodDialect implements GridDialect {
 		final RemoteCache<RowKey, Object> identifierCache = provider.getCache( IDENTIFIER_STORE );
 		boolean done = false;
 		do {
-			// read value
-			VersionedValue<Object> valueFromDb = identifierCache.getVersioned( key );
-			if ( valueFromDb == null ) {
-				// if not there, insert initial value
+			//read value
+			VersionedValue<Object> versionedFromDb = identifierCache.getVersioned( key );
+			if ( versionedFromDb == null ) {
+				//if not there, insert initial value
 				value.initialize( initialValue );
-				// TODO should we use GridTypes here?
-				Long newValue = new Long( value.makeValue().longValue() );
-				final boolean replaced = identifierCache.replaceWithVersion( key, newValue, valueFromDb.getVersion() );
+				//TODO should we use GridTypes here?
+				Object valueFromDB = new Long( value.makeValue().longValue() );
+				//update value
+				final IntegralDataTypeHolder updateValue = value.copy();
+				//increment value
+				updateValue.add( increment );
+				final Object newValueFromDb = updateValue.makeValue();
+				final Object oldValue = identifierCache.putIfAbsent( key, newValueFromDb );
+				done = oldValue == null;
+				if (done)
+					System.out.println( "Initial value: " + ", old value: " + oldValue + ", initial: " + initialValue );
 			}
 			else {
-				// read the value from the table
-				value.initialize( ( (Number) valueFromDb ).longValue() );
+				//read the value from the table
+				value.initialize( ( (Number) versionedFromDb.getValue() ).longValue() );
+				final IntegralDataTypeHolder updateValue = value.copy();
+				//increment value
+				updateValue.add( increment );
+				done = identifierCache.replaceWithVersion( key, updateValue.makeValue(), versionedFromDb.getVersion() );
+				if ( done )
+					System.out.println( done + ": fromDb" + versionedFromDb + ", new :" + updateValue.makeValue() );
 			}
-
-			// update value
-			final IntegralDataTypeHolder updateValue = value.copy();
-			// increment value
-			updateValue.add( increment );
-			// TODO should we use GridTypes here?
-			final Object newValueFromDb = updateValue.makeValue();
-			done = identifierCache.replaceWithVersion( key, newValueFromDb, valueFromDb. );
-		} while ( !done );
+		}
+		while ( !done );
 	}
 
 	@Override

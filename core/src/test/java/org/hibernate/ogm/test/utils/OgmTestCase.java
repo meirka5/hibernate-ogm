@@ -96,13 +96,15 @@ public abstract class OgmTestCase {
 	 */
 	@After
 	public void closeOpenedSessions() {
-		for ( Session session : openedSessions ) {
-			if ( session.isOpen() ) {
-				Transaction transaction = session.getTransaction();
-				if ( transaction != null && transaction.isActive() ) {
-					transaction.rollback();
+		if ( openedSessions != null ) {
+			for ( Session session : openedSessions ) {
+				if ( session.isOpen() ) {
+					Transaction transaction = session.getTransaction();
+					if ( transaction != null && transaction.isActive() ) {
+						transaction.rollback();
+					}
+					session.close();
 				}
-				session.close();
 			}
 		}
 	}
