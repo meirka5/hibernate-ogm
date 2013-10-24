@@ -106,7 +106,7 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 	/**
 	 * Need to make sure all needed caches are started before state transfer happens. This prevents this node to return
 	 * undefined cache errors during replication when other nodes join this one.
-	 * 
+	 *
 	 * @param cacheManager
 	 */
 	private void eagerlyInitializeCaches(RemoteCacheManager cacheManager) {

@@ -22,6 +22,7 @@ package org.hibernate.ogm.test.utils;
 
 import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.ASSOCIATION_STORE;
 import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.ENTITY_STORE;
+import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.IDENTIFIER_STORE;
 
 import java.util.Map;
 import java.util.Set;
@@ -82,9 +83,16 @@ public class HotRodTestHelper implements TestableGridDialect {
 	@Override
 	public void dropSchemaAndDatabase(SessionFactory sessionFactory) {
 		HotRodDatastoreProvider castProvider = getProvider( sessionFactory );
-		castProvider.getCache( ENTITY_STORE ).clear();
-		castProvider.getCache( ASSOCIATION_STORE ).clear();
-		castProvider.getCache( ASSOCIATION_STORE ).clear();
+		clear( castProvider.getCache( ENTITY_STORE ) );
+		clear( castProvider.getCache( ASSOCIATION_STORE ) );
+		clear( castProvider.getCache( IDENTIFIER_STORE ) );
+	}
+
+	private void clear(RemoteCache cache) {
+		Set keySet = cache.keySet();
+		for ( Object key : keySet ) {
+			cache.remove( key );
+		}
 	}
 
 	@Override
