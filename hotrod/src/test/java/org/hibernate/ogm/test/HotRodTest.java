@@ -20,11 +20,13 @@
  */
 package org.hibernate.ogm.test;
 
-import org.hibernate.ogm.test.associations.manytoone.ManyToOneTest;
+import org.hibernate.ogm.test.associations.onetoone.OneToOneTest;
+import org.hibernate.ogm.test.id.SequenceIdGeneratorTest;
+import org.hibernate.ogm.test.jpa.JPAResourceLocalStandaloneTest;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  */
-public class HotRodTest extends ManyToOneTest {
+public class HotRodTest extends SequenceIdGeneratorTest {
 
 }

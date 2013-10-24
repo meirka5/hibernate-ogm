@@ -50,6 +50,7 @@ import org.hibernate.ogm.type.GridType;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.VersionedValue;
 
 /**
  * @author Emmanuel Bernard
@@ -145,18 +146,13 @@ public class HotRodDialect implements GridDialect {
 		boolean done = false;
 		do {
 			// read value
-			Object valueFromDb = identifierCache.get( key );
+			VersionedValue<Object> valueFromDb = identifierCache.getVersioned( key );
 			if ( valueFromDb == null ) {
 				// if not there, insert initial value
 				value.initialize( initialValue );
 				// TODO should we use GridTypes here?
-				valueFromDb = new Long( value.makeValue().longValue() );
-				final Object oldValue = identifierCache.putIfAbsent( key, valueFromDb );
-				// check in case somebody has inserted it behind our back
-				if ( oldValue != null ) {
-					value.initialize( ( (Number) oldValue ).longValue() );
-					valueFromDb = oldValue;
-				}
+				Long newValue = new Long( value.makeValue().longValue() );
+				final boolean replaced = identifierCache.replaceWithVersion( key, newValue, valueFromDb.getVersion() );
 			}
 			else {
 				// read the value from the table
@@ -169,7 +165,7 @@ public class HotRodDialect implements GridDialect {
 			updateValue.add( increment );
 			// TODO should we use GridTypes here?
 			final Object newValueFromDb = updateValue.makeValue();
-			done = identifierCache.replace( key, valueFromDb, newValueFromDb );
+			done = identifierCache.replaceWithVersion( key, newValueFromDb, valueFromDb. );
 		} while ( !done );
 	}
 

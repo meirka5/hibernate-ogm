@@ -163,6 +163,12 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 		return caches.get( name );
 	}
 
+	public void clearCaches() {
+		for ( RemoteCache cache : caches.values() ) {
+			cache.clear();
+		}
+	}
+
 	@Override
 	public void stop() {
 		if ( !isCacheProvided && cacheManager != null ) {

@@ -20,6 +20,7 @@
  */
 package org.hibernate.ogm.grid;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -28,7 +29,7 @@ import java.util.Arrays;
  *
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class AssociationKeyMetadata {
+public class AssociationKeyMetadata implements Serializable {
 	private final String table;
 	private final String[] columnNames;
 	private final int hashCode;

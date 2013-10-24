@@ -45,10 +45,10 @@ public final class MapHelpers {
 	public static void applyTupleOpsOnMap(Tuple tuple, Map<String, Object> map) {
 		for ( TupleOperation action : tuple.getOperations() ) {
 			switch ( action.getType() ) {
-				case PUT_NULL:
 				case PUT:
 					map.put( action.getColumn(), action.getValue() );
 					break;
+				case PUT_NULL:
 				case REMOVE:
 					map.remove( action.getColumn() );
 					break;

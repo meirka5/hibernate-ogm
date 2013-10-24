@@ -24,6 +24,7 @@ import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.ASSOCIATION_
 import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.ENTITY_STORE;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -40,6 +41,7 @@ public class HotRodTestHelper implements TestableGridDialect {
 	@Override
 	public boolean assertNumberOfEntities(int numberOfEntities, SessionFactory sessionFactory) {
 		RemoteCache entityCache = getEntityCache( sessionFactory );
+		Set entrySet = entityCache.keySet();
 		int size = entityCache.size();
 		return size == numberOfEntities;
 	}
@@ -74,12 +76,15 @@ public class HotRodTestHelper implements TestableGridDialect {
 
 	@Override
 	public boolean backendSupportsTransactions() {
-		return true;
+		return false;
 	}
 
 	@Override
 	public void dropSchemaAndDatabase(SessionFactory sessionFactory) {
-		// Nothing to do
+		HotRodDatastoreProvider castProvider = getProvider( sessionFactory );
+		castProvider.getCache( ENTITY_STORE ).clear();
+		castProvider.getCache( ASSOCIATION_STORE ).clear();
+		castProvider.getCache( ASSOCIATION_STORE ).clear();
 	}
 
 	@Override
