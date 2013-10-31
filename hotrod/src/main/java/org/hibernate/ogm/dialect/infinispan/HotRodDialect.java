@@ -26,6 +26,7 @@ import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.IDENTIFIER_S
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.LockingStrategy;
