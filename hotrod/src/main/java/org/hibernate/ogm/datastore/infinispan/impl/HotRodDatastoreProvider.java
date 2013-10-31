@@ -27,6 +27,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.ogm.datastore.infinispan.impl.configuration.HotRodConfiguration;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DefaultDatastoreNames;
@@ -39,8 +41,6 @@ import org.hibernate.ogm.service.impl.LuceneBasedQueryParserService;
 import org.hibernate.ogm.service.impl.QueryParserService;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
-import org.hibernate.service.jndi.spi.JndiService;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -50,7 +50,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.util.FileLookupFactory;
+import org.infinispan.commons.util.FileLookupFactory;
 
 /**
  * Provides access to Infinispan's CacheManager; one CacheManager is needed for all caches, it can be taken via JNDI or

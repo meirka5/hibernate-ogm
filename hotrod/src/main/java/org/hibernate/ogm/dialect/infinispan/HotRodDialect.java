@@ -26,7 +26,6 @@ import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.IDENTIFIER_S
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -91,8 +90,7 @@ public class HotRodDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		Map<String, Object> newMap = new ConcurrentHashMap<String, Object>();
-		return new Tuple( new HotRodTupleSnapshot( newMap ) );
+		return new Tuple( new HotRodTupleSnapshot( new ConcurrentHashMap<String, Object>() ) );
 	}
 
 	@Override
