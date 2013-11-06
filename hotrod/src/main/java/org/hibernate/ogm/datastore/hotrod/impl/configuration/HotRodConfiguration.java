@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.datastore.infinispan.impl.configuration;
+package org.hibernate.ogm.datastore.hotrod.impl.configuration;
 
 import java.util.Map;
 
@@ -27,7 +27,7 @@ import org.hibernate.ogm.util.impl.LoggerFactory;
 import org.hibernate.ogm.util.impl.StringHelper;
 
 /**
- * Configuration for {@link org.hibernate.ogm.datastore.infinispan.impl.HotRodDatastoreProvider}.
+ * Configuration for {@link org.hibernate.ogm.datastore.hotrod.impl.HotRodDatastoreProvider}.
  *
  * @author Guillaume Scheibel <guillaume.scheibel@gmail.com>
  */

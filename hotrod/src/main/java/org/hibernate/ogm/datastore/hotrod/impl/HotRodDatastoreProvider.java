@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.datastore.infinispan.impl;
+package org.hibernate.ogm.datastore.hotrod.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,11 +29,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.ogm.datastore.infinispan.impl.configuration.HotRodConfiguration;
+import org.hibernate.ogm.datastore.hotrod.impl.configuration.HotRodConfiguration;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DefaultDatastoreNames;
 import org.hibernate.ogm.dialect.GridDialect;
-import org.hibernate.ogm.dialect.infinispan.HotRodDialect;
+import org.hibernate.ogm.dialect.hotrod.HotRodDialect;
 import org.hibernate.ogm.options.navigation.context.GlobalContext;
 import org.hibernate.ogm.options.navigation.impl.ConfigurationContext;
 import org.hibernate.ogm.options.navigation.impl.GenericOptionModel;

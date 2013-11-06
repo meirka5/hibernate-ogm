@@ -19,10 +19,10 @@
  * MA  02110-1301, USA.
  */
 
-package org.hibernate.ogm.datastore.infinispan.impl.configuration;
+package org.hibernate.ogm.datastore.hotrod.impl.configuration;
 
 /**
- * Configuration options for {@link org.hibernate.ogm.datastore.infinispan.impl.HotRodDatastoreProvider}
+ * Configuration options for {@link org.hibernate.ogm.datastore.hotrod.impl.HotRodDatastoreProvider}
  *
  * @author Guillaume Scheibel <guillaume.scheibel@gmail.com>
  */

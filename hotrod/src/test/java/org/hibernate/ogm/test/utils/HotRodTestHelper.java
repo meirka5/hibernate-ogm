@@ -29,7 +29,7 @@ import java.util.Set;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.ogm.datastore.infinispan.impl.HotRodDatastoreProvider;
+import org.hibernate.ogm.datastore.hotrod.impl.HotRodDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.grid.EntityKey;
 import org.infinispan.client.hotrod.RemoteCache;

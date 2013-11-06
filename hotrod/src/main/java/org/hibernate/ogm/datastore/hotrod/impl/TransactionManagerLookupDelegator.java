@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.datastore.infinispan.impl;
+package org.hibernate.ogm.datastore.hotrod.impl;
 
 import javax.transaction.TransactionManager;
 
