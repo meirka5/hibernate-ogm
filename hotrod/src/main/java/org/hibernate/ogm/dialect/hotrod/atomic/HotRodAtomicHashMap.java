@@ -18,7 +18,9 @@ import org.infinispan.atomic.DeltaAware;
 import org.infinispan.atomic.FineGrainedAtomicHashMapProxy;
 import org.infinispan.atomic.NullDelta;
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.impl.operations.ClearOperation;
+import org.infinispan.client.hotrod.impl.operations.OperationsFactory;
 import org.infinispan.client.hotrod.impl.operations.PutOperation;
 import org.infinispan.client.hotrod.impl.operations.RemoveOperation;
 import org.infinispan.commons.marshall.AbstractExternalizer;
@@ -58,6 +60,8 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	private volatile AtomicHashMapProxy<K, V> proxy;
 	volatile boolean copied = false;
 	volatile boolean removed = false;
+
+	private OperationsFactory operationsFactory;
 
 	/**
 	 * Construction only allowed through this factory method. This factory is intended for use internally by the
@@ -144,7 +148,7 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	@Override
 	public V put(K key, V value) {
 		V oldValue = delegate.put( key, value );
-		PutOperation op = new PutOperation( key, oldValue, value );
+		PutOperation op = new PutOperation(  );
 		getDelta().addOperation( op );
 		return oldValue;
 	}
@@ -153,7 +157,7 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	@SuppressWarnings("unchecked")
 	public V remove(Object key) {
 		V oldValue = delegate.remove( key );
-		RemoveOperation op = new RemoveOperation<K, V>( (K) key, oldValue );
+		RemoveOperation op = new RemoveOperation( (K) key, oldValue );
 		getDelta().addOperation( op );
 		return oldValue;
 	}

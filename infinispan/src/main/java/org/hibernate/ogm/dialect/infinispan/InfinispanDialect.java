@@ -54,7 +54,6 @@ import org.hibernate.type.Type;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.atomic.AtomicMapLookup;
-import org.infinispan.atomic.FineGrainedAtomicMap;
 import org.infinispan.context.Flag;
 import org.infinispan.distexec.mapreduce.Collector;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
@@ -106,7 +105,7 @@ public class InfinispanDialect implements GridDialect {
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext tupleContext) {
 		Cache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
-		FineGrainedAtomicMap<String, Object> atomicMap = AtomicMapLookup.getFineGrainedAtomicMap( cache, key, false );
+		Map<String, Object> atomicMap = AtomicMapLookup.getFineGrainedAtomicMap( cache, key, false );
 		if ( atomicMap == null ) {
 			return null;
 		}
@@ -117,10 +116,9 @@ public class InfinispanDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		//TODO we don't verify that it does not yet exist assuming that this has been done before by the calling code
-		//should we improve?
+		// We don't verify that it does not yet exist assuming that this has been done before by the calling code
 		Cache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
-		FineGrainedAtomicMap<String,Object> atomicMap =  AtomicMapLookup.getFineGrainedAtomicMap( cache, key, true );
+		Map<String,Object> atomicMap =  AtomicMapLookup.getFineGrainedAtomicMap( cache, key, true );
 		return new Tuple( new InfinispanTupleSnapshot( atomicMap ) );
 	}
 
@@ -226,7 +224,8 @@ public class InfinispanDialect implements GridDialect {
 	}
 
 	private Map<EntityKey, Map<String, Object>> retrieveKeys(Cache<EntityKey, Map<String, Object>> cache, EntityKeyMetadata... entityKeyMetadatas) {
-		MapReduceTask<EntityKey, Map<String, Object>, EntityKey, Map<String, Object>> queryTask = new MapReduceTask<EntityKey, Map<String, Object>, EntityKey, Map<String, Object>>( cache );
+		MapReduceTask<EntityKey, Map<String, Object>, EntityKey, Map<String, Object>> queryTask = new MapReduceTask<EntityKey, Map<String, Object>, EntityKey, Map<String, Object>>(
+				cache );
 		queryTask.mappedWith( new TupleMapper( entityKeyMetadatas ) ).reducedWith( new TupleReducer() );
 		return queryTask.execute();
 	}
