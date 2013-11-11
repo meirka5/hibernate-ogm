@@ -18,37 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.test.utils;
+package org.hibernate.ogm.test;
 
-import junit.framework.Assert;
-
-import org.hibernate.ogm.test.simpleentity.Hypothesis;
-import org.hibernate.ogm.test.utils.jpa.JpaTestCase;
-import org.junit.Test;
+import org.hibernate.ogm.test.associations.collection.types.MapTest;
 
 /**
- * Test {@link SkipByGridDialect} is working with {@link JpaTestCase}
- *
  * @author Davide D'Alto <davide@hibernate.org>
+ *
  */
-public class SkipByGridDialectSelfJpaTest extends JpaTestCase {
-
-	@Test
-	@SkipByGridDialect({
-		GridDialectType.HASHMAP, GridDialectType.INFINISPAN, GridDialectType.MONGODB, GridDialectType.EHCACHE, GridDialectType.NEO4J, GridDialectType.NEO4J_BLUEPRINTS
-	})
-	public void testWhichAlwaysFails() {
-		Assert.fail( "This should never be executed" );
-	}
-
-	@Test
-	public void testCorrect() {
-		// all fine
-	}
-
-	@Override
-	public Class<?>[] getEntities() {
-		return new Class<?>[] { Hypothesis.class };
-	}
+public class Neo4jTest extends MapTest {
 
 }

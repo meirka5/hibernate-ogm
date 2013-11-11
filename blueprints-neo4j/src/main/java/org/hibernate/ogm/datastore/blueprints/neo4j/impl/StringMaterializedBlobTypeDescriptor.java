@@ -18,37 +18,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.test.utils;
+package org.hibernate.ogm.datastore.blueprints.neo4j.impl;
 
-import junit.framework.Assert;
-
-import org.hibernate.ogm.test.simpleentity.Hypothesis;
-import org.hibernate.ogm.test.utils.jpa.JpaTestCase;
-import org.junit.Test;
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.ogm.type.AbstractGenericBasicType;
+import org.hibernate.ogm.type.descriptor.StringMappedGridTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 
 /**
- * Test {@link SkipByGridDialect} is working with {@link JpaTestCase}
- *
  * @author Davide D'Alto <davide@hibernate.org>
  */
-public class SkipByGridDialectSelfJpaTest extends JpaTestCase {
+public class StringMaterializedBlobTypeDescriptor extends AbstractGenericBasicType<byte[]> {
 
-	@Test
-	@SkipByGridDialect({
-		GridDialectType.HASHMAP, GridDialectType.INFINISPAN, GridDialectType.MONGODB, GridDialectType.EHCACHE, GridDialectType.NEO4J, GridDialectType.NEO4J_BLUEPRINTS
-	})
-	public void testWhichAlwaysFails() {
-		Assert.fail( "This should never be executed" );
-	}
+	public static final StringMaterializedBlobTypeDescriptor INSTANCE = new StringMaterializedBlobTypeDescriptor();
 
-	@Test
-	public void testCorrect() {
-		// all fine
+	public StringMaterializedBlobTypeDescriptor() {
+		super( StringMappedGridTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	public Class<?>[] getEntities() {
-		return new Class<?>[] { Hypothesis.class };
+	public int getColumnSpan(Mapping mapping) throws MappingException {
+		return 1;
+	}
+
+	@Override
+	public String getName() {
+		return "string_materialized_blob";
 	}
 
 }
