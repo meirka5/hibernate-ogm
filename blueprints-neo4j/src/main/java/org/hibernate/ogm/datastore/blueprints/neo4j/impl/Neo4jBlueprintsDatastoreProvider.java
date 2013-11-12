@@ -20,7 +20,6 @@
  */
 package org.hibernate.ogm.datastore.blueprints.neo4j.impl;
 
-
 import static org.hibernate.ogm.datastore.blueprints.neo4j.Environment.BLUEPRINTS_ASSOCIATION_INDEX_NAME;
 import static org.hibernate.ogm.datastore.blueprints.neo4j.Environment.BLUEPRINTS_CONFIGURATION_LOCATION;
 import static org.hibernate.ogm.datastore.blueprints.neo4j.Environment.BLUEPRINTS_ENTITY_INDEX_NAME;
@@ -48,8 +47,8 @@ import org.hibernate.service.spi.Stoppable;
 import com.tinkerpop.blueprints.Edge;
 import com.tinkerpop.blueprints.GraphFactory;
 import com.tinkerpop.blueprints.Index;
-import com.tinkerpop.blueprints.IndexableGraph;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.neo4j.Neo4jGraph;
 
 /**
  * Provides access to the Neo4j system.
@@ -66,7 +65,7 @@ public class Neo4jBlueprintsDatastoreProvider implements DatastoreProvider, Star
 
 	private Neo4jSequenceGenerator neo4jSequenceGenerator;
 
-	private IndexableGraph graph;
+	private Neo4jGraph graph;
 
 	private String blueprintsConfiguration;
 
@@ -85,7 +84,7 @@ public class Neo4jBlueprintsDatastoreProvider implements DatastoreProvider, Star
 
 	private String configurationLocation(Map cfg) {
 		String blueprintsConfiguration = (String) cfg.get( BLUEPRINTS_CONFIGURATION_LOCATION );
-		if (blueprintsConfiguration == null) {
+		if ( blueprintsConfiguration == null ) {
 			URL resource = this.getClass().getClassLoader().getResource( "blueprints.properties" );
 			blueprintsConfiguration = resource.getFile();
 		}
@@ -104,8 +103,16 @@ public class Neo4jBlueprintsDatastoreProvider implements DatastoreProvider, Star
 
 	@Override
 	public void start() {
-		this.graph = (IndexableGraph) GraphFactory.open( blueprintsConfiguration );
+		this.graph = (Neo4jGraph) GraphFactory.open( blueprintsConfiguration );
 		this.neo4jSequenceGenerator = new Neo4jSequenceGenerator( graph, sequenceIndexName );
+	}
+
+	public void commit() {
+		this.graph.commit();
+	}
+
+	public void rollback() {
+		this.graph.rollback();
 	}
 
 	@Override
@@ -128,7 +135,7 @@ public class Neo4jBlueprintsDatastoreProvider implements DatastoreProvider, Star
 
 	public Index<Vertex> getVertexesIndex() {
 		Index<Vertex> index = graph.getIndex( vertexIndexName, Vertex.class );
-		if (index == null) {
+		if ( index == null ) {
 			return graph.createIndex( vertexIndexName, Vertex.class );
 		}
 		return index;
@@ -136,7 +143,7 @@ public class Neo4jBlueprintsDatastoreProvider implements DatastoreProvider, Star
 
 	public Index<Edge> getEdgesIndex() {
 		Index<Edge> index = graph.getIndex( edgeIndexName, Edge.class );
-		if (index == null) {
+		if ( index == null ) {
 			return graph.createIndex( edgeIndexName, Edge.class );
 		}
 		return index;

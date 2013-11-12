@@ -39,20 +39,15 @@ import org.hibernate.ogm.datastore.spi.TupleSnapshot;
 import org.hibernate.ogm.dialect.blueprints.neo4j.BlueprintsDialect;
 import org.hibernate.ogm.dialect.blueprints.neo4j.BlueprintsIndexManager;
 import org.hibernate.ogm.grid.EntityKey;
-import org.hibernate.ogm.util.impl.Log;
-import org.hibernate.ogm.util.impl.LoggerFactory;
 
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
-import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.Vertex;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  */
 public class BlueprintsTestHelper implements TestableGridDialect {
-
-	private final static Log log = LoggerFactory.make();
 
 	@Override
 	public boolean assertNumberOfEntities(int numberOfEntities, SessionFactory sessionFactory) {

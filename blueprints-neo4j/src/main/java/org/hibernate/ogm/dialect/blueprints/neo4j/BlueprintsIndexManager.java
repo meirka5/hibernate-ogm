@@ -37,14 +37,12 @@ import com.tinkerpop.blueprints.Vertex;
 
 /**
  * Manages {@link Vertex} and {@link Edge} indexes.
- * 
+ *
  * @author Davide D'Alto <davide@hibernate.org>
  */
 public class BlueprintsIndexManager {
 
 	public static final String RELATIONSHIP_TYPE = "_relationship_type";
-
-	private static final Log log = LoggerFactory.make();
 
 	private static final String TABLE_PROPERTY = BlueprintsDialect.TABLE_PROPERTY;
 
@@ -61,12 +59,10 @@ public class BlueprintsIndexManager {
 	 * @param vertex the Vertex to index
 	 * @param key the {@link EntityKey} representing the vertex
 	 */
-	public void index(EntityKey key, Vertex vertex ) {
+	public void index(EntityKey key, Vertex vertex) {
 		Index<Vertex> vertexIndex = provider.getVertexesIndex();
 		vertexIndex.put( TABLE_PROPERTY, key.getTable(), vertex );
-		log.trace( "INDEX " + vertex + ": " + TABLE_PROPERTY + " = " + key.getTable() );
 		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
-			log.trace( "INDEX " + vertex + ": " + key.getColumnNames()[i] + " = " + key.getColumnValues()[i] );
 			vertexIndex.put( key.getColumnNames()[i], key.getColumnValues()[i], vertex );
 		}
 	}
@@ -79,9 +75,7 @@ public class BlueprintsIndexManager {
 	public void index(Edge edge) {
 		Index<Edge> relationshipIndex = provider.getEdgesIndex();
 		relationshipIndex.put( RELATIONSHIP_TYPE, edge.getLabel(), edge );
-		log.trace( "INDEX " + edge + ": " + RELATIONSHIP_TYPE + " = " + edge.getLabel() );
 		for ( String key : edge.getPropertyKeys() ) {
-			log.trace( "INDEX " + edge + ": " + key + " = " + edge.getProperty( key ) );
 			relationshipIndex.put( key, edge.getProperty( key ), edge );
 		}
 	}
@@ -164,10 +158,8 @@ public class BlueprintsIndexManager {
 	 */
 	public void remove(Edge edge) {
 		Index<Edge> relationshipIndex = provider.getEdgesIndex();
-		log.trace( "REMOVE " + edge + ": " + RELATIONSHIP_TYPE + " = " + edge.getLabel() );
 		relationshipIndex.remove( RELATIONSHIP_TYPE, edge.getLabel(), edge );
 		for ( String key : edge.getPropertyKeys() ) {
-			log.trace( "REMOVE " + edge + ": " + key + " = " + edge.getProperty( key ) );
 			relationshipIndex.put( key, edge.getProperty( key ), edge );
 		}
 	}
@@ -175,9 +167,7 @@ public class BlueprintsIndexManager {
 	public void remove(EntityKey key, Vertex vertex) {
 		Index<Vertex> vertexIndex = provider.getVertexesIndex();
 		vertexIndex.remove( TABLE_PROPERTY, vertex.getProperty( TABLE_PROPERTY ), vertex );
-		log.trace( "INDEX " + vertex + ": " + TABLE_PROPERTY + " = " + vertex.getProperty( TABLE_PROPERTY ) );
 		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
-			log.trace( "INDEX " + vertex + ": " + key.getColumnNames()[i] + " = " + key.getColumnValues()[i] + ", " + vertex );
 			vertexIndex.remove( key.getColumnNames()[i], key.getColumnValues()[i], vertex );
 		}
 	}
@@ -190,7 +180,7 @@ public class BlueprintsIndexManager {
 	 */
 	public CloseableIterable<Vertex> findVertexes(String tableName) {
 		Index<Vertex> vertexIndex = provider.getVertexesIndex();
-		return vertexIndex.query( TABLE_PROPERTY, tableName );
+		return vertexIndex.query( null, TABLE_PROPERTY + ":\"" + tableName + "\"" );
 	}
 
 }

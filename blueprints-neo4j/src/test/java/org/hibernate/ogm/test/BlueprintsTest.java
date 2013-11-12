@@ -21,6 +21,7 @@
 package org.hibernate.ogm.test;
 
 import org.hibernate.ogm.test.massindex.SimpleEntityMassIndexingTest;
+import org.hibernate.ogm.test.simpleentity.CRUDTest;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>

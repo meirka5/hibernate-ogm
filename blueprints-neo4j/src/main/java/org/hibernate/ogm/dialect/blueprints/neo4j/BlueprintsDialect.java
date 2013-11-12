@@ -45,8 +45,6 @@ import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.hibernate.ogm.grid.RowKey;
 import org.hibernate.ogm.massindex.batchindexing.Consumer;
 import org.hibernate.ogm.type.GridType;
-import org.hibernate.ogm.util.impl.Log;
-import org.hibernate.ogm.util.impl.LoggerFactory;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
 
@@ -66,8 +64,7 @@ import com.tinkerpop.blueprints.util.wrappers.wrapped.WrappedElement;
  * @author Davide D'Alto <davide@hibernate.org>
  */
 public class BlueprintsDialect implements GridDialect {
-	
-	private static final Log log =  LoggerFactory.make();
+
 	/**
 	 * Contains the name of the property with the table name.
 	 */
@@ -90,10 +87,12 @@ public class BlueprintsDialect implements GridDialect {
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext context) {
 		Vertex entityVertex = findVertex( key );
-		if ( entityVertex == null ) {
-			return null;
+		Tuple tuple = null;
+		if ( entityVertex != null ) {
+			tuple = createTuple( entityVertex );
 		}
-		return createTuple( entityVertex );
+		provider.commit();
+		return tuple;
 	}
 
 	private Tuple createTuple(Vertex entityVertex) {
@@ -109,6 +108,7 @@ public class BlueprintsDialect implements GridDialect {
 	public void updateTuple(Tuple tuple, EntityKey key) {
 		Vertex vertex = createVertexUnlessExists( key );
 		applyTupleOperations( new ReservedWordWrapper( vertex ), tuple.getOperations() );
+		provider.commit();
 	}
 
 	@Override
@@ -118,6 +118,7 @@ public class BlueprintsDialect implements GridDialect {
 			removeRelationships( entityVertex );
 			removeVertex( key, entityVertex );
 		}
+		provider.commit();
 	}
 
 	@Override
@@ -128,10 +129,12 @@ public class BlueprintsDialect implements GridDialect {
 	@Override
 	public Association getAssociation(AssociationKey associationKey, AssociationContext associationContext) {
 		Vertex entityVertex = findVertex( associationKey.getEntityKey() );
+		Association association = null;
 		if ( entityVertex == null ) {
-			return null;
+			association = new Association( new BlueprintsAssociationSnapshot( entityVertex, label( associationKey ), associationKey ) );
 		}
-		return new Association( new BlueprintsAssociationSnapshot( entityVertex, label( associationKey ), associationKey ) );
+		provider.commit();
+		return association;
 	}
 
 	@Override
@@ -166,27 +169,28 @@ public class BlueprintsDialect implements GridDialect {
 				removeRelationship( rel );
 			}
 		}
+		provider.commit();
 	}
 
 	@Override
 	public Iterator<Tuple> executeBackendQuery(CustomQuery customQuery, EntityKeyMetadata[] metadatas) {
-		throw new UnsupportedOperationException( "Native queries not suported for Neo4j" );
+		throw new UnsupportedOperationException( "Native queries not suported for Blueprints-Neo4j" );
 	}
 
 	private void applyAssociationOperation(AssociationKey key, AssociationOperation operation) {
 		switch ( operation.getType() ) {
-		case CLEAR:
-			removeAssociation( key );
-			break;
-		case PUT:
-			putAssociationOperation( key, operation );
-			break;
-		case PUT_NULL:
-			removeAssociationOperation( key, operation );
-			break;
-		case REMOVE:
-			removeAssociationOperation( key, operation );
-			break;
+			case CLEAR:
+				removeAssociation( key );
+				break;
+			case PUT:
+				putAssociationOperation( key, operation );
+				break;
+			case PUT_NULL:
+				removeAssociationOperation( key, operation );
+				break;
+			case REMOVE:
+				removeAssociationOperation( key, operation );
+				break;
 		}
 	}
 
@@ -264,7 +268,7 @@ public class BlueprintsDialect implements GridDialect {
 	}
 
 	private Vertex createVertex(EntityKey key) {
- 		Vertex vertex = provider.createVertex();
+		Vertex vertex = provider.createVertex();
 		vertex.setProperty( TABLE_PROPERTY, key.getTable() );
 		applyProperties( vertex, key.getColumnNames(), key.getColumnValues() );
 		indexer.index( key, vertex );
@@ -292,7 +296,7 @@ public class BlueprintsDialect implements GridDialect {
 	}
 
 	private String label(AssociationKey associationKey) {
-		StringBuilder builder = new StringBuilder(associationKey.getEntityKey().getTable());
+		StringBuilder builder = new StringBuilder( associationKey.getEntityKey().getTable() );
 		builder.append( ":" );
 		builder.append( associationKey.getCollectionRole() );
 		return builder.toString();
@@ -300,7 +304,7 @@ public class BlueprintsDialect implements GridDialect {
 
 	private void removeRelationships(Vertex vertex) {
 		if ( vertex != null ) {
-			Iterable<Edge> edges = vertex.getEdges( com.tinkerpop.blueprints.Direction.BOTH);
+			Iterable<Edge> edges = vertex.getEdges( com.tinkerpop.blueprints.Direction.BOTH );
 			for ( Edge rel : edges ) {
 				removeRelationship( rel );
 			}
@@ -321,6 +325,7 @@ public class BlueprintsDialect implements GridDialect {
 				queryVertexes.close();
 			}
 		}
+		provider.commit();
 	}
 
 }

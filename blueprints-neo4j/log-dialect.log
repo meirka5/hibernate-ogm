@@ -1,9 +1,0 @@
-Using TestGridDialect class org.hibernate.ogm.test.utils.BlueprintsTestHelper
-Using /home/ddalto/workspace/projects/hibernate-ogm/core/target/indextemp as index directory.
-INDEX v[1]: _table = IndexedNews
-INDEX v[1]: newsId.author = author
-INDEX v[1]: newsId.title = title
-Using /home/ddalto/workspace/projects/hibernate-ogm/core/target/indextemp as index directory.
-INDEX v[2]: _table = Insurance
-INDEX v[2]: id = 35ce253b-6dcf-4030-8e05-a07568effb02
-Using /home/ddalto/workspace/projects/hibernate-ogm/core/target/indextemp as index directory.
