@@ -20,13 +20,10 @@
  */
 package org.hibernate.ogm.test;
 
-import org.hibernate.ogm.test.massindex.SimpleEntityMassIndexingTest;
-import org.hibernate.ogm.test.simpleentity.CRUDTest;
-
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  *
  */
-public class BlueprintsTest extends SimpleEntityMassIndexingTest {
+public class BlueprintsTest extends org.hibernate.ogm.test.jpa.JPAAPIWrappingTest {
 
 }
