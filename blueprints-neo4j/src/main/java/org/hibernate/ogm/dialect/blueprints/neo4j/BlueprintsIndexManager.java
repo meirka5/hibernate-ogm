@@ -42,10 +42,11 @@ import com.tinkerpop.blueprints.Vertex;
  */
 public class BlueprintsIndexManager {
 
+	public static final String RELATIONSHIP_TYPE = "_relationship_type";
+
 	private static final Log log = LoggerFactory.make();
 
 	private static final String TABLE_PROPERTY = BlueprintsDialect.TABLE_PROPERTY;
-	public static final String RELATIONSHIP_TYPE = "_relationship_type";
 
 	private final Neo4jBlueprintsDatastoreProvider provider;
 
@@ -189,7 +190,7 @@ public class BlueprintsIndexManager {
 	 */
 	public CloseableIterable<Vertex> findVertexes(String tableName) {
 		Index<Vertex> vertexIndex = provider.getVertexesIndex();
-		return vertexIndex.get( TABLE_PROPERTY, tableName );
+		return vertexIndex.query( TABLE_PROPERTY, tableName );
 	}
 
 }

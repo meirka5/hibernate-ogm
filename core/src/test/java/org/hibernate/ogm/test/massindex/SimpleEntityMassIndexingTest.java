@@ -54,10 +54,11 @@ public class SimpleEntityMassIndexingTest extends OgmTestCase {
 
 	@Test
 	public void testSimpleEntityMassIndexing() throws Exception {
+		Insurance insurance =  null;
 		{
 			Session session = openSession();
 			Transaction transaction = session.beginTransaction();
-			Insurance insurance = new Insurance();
+			insurance = new Insurance();
 			insurance.setName( "Insurance Corporation" );
 			session.persist( insurance );
 			transaction.commit();

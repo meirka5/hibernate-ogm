@@ -114,16 +114,18 @@ public class BlueprintsTestHelper implements TestableGridDialect {
 	}
 
 	public int countAssociations(SessionFactory sessionFactory) {
-		String allLabelsQuery = BlueprintsIndexManager.RELATIONSHIP_TYPE + ":*";
-		CloseableIterable<Edge> relationships = getProvider( sessionFactory ).getEdgesIndex().query( null, allLabelsQuery );
+		String allEdgeTypes = BlueprintsIndexManager.RELATIONSHIP_TYPE + ":*";
+		CloseableIterable<Edge> relationships = getProvider( sessionFactory ).getEdgesIndex().query( null, allEdgeTypes );
+		Set<String> uniqueAssociationTypes = new HashSet<String>();
 		Iterator<Edge> iterator = relationships.iterator();
-		int count = 0;
 		while ( iterator.hasNext() ) {
-			iterator.next();
-			count++;
+			Edge relationship = (Edge) iterator.next();
+			if ( !uniqueAssociationTypes.contains( relationship.getLabel() ) ) {
+				uniqueAssociationTypes.add( relationship.getLabel() );
+			}
 		}
 		relationships.close();
-		return count;
+		return uniqueAssociationTypes.size();
 	}
 
 	public int countEntities(SessionFactory sessionFactory) {

@@ -20,12 +20,12 @@
  */
 package org.hibernate.ogm.test;
 
-import org.hibernate.ogm.test.associations.collection.types.MapTest;
+import org.hibernate.ogm.test.massindex.SimpleEntityMassIndexingTest;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  *
  */
-public class Neo4jTest extends MapTest {
+public class BlueprintsTest extends SimpleEntityMassIndexingTest {
 
 }
