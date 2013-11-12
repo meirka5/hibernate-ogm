@@ -130,7 +130,7 @@ public class BlueprintsDialect implements GridDialect {
 	public Association getAssociation(AssociationKey associationKey, AssociationContext associationContext) {
 		Vertex entityVertex = findVertex( associationKey.getEntityKey() );
 		Association association = null;
-		if ( entityVertex == null ) {
+		if ( entityVertex != null ) {
 			association = new Association( new BlueprintsAssociationSnapshot( entityVertex, label( associationKey ), associationKey ) );
 		}
 		provider.commit();
