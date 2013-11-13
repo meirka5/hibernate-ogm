@@ -20,6 +20,7 @@
  */
 package org.hibernate.ogm.test.utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.fest.util.Files;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.ogm.datastore.blueprints.neo4j.impl.Neo4jBlueprintsDatastoreProvider;
@@ -76,7 +78,7 @@ public class BlueprintsTestHelper implements TestableGridDialect {
 	@Override
 	public void dropSchemaAndDatabase(SessionFactory sessionFactory) {
 		getProvider( sessionFactory ).stop();
-//		Files.delete( new File( dbLocation() ) );
+		Files.delete( new File( dbLocation() ) );
 	}
 
 	private String dbLocation() {

@@ -27,8 +27,6 @@ import org.hibernate.ogm.datastore.blueprints.neo4j.impl.Neo4jBlueprintsDatastor
 import org.hibernate.ogm.datastore.blueprints.neo4j.impl.ReservedWordWrapper;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.RowKey;
-import org.hibernate.ogm.util.impl.Log;
-import org.hibernate.ogm.util.impl.LoggerFactory;
 
 import com.tinkerpop.blueprints.CloseableIterable;
 import com.tinkerpop.blueprints.Edge;
