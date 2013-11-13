@@ -103,7 +103,7 @@ public class HotRodAtomicMapLookup {
 		}
 		HotRodAtomicHashMap<K, V> castValue = (HotRodAtomicHashMap<K, V>) value;
 		HotRodAtomicHashMapProxy<K, V> proxy = castValue.getProxy( (RemoteCache<Object, Object>) cache, key, fineGrained );
-		return proxy.get;
+		return proxy;
 	}
 
 	/**

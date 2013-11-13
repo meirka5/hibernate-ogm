@@ -19,6 +19,7 @@ import org.infinispan.atomic.FineGrainedAtomicHashMapProxy;
 import org.infinispan.atomic.NullDelta;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.impl.RemoteCacheImpl;
 import org.infinispan.client.hotrod.impl.operations.ClearOperation;
 import org.infinispan.client.hotrod.impl.operations.OperationsFactory;
 import org.infinispan.client.hotrod.impl.operations.PutOperation;
@@ -55,9 +56,9 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	private static final Log log = LogFactory.getLog( HotRodAtomicHashMap.class );
 	private static final boolean trace = log.isTraceEnabled();
 
-	protected final FastCopyHashMap<K, V> delegate;
+	protected final RemoteCacheImpl<K, V> delegate;
 	private AtomicHashMapDelta delta = null;
-	private volatile AtomicHashMapProxy<K, V> proxy;
+	private volatile HotRodAtomicHashMapProxy<K, V> proxy;
 	volatile boolean copied = false;
 	volatile boolean removed = false;
 
@@ -77,7 +78,7 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	}
 
 	public HotRodAtomicHashMap() {
-		this.delegate = new FastCopyHashMap<K, V>();
+		this.delegate = new RemoteCacheImpl( rcm, name )<K, V>();
 	}
 
 	private HotRodAtomicHashMap(FastCopyHashMap<K, V> delegate) {
@@ -89,7 +90,7 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 		this.copied = isCopy;
 	}
 
-	private HotRodAtomicHashMap(FastCopyHashMap<K, V> newDelegate, AtomicHashMapProxy<K, V> proxy) {
+	private HotRodAtomicHashMap(RemoteCacheImpl<K, V> newDelegate, AtomicHashMapProxy<K, V> proxy) {
 		this.delegate = newDelegate;
 		this.proxy = proxy;
 		this.copied = true;
@@ -148,7 +149,7 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	@Override
 	public V put(K key, V value) {
 		V oldValue = delegate.put( key, value );
-		PutOperation op = new PutOperation(  );
+		PutOperation op = new PutOperation();
 		getDelta().addOperation( op );
 		return oldValue;
 	}
@@ -170,12 +171,8 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void clear() {
-		FastCopyHashMap<K, V> originalEntries = delegate.clone();
-		ClearOperation<K, V> op = new ClearOperation<K, V>( originalEntries );
-		getDelta().addOperation( op );
-		delegate.clear();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -183,18 +180,14 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	 * 
 	 * @return an instance of AtomicHashMapProxy
 	 */
-	AtomicHashMapProxy<K, V> getProxy(AdvancedCache<Object, Object> cache, Object mapKey, boolean fineGrained) {
+	HotRodAtomicHashMapProxy<K, V> getProxy(RemoteCache<Object, Object> cache, Object mapKey, boolean fineGrained) {
 		// construct the proxy lazily
 		if ( proxy == null ) // DCL is OK here since proxy is volatile (and we live in a post-JDK 5 world)
 		{
 			synchronized ( this ) {
-				if ( proxy == null )
-					if ( fineGrained ) {
-						proxy = new FineGrainedAtomicHashMapProxy<K, V>( cache, mapKey );
-					}
-					else {
-						proxy = new AtomicHashMapProxy<K, V>( cache, mapKey );
-					}
+				if ( proxy == null ) {
+					proxy = new HotRodAtomicHashMapProxy<K, V>( cache, mapKey );
+				}
 			}
 		}
 		return proxy;
@@ -214,7 +207,7 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	@SuppressWarnings("unchecked")
 	public HotRodAtomicHashMap<K, V> copy() {
 		FastCopyHashMap<K, V> newDelegate = delegate.clone();
-		return new HotRodAtomicHashMap( newDelegate, proxy );
+		return new HotRodAtomicHashMap<k, V>( newDelegate, proxy );
 	}
 
 	@Override

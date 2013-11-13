@@ -49,24 +49,16 @@ public class HotRodAtomicHashMapProxy<K, V> extends AutoBatchSupport implements 
 	private static final Log log = LogFactory.getLog( HotRodAtomicHashMapProxy.class );
 	private static final boolean trace = log.isTraceEnabled();
 	protected final Object deltaMapKey;
-	protected final AdvancedCache<Object, AtomicMap<K, V>> cache;
-	protected final AdvancedCache<Object, AtomicMap<K, V>> cacheForWriting;
+	protected final RemoteCache<Object, AtomicMap<K, V>> cache;
+	protected final RemoteCache<Object, AtomicMap<K, V>> cacheForWriting;
 	protected volatile boolean startedReadingMap = false;
-	protected TransactionTable transactionTable;
-	protected TransactionManager transactionManager;
 
-	HotRodAtomicHashMapProxy(RemoteCache<?, ?> cache, Object deltaMapKey) {
-		Configuration configuration = cache.getRemoteCacheManager().getConfiguration();
-		if ( configuration.transaction().transactionMode() == TransactionMode.NON_TRANSACTIONAL ) {
-			throw new IllegalStateException( "AtomicMap needs a transactional cache." );
-		}
-		this.cache = (AdvancedCache<Object, AtomicMap<K, V>>) cache;
+	HotRodAtomicHashMapProxy(RemoteCache<Object, Object> cache2, Object deltaMapKey) {
+		Configuration configuration = cache2.getRemoteCacheManager().getConfiguration();
+		this.cache = cache2;
 		Flag[] writeFlags = new Flag[] { Flag.DELTA_WRITE };
 		this.cacheForWriting = this.cache.withFlags( writeFlags );
 		this.deltaMapKey = deltaMapKey;
-		this.batchContainer = cache.getBatchContainer();
-		transactionTable = cache.getComponentRegistry().getComponent( TransactionTable.class );
-		transactionManager = cache.getTransactionManager();
 	}
 
 	// internal helper, reduces lots of casts.

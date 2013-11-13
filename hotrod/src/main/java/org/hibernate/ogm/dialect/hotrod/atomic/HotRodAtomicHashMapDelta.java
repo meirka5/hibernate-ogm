@@ -21,98 +21,107 @@ import org.infinispan.util.logging.LogFactory;
 
 /**
  * Changes that have occurred on an AtomicHashMap
- *
+ * 
  * @author Manik Surtani (<a href="mailto:manik AT jboss DOT org">manik AT jboss DOT org</a>)
  * @since 4.0
  */
 public class HotRodAtomicHashMapDelta implements Delta {
-   private static final Log log = LogFactory.getLog(HotRodAtomicHashMapDelta.class);
-   private static final boolean trace = log.isTraceEnabled();
 
-   private List<AbstractKeyOperation> changeLog;
-   private boolean hasClearOperation;
+	private static final Log log = LogFactory.getLog( HotRodAtomicHashMapDelta.class );
+	private static final boolean trace = log.isTraceEnabled();
+
+	private List<AbstractKeyOperation> changeLogs;
+	private boolean hasClearOperation;
 
 	@Override
-	public DeltaAware merge(DeltaAware d) {
-		HotRodAtomicHashMap<Object, Object> other;
-		if ( d != null && ( d instanceof HotRodAtomicHashMap ) )
-			other = (HotRodAtomicHashMap<Object, Object>) d;
-		else
-			other = new HotRodAtomicHashMap();
-		if ( changeLog != null ) {
-			for ( AbstractKeyOperation o : changeLog )
-				o.replay( other.delegate );
+	public DeltaAware merge(DeltaAware deltaAware) {
+		HotRodAtomicHashMap<Object, Object> other = other( deltaAware );
+		if ( changeLogs != null ) {
+			for ( AbstractKeyOperation changeLog : changeLogs ) {
+				other.put( key, value )
+				changeLog.replay( other.delegate );
+			}
 		}
 		return other;
 	}
 
-   public void addOperation(AbstractKeyOperation o) {
-      if (changeLog == null) {
-         // lazy init
-         changeLog = new LinkedList<AbstractKeyOperation>();
-      }
-      if(o instanceof ClearOperation) {
-         hasClearOperation = true;
-      }
+	private HotRodAtomicHashMap<Object, Object> other(DeltaAware deltaAware) {
+		HotRodAtomicHashMap<Object, Object> other;
+		if ( deltaAware != null && ( deltaAware instanceof HotRodAtomicHashMap ) ) {
+			other = (HotRodAtomicHashMap<Object, Object>) deltaAware;
+		}
+		else {
+			other = new HotRodAtomicHashMap();
+		}
+		return other;
+	}
 
-      if (trace)
-         log.tracef("Add operation %s to delta", o);
+	public void addOperation(AbstractKeyOperation o) {
+		if ( changeLogs == null ) {
+			// lazy init
+			changeLogs = new LinkedList<AbstractKeyOperation>();
+		}
+		if ( trace )
+			log.tracef( "Add operation %s to delta", o );
 
-      changeLog.add( o );
-   }
+		changeLogs.add( o );
+	}
 
-   public Collection<Object> getKeys() {
-      List<Object> keys = new LinkedList<Object>();
-      if (changeLog != null) {
-         for (AbstractKeyOperation o : changeLog) {
-            Object key = o.keyAffected();
-            keys.add(key);
-         }
-      }
-      return keys;
-   }
+	public Collection<Object> getKeys() {
+		List<Object> keys = new LinkedList<Object>();
+		if ( changeLogs != null ) {
+			for ( AbstractKeyOperation o : changeLogs ) {
+				Object key = o.keyAffected();
+				keys.add( key );
+			}
+		}
+		return keys;
+	}
 
-   public boolean hasClearOperation(){
-      return hasClearOperation;
-   }
+	public boolean hasClearOperation() {
+		return hasClearOperation;
+	}
 
-   @Override
-   public String toString() {
-      StringBuilder sb = new StringBuilder( "AtomicHashMapDelta{changeLog=");
-      sb.append(changeLog);
-      sb.append( ",hasClear=");
-      sb.append(hasClearOperation);
-      sb.append("}");
-      return sb.toString();
-   }
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder( "AtomicHashMapDelta{changeLog=" );
+		sb.append( changeLogs );
+		sb.append( ",hasClear=" );
+		sb.append( hasClearOperation );
+		sb.append( "}" );
+		return sb.toString();
+	}
 
-   public int getChangeLogSize() {
-      return changeLog == null ? 0 : changeLog.size();
-   }
+	public int getChangeLogSize() {
+		return changeLogs == null ? 0 : changeLogs.size();
+	}
 
-   public static class Externalizer extends AbstractExternalizer<HotRodAtomicHashMapDelta> {
-      @Override
-      public void writeObject(ObjectOutput output, HotRodAtomicHashMapDelta delta) throws IOException {
-         if (trace) log.tracef("Serializing changeLog %s", delta.changeLog);
-         output.writeObject(delta.changeLog);
-      }
+	public static class Externalizer extends AbstractExternalizer<HotRodAtomicHashMapDelta> {
 
-      @Override
-      public HotRodAtomicHashMapDelta readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-         HotRodAtomicHashMapDelta delta = new HotRodAtomicHashMapDelta();
-         delta.changeLog = (List<AbstractKeyOperation>) input.readObject();
-         if (trace) log.tracef("Deserialized changeLog %s", delta.changeLog);
-         return delta;
-      }
+		@Override
+		public void writeObject(ObjectOutput output, HotRodAtomicHashMapDelta delta) throws IOException {
+			if ( trace )
+				log.tracef( "Serializing changeLog %s", delta.changeLogs );
+			output.writeObject( delta.changeLogs );
+		}
 
-      @Override
-      public Integer getId() {
-         return Ids.ATOMIC_HASH_MAP_DELTA;
-      }
+		@Override
+		public HotRodAtomicHashMapDelta readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+			HotRodAtomicHashMapDelta delta = new HotRodAtomicHashMapDelta();
+			delta.changeLogs = (List<AbstractKeyOperation>) input.readObject();
+			if ( trace )
+				log.tracef( "Deserialized changeLog %s", delta.changeLogs );
+			return delta;
+		}
 
-      @Override
-      public Set<Class<? extends HotRodAtomicHashMapDelta>> getTypeClasses() {
-         return Util.<Class<? extends HotRodAtomicHashMapDelta>>asSet(HotRodAtomicHashMapDelta.class);
-      }
-   }
+		@Override
+		public Integer getId() {
+			return Ids.ATOMIC_HASH_MAP_DELTA;
+		}
+
+		@Override
+		public Set<Class<? extends HotRodAtomicHashMapDelta>> getTypeClasses() {
+			return Util.<Class<? extends HotRodAtomicHashMapDelta>> asSet( HotRodAtomicHashMapDelta.class );
+		}
+	}
 }
