@@ -25,15 +25,13 @@ import static org.fest.assertions.Assertions.assertThat;
 import java.util.HashMap;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
 import org.hibernate.ogm.jpa.impl.OgmEntityManager;
 import org.hibernate.ogm.jpa.impl.OgmEntityManagerFactory;
-import org.hibernate.ogm.test.utils.TestHelper;
-import org.hibernate.ogm.test.utils.jpa.JpaTestCase;
 import org.hibernate.ogm.test.utils.PackagingRule;
+import org.hibernate.ogm.test.utils.jpa.JpaTestCase;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -48,22 +46,6 @@ public class JPAAPIWrappingTest extends JpaTestCase {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
-
-	@Test
-	public void testWrappedStandalone() throws Exception {
-		final EntityManagerFactory emf = Persistence.createEntityManagerFactory( "jpajtastandalone", TestHelper.getEnvironmentProperties() );
-		assertThat( emf.getClass() ).isEqualTo( OgmEntityManagerFactory.class );
-
-		EntityManager em = emf.createEntityManager();
-		assertThat( em.getClass() ).isEqualTo( OgmEntityManager.class );
-		em.close();
-
-		em = emf.createEntityManager( new HashMap() );
-		assertThat( em.getClass() ).isEqualTo( OgmEntityManager.class );
-		em.close();
-
-		emf.close();
-	}
 
 	@Test
 	public void testUndefinedPU() throws Exception {

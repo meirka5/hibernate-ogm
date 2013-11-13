@@ -24,11 +24,15 @@ import static org.fest.assertions.Assertions.assertThat;
 import static org.hibernate.ogm.test.utils.TestHelper.dropSchemaAndDatabase;
 import static org.hibernate.ogm.test.utils.jpa.JpaTestCase.extractJBossTransactionManager;
 
+import java.util.HashMap;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.ogm.jpa.impl.OgmEntityManager;
+import org.hibernate.ogm.jpa.impl.OgmEntityManagerFactory;
 import org.hibernate.ogm.test.utils.PackagingRule;
 import org.hibernate.ogm.test.utils.TestHelper;
 import org.junit.Rule;
@@ -41,6 +45,22 @@ public class JPAStandaloneTest {
 
 	@Rule
 	public PackagingRule packaging = new PackagingRule( "persistencexml/jpajtastandalone.xml", Poem.class );
+
+	@Test
+	public void testWrappedStandalone() throws Exception {
+		final EntityManagerFactory emf = Persistence.createEntityManagerFactory( "jpajtastandalone", TestHelper.getEnvironmentProperties() );
+		assertThat( emf.getClass() ).isEqualTo( OgmEntityManagerFactory.class );
+
+		EntityManager em = emf.createEntityManager();
+		assertThat( em.getClass() ).isEqualTo( OgmEntityManager.class );
+		em.close();
+
+		em = emf.createEntityManager( new HashMap() );
+		assertThat( em.getClass() ).isEqualTo( OgmEntityManager.class );
+		em.close();
+
+		emf.close();
+	}
 
 	@Test
 	public void testJTAStandalone() throws Exception {
