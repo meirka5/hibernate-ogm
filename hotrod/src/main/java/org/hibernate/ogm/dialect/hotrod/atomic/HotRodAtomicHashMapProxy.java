@@ -5,10 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 
-import org.infinispan.AdvancedCache;
 import org.infinispan.atomic.AtomicMap;
 import org.infinispan.atomic.AtomicMapLookup;
 import org.infinispan.batch.AutoBatchSupport;
@@ -19,9 +16,6 @@ import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.marshall.core.MarshalledValue;
 import org.infinispan.transaction.LocalTransaction;
-import org.infinispan.transaction.LockingMode;
-import org.infinispan.transaction.TransactionMode;
-import org.infinispan.transaction.TransactionTable;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -46,18 +40,16 @@ import org.infinispan.util.logging.LogFactory;
  */
 public class HotRodAtomicHashMapProxy<K, V> extends AutoBatchSupport implements AtomicMap<K, V> {
 
-	private static final Log log = LogFactory.getLog( HotRodAtomicHashMapProxy.class );
-	private static final boolean trace = log.isTraceEnabled();
 	protected final Object deltaMapKey;
 	protected final RemoteCache<Object, AtomicMap<K, V>> cache;
 	protected final RemoteCache<Object, AtomicMap<K, V>> cacheForWriting;
 	protected volatile boolean startedReadingMap = false;
 
-	HotRodAtomicHashMapProxy(RemoteCache<Object, Object> cache2, Object deltaMapKey) {
-		Configuration configuration = cache2.getRemoteCacheManager().getConfiguration();
-		this.cache = cache2;
+	HotRodAtomicHashMapProxy(RemoteCache<Object, AtomicMap<K, V>> remoteCache, Object deltaMapKey) {
+		Configuration configuration = remoteCache.getRemoteCacheManager().getConfiguration();
+		this.cache = remoteCache;
 		Flag[] writeFlags = new Flag[] { Flag.DELTA_WRITE };
-		this.cacheForWriting = this.cache.withFlags( writeFlags );
+		this.cacheForWriting = this.cache;
 		this.deltaMapKey = deltaMapKey;
 	}
 
@@ -87,7 +79,7 @@ public class HotRodAtomicHashMapProxy<K, V> extends AutoBatchSupport implements 
 		// can no longer be relied upon in 5.1, we need to grab the TransactionTable and check if an ongoing
 		// transaction exists, peeking into transactional state instead.
 		try {
-			Transaction tx = transactionManager.getTransaction();
+//			Transaction tx = transactionManager.getTransaction();
 			LocalTransaction localTransaction = tx == null ? null : transactionTable.getLocalTransaction( tx );
 
 			// The stored localTransaction could be null, if this is the first call in a transaction. In which case
@@ -109,10 +101,10 @@ public class HotRodAtomicHashMapProxy<K, V> extends AutoBatchSupport implements 
 			return getDeltaMapForRead();
 		}
 		else {
-			AdvancedCache<Object, AtomicMap<K, V>> cacheForRead = cache;
-			if ( cache.getCacheConfiguration().transaction().lockingMode() == LockingMode.PESSIMISTIC ) {
-				cacheForRead = cache.withFlags( Flag.FORCE_WRITE_LOCK );
-			}
+			RemoteCache<Object, AtomicMap<K, V>> cacheForRead = cache;
+//			if ( cache.getCacheConfiguration().transaction().lockingMode() == LockingMode.PESSIMISTIC ) {
+//				cacheForRead = cache.withFlags( Flag.FORCE_WRITE_LOCK );
+//			}
 			// acquire WL
 			HotRodAtomicHashMap<K, V> map = toMap( cacheForRead.get( deltaMapKey ) );
 			if ( map != null && !startedReadingMap )
