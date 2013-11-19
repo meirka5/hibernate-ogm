@@ -26,7 +26,6 @@ import static org.hibernate.ogm.datastore.spi.DefaultDatastoreNames.IDENTIFIER_S
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -41,6 +40,7 @@ import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
 import org.hibernate.ogm.dialect.GridDialect;
+import org.hibernate.ogm.dialect.hotrod.atomic.HotRodAtomicMapLookup;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
@@ -50,6 +50,7 @@ import org.hibernate.ogm.type.GridType;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.VersionedValue;
 
 /**
@@ -62,6 +63,7 @@ public class HotRodDialect implements GridDialect {
 
 	public HotRodDialect(HotRodDatastoreProvider provider) {
 		this.provider = provider;
+		
 	}
 
 	/**
@@ -80,7 +82,7 @@ public class HotRodDialect implements GridDialect {
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext tupleContext) {
 		RemoteCache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
-		Map<String, Object> atomicMap = cache.get( key );
+		Map<String, Object> atomicMap = HotRodAtomicMapLookup.getFineGrainedAtomicMap( provider.getRemoteCacheManager(), cache, key, false );
 		if ( atomicMap == null ) {
 			return null;
 		}
@@ -91,7 +93,10 @@ public class HotRodDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		return new Tuple( new HotRodTupleSnapshot( new ConcurrentHashMap<String, Object>() ) );
+		RemoteCache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
+		RemoteCacheManager cacheManager = provider.getRemoteCacheManager();
+		Map<String, Object> atomicMap = HotRodAtomicMapLookup.getFineGrainedAtomicMap( cacheManager, cache, key, true );
+		return new Tuple( new HotRodTupleSnapshot( atomicMap ) );
 	}
 
 	@Override
@@ -105,33 +110,33 @@ public class HotRodDialect implements GridDialect {
 	@Override
 	public void removeTuple(EntityKey key) {
 		RemoteCache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
-		cache.remove( key );
+		HotRodAtomicMapLookup.removeAtomicMap( cache, key );
 	}
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext associationContext) {
 		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
-		Map<RowKey, Map<String, Object>> atomicMap = cache.get( key );
+		Map<RowKey, Map<String, Object>> atomicMap = HotRodAtomicMapLookup.getFineGrainedAtomicMap( provider.getRemoteCacheManager(), cache, key, false );
 		return atomicMap == null ? null : new Association( new MapAssociationSnapshot( atomicMap ) );
 	}
 
 	@Override
 	public Association createAssociation(AssociationKey key) {
-		return new Association( new MapAssociationSnapshot( new ConcurrentHashMap<RowKey, Map<String, Object>>() ) );
+		// We don't verify that it does not yet exist assuming that this has been done before by the calling code
+		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
+		Map<RowKey, Map<String, Object>> atomicMap = HotRodAtomicMapLookup.getFineGrainedAtomicMap( provider.getRemoteCacheManager(), cache, key, true );
+		return new Association( new MapAssociationSnapshot( atomicMap ) );
 	}
 
 	@Override
 	public void updateAssociation(Association association, AssociationKey key) {
 		MapHelpers.updateAssociation( association, key );
-		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
-		Map<RowKey, Map<String, Object>> atomicMap = ( (MapAssociationSnapshot) association.getSnapshot() ).getUnderlyingMap();
-		cache.put( key, atomicMap );
 	}
 
 	@Override
 	public void removeAssociation(AssociationKey key) {
 		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
-		cache.remove( key );
+		HotRodAtomicMapLookup.removeAtomicMap( cache, key );
 	}
 
 	@Override

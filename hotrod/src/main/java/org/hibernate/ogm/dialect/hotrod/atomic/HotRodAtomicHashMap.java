@@ -56,20 +56,18 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	private static final Log log = LogFactory.getLog( HotRodAtomicHashMap.class );
 	private static final boolean trace = log.isTraceEnabled();
 
-	protected final RemoteCacheImpl<K, V> delegate;
+	protected final FastCopyHashMap<K, V> delegate;
 	private AtomicHashMapDelta delta = null;
 	private volatile HotRodAtomicHashMapProxy<K, V> proxy;
 	volatile boolean copied = false;
 	volatile boolean removed = false;
 
-	private OperationsFactory operationsFactory;
-
 	/**
 	 * Construction only allowed through this factory method. This factory is intended for use internally by the
 	 * CacheDelegate. User code should use {@link AtomicMapLookup#getAtomicMap(Cache, Object)}.
 	 */
-	public static <K, V> HotRodAtomicHashMap<K, V> newInstance(RemoteCache<Object, Object> cache, Object cacheKey) {
-		HotRodAtomicHashMap<K, V> value = new HotRodAtomicHashMap<K, V>();
+	public static <K, V> HotRodAtomicHashMap<K, V> newInstance(RemoteCacheManager rcm, RemoteCache<Object, Object> cache, Object cacheKey) {
+		HotRodAtomicHashMap<K, V> value = new HotRodAtomicHashMap<K, V>(rcm, "testing" );
 		Object oldValue = cache.putIfAbsent( cacheKey, value );
 		if ( oldValue != null ) {
 			value = (HotRodAtomicHashMap<K, V>) oldValue;
@@ -77,20 +75,11 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 		return value;
 	}
 
-	public HotRodAtomicHashMap() {
-		this.delegate = new RemoteCacheImpl( rcm, name )<K, V>();
+	public HotRodAtomicHashMap(RemoteCacheManager rcm, String name) {
+		this.delegate = new RemoteCacheImpl( rcm, name );
 	}
 
-	private HotRodAtomicHashMap(FastCopyHashMap<K, V> delegate) {
-		this.delegate = delegate;
-	}
-
-	public HotRodAtomicHashMap(boolean isCopy) {
-		this();
-		this.copied = isCopy;
-	}
-
-	private HotRodAtomicHashMap(RemoteCacheImpl<K, V> newDelegate, AtomicHashMapProxy<K, V> proxy) {
+	private HotRodAtomicHashMap(RemoteCacheImpl<K, V> newDelegate, HotRodAtomicHashMapProxy<K, V> proxy) {
 		this.delegate = newDelegate;
 		this.proxy = proxy;
 		this.copied = true;
@@ -149,6 +138,7 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	@Override
 	public V put(K key, V value) {
 		V oldValue = delegate.put( key, value );
+		delegate.getOperationsFactory().newPutKeyValueOperation( key, value, lifespanSecs, maxIdleSecs )
 		PutOperation op = new PutOperation();
 		getDelta().addOperation( op );
 		return oldValue;

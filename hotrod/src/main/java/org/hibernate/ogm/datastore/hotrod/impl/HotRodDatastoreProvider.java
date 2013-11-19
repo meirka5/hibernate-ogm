@@ -101,6 +101,7 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 		// clear resources
 		this.jtaPlatform = null;
 		this.jndiService = null;
+		cacheManager.start();
 	}
 
 	/**
@@ -194,5 +195,9 @@ public class HotRodDatastoreProvider implements DatastoreProvider, Startable, St
 	@Override
 	public GlobalContext<?, ?> getConfigurationBuilder(ConfigurationContext context) {
 		return GenericOptionModel.createGlobalContext( context );
+	}
+
+	public RemoteCacheManager getRemoteCacheManager() {
+		return cacheManager;
 	}
 }

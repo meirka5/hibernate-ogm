@@ -4,9 +4,11 @@ import static org.infinispan.commons.util.Immutables.immutableMapWrap;
 
 import java.util.Map;
 
+import org.hibernate.ogm.grid.EntityKey;
 import org.infinispan.atomic.AtomicMap;
 import org.infinispan.atomic.FineGrainedAtomicMap;
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.util.InfinispanCollections;
 
 /**
@@ -78,8 +80,8 @@ public class HotRodAtomicMapLookup {
 	 * @param <V> value param of the AtomicMap
 	 * @return an AtomicMap, or null if one did not exist.
 	 */
-	public static <MK, K, V> FineGrainedAtomicMap<K, V> getFineGrainedAtomicMap(RemoteCache<MK, ?> cache, MK key, boolean createIfAbsent) {
-		return (FineGrainedAtomicMap<K, V>) getMap( cache, key, createIfAbsent, true );
+	public static <MK, K, V> FineGrainedAtomicMap<K, V> getFineGrainedAtomicMap(RemoteCacheManager rcm, RemoteCache<MK, ?> cache, MK key, boolean createIfAbsent) {
+		return (FineGrainedAtomicMap<K, V>) getMap( rcm, cache, key, createIfAbsent, true );
 	}
 
 	/**
@@ -93,11 +95,11 @@ public class HotRodAtomicMapLookup {
 	 * @return an AtomicMap, or null if one did not exist.
 	 */
 	@SuppressWarnings("unchecked")
-	private static <MK, K, V> Map<K, V> getMap(RemoteCache<MK, ?> cache, MK key, boolean createIfAbsent, boolean fineGrained) {
+	private static <MK, K, V> Map<K, V> getMap(RemoteCacheManager rcm, RemoteCache<MK, ?> cache, MK key, boolean createIfAbsent, boolean fineGrained) {
 		Object value = cache.get( key );
 		if ( value == null ) {
 			if ( createIfAbsent )
-				value = HotRodAtomicHashMap.newInstance( (RemoteCache<Object, Object>) cache, key );
+				value = HotRodAtomicHashMap.newInstance( rcm, (RemoteCache<Object, Object>) cache, key );
 			else
 				return null;
 		}
@@ -135,4 +137,5 @@ public class HotRodAtomicMapLookup {
 	public static <MK> void removeAtomicMap(RemoteCache<MK, ?> cache, MK key) {
 		cache.remove( key );
 	}
+
 }

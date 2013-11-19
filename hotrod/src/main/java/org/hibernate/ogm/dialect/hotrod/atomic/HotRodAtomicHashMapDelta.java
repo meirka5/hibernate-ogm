@@ -13,6 +13,7 @@ import org.infinispan.atomic.DeltaAware;
 import org.infinispan.atomic.Operation;
 import org.infinispan.client.hotrod.impl.operations.AbstractKeyOperation;
 import org.infinispan.client.hotrod.impl.operations.ClearOperation;
+import org.infinispan.client.hotrod.impl.operations.HotRodOperation;
 import org.infinispan.commons.marshall.AbstractExternalizer;
 import org.infinispan.commons.util.Util;
 import org.infinispan.marshall.core.Ids;
@@ -30,12 +31,12 @@ public class HotRodAtomicHashMapDelta implements Delta {
 	private static final Log log = LogFactory.getLog( HotRodAtomicHashMapDelta.class );
 	private static final boolean trace = log.isTraceEnabled();
 
-	private List<AbstractKeyOperation> changeLogs;
+	private List<HotRodOperation> changeLogs;
 	private boolean hasClearOperation;
 
 	@Override
 	public DeltaAware merge(DeltaAware deltaAware) {
-		HotRodAtomicHashMap<Object, Object> other = other( deltaAware );
+		RemoteAtomicCache<Object, Object> other = other( deltaAware );
 		if ( changeLogs != null ) {
 			for ( AbstractKeyOperation changeLog : changeLogs ) {
 				other.put( key, value )
@@ -45,7 +46,7 @@ public class HotRodAtomicHashMapDelta implements Delta {
 		return other;
 	}
 
-	private HotRodAtomicHashMap<Object, Object> other(DeltaAware deltaAware) {
+	private RemoteAtomicCache<Object, Object> other(DeltaAware deltaAware) {
 		HotRodAtomicHashMap<Object, Object> other;
 		if ( deltaAware != null && ( deltaAware instanceof HotRodAtomicHashMap ) ) {
 			other = (HotRodAtomicHashMap<Object, Object>) deltaAware;
@@ -56,7 +57,7 @@ public class HotRodAtomicHashMapDelta implements Delta {
 		return other;
 	}
 
-	public void addOperation(AbstractKeyOperation o) {
+	public void addOperation(HotRodOperation o) {
 		if ( changeLogs == null ) {
 			// lazy init
 			changeLogs = new LinkedList<AbstractKeyOperation>();
@@ -108,7 +109,7 @@ public class HotRodAtomicHashMapDelta implements Delta {
 		@Override
 		public HotRodAtomicHashMapDelta readObject(ObjectInput input) throws IOException, ClassNotFoundException {
 			HotRodAtomicHashMapDelta delta = new HotRodAtomicHashMapDelta();
-			delta.changeLogs = (List<AbstractKeyOperation>) input.readObject();
+			delta.changeLogs = (List<HotRodOperation>) input.readObject();
 			if ( trace )
 				log.tracef( "Deserialized changeLog %s", delta.changeLogs );
 			return delta;

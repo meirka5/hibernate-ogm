@@ -53,7 +53,6 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
-import org.infinispan.atomic.AtomicMapLookup;
 import org.infinispan.context.Flag;
 import org.infinispan.distexec.mapreduce.Collector;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
