@@ -121,7 +121,7 @@ public class HotRodDialect implements GridDialect {
 	}
 
 	@Override
-	public Association createAssociation(AssociationKey key) {
+	public Association createAssociation(AssociationKey key, AssociationContext associationContext) {
 		// We don't verify that it does not yet exist assuming that this has been done before by the calling code
 		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
 		Map<RowKey, Map<String, Object>> atomicMap = HotRodAtomicMapLookup.getFineGrainedAtomicMap( provider.getRemoteCacheManager(), cache, key, true );
@@ -129,19 +129,19 @@ public class HotRodDialect implements GridDialect {
 	}
 
 	@Override
-	public void updateAssociation(Association association, AssociationKey key) {
+	public void updateAssociation(Association association, AssociationKey key, AssociationContext associationContext) {
 		MapHelpers.updateAssociation( association, key );
 	}
 
 	@Override
-	public void removeAssociation(AssociationKey key) {
+	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
 		RemoteCache<AssociationKey, Map<RowKey, Map<String, Object>>> cache = provider.getCache( ASSOCIATION_STORE );
 		HotRodAtomicMapLookup.removeAtomicMap( cache, key );
 	}
 
 	@Override
 	public Tuple createTupleAssociation(AssociationKey associationKey, RowKey rowKey) {
-		return new Tuple( EmptyTupleSnapshot.SINGLETON );
+		return new Tuple( EmptyTupleSnapshot.INSTANCE );
 	}
 
 	@Override
@@ -190,4 +190,5 @@ public class HotRodDialect implements GridDialect {
 	public void forEachTuple(Consumer consumer, EntityKeyMetadata... entityKeyMetadatas) {
 		throw new UnsupportedOperationException( "It is not possible to scan the datastore using HotRod" );
 	}
+
 }
