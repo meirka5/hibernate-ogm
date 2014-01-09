@@ -9,9 +9,8 @@ import java.util.Set;
 
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.impl.RemoteCacheImpl;
 import org.infinispan.commons.marshall.AbstractExternalizer;
+import org.infinispan.commons.util.FastCopyHashMap;
 import org.infinispan.commons.util.Util;
 import org.infinispan.marshall.core.Ids;
 
@@ -27,7 +26,7 @@ import org.infinispan.marshall.core.Ids;
  * Note that for replication to work properly, AtomicHashMap updates <b><i>must always</i></b> take place within the
  * scope of an ongoing JTA transaction or batch (see {@link Cache#startBatch()}).
  * <p/>
- *
+ * 
  * @author (various)
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
@@ -41,55 +40,44 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	private volatile HotRodAtomicHashMapProxy<K, V> proxy;
 	volatile boolean copied = false;
 	volatile boolean removed = false;
-	private final RemoteCacheImpl<K, V> delegate;
+	private final FastCopyHashMap<K, V> delegate;
 
-	public HotRodAtomicHashMap(RemoteCacheManager rcm, String name) {
-		this( rcm, name, false );
-	}
-
-	public HotRodAtomicHashMap(RemoteCacheManager rcm, String name, boolean b) {
-		this.delegate = new RemoteCacheImpl<K, V>( rcm, name );
-		this.copied = b;
-	}
-
-	public HotRodAtomicHashMap(RemoteCacheImpl<K, V> delegate, boolean b) {
-		this.delegate = delegate;
-		this.copied = b;
-	}
-
-	public HotRodAtomicHashMap(RemoteCacheImpl<K, V> delegate, HotRodAtomicHashMapProxy<K, V> proxy) {
-		this.delegate = delegate;
-		this.proxy = proxy;
-	}
-
-	/**
-	 * Construction only allowed through this factory method. This factory is intended for use internally by the
-	 * CacheDelegate.
-	 */
-	public static <K, V> HotRodAtomicHashMap<K, V> newInstance( RemoteCacheManager rcm, RemoteCache<Object, Object> cache, Object cacheKey) {
-		HotRodAtomicHashMap<K, V> value = new HotRodAtomicHashMap<K, V>(rcm, "testing");
-		Object oldValue = cache.putIfAbsent(cacheKey, value);
-		if (oldValue != null) {
+	public static <K, V> HotRodAtomicHashMap<K, V> newInstance(RemoteCache<Object, Object> cache, Object cacheKey) {
+		HotRodAtomicHashMap<K, V> value = new HotRodAtomicHashMap<K, V>();
+		Object oldValue = cache.putIfAbsent( cacheKey, value );
+		if ( oldValue != null )
 			value = (HotRodAtomicHashMap<K, V>) oldValue;
-		}
 		return value;
 	}
 
-//	private HotRodAtomicHashMap(RemoteCacheImpl<K, V> newDelegate, HotRodAtomicHashMapProxy<K, V> proxy) {
-//		this.delegate = newDelegate;
-//		this.proxy = proxy;
-//		this.copied = true;
-//	}
-//
-//	private HotRodAtomicHashMap(RemoteCache<K, V> newDelegate) {
-//		this.delegate = newDelegate;
-//		this.copied = true;
-//	}
+	public HotRodAtomicHashMap() {
+		this.delegate = new FastCopyHashMap<K, V>();
+	}
+
+	private HotRodAtomicHashMap(FastCopyHashMap<K, V> delegate) {
+		this.delegate = delegate;
+	}
+
+	public HotRodAtomicHashMap(boolean isCopy) {
+		this();
+		this.copied = isCopy;
+	}
+
+	private HotRodAtomicHashMap(FastCopyHashMap<K, V> newDelegate, HotRodAtomicHashMapProxy<K, V> proxy) {
+		this.delegate = newDelegate;
+		this.proxy = proxy;
+		this.copied = true;
+	}
 
 	@Override
 	public void commit() {
 		copied = false;
 		delta = null;
+	}
+
+	@Override
+	public int size() {
+		return delegate.size();
 	}
 
 	@Override
@@ -123,11 +111,11 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 
 	/**
 	 * Builds a thread-safe proxy for this instance so that concurrent reads are isolated from writes.
-	 * @param rcm 
 	 * 
+	 * @param rcm
 	 * @return an instance of AtomicHashMapProxy
 	 */
-	HotRodAtomicHashMapProxy<K, V> getProxy(RemoteCacheManager rcm, RemoteCache<Object, AtomicMap<K, V>> cache, Object mapKey, boolean fineGrained) {
+	HotRodAtomicHashMapProxy<K, V> getProxy(RemoteCache<Object, AtomicMap<K, V>> cache, Object mapKey, boolean fineGrained) {
 		// construct the proxy lazily
 		if ( proxy == null ) // DCL is OK here since proxy is volatile (and we live in a post-JDK 5 world)
 		{
@@ -181,11 +169,6 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	}
 
 	@Override
-	public int size() {
-		return delegate.size();
-	}
-
-	@Override
 	public boolean isEmpty() {
 		return delegate.isEmpty();
 	}
@@ -224,16 +207,14 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 
 		@Override
 		public void writeObject(ObjectOutput output, HotRodAtomicHashMap map) throws IOException {
-			output.writeObject( map.delegate.getName() );
-			output.writeObject( map.delegate.getRemoteCacheManager() );
+			output.writeObject( map.delegate );
 		}
 
 		@Override
 		@SuppressWarnings("unchecked")
 		public HotRodAtomicHashMap readObject(ObjectInput input) throws IOException, ClassNotFoundException {
-			String name = (String) input.readObject();
-			RemoteCacheManager rcm = (RemoteCacheManager) input.readObject();
-			return new HotRodAtomicHashMap( rcm, name );
+			FastCopyHashMap<?, ?> delegate = (FastCopyHashMap<?, ?>) input.readObject();
+			return new HotRodAtomicHashMap( delegate );
 		}
 
 		@Override
