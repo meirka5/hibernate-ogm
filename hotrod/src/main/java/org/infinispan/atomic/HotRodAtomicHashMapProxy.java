@@ -74,7 +74,7 @@ public class HotRodAtomicHashMapProxy<K, V> extends AutoBatchSupport implements 
 		assertValid( map );
 
 		// copy for write
-		HotRodAtomicHashMap<K, V> copy = map == null ? new HotRodAtomicHashMap<K, V>( cacheForRead.getRemoteCacheManager(), cacheForRead.getName(), true ) : map.copy();
+		HotRodAtomicHashMap<K, V> copy = map == null ? new HotRodAtomicHashMap<K, V>( true ) : map.copy();
 		copy.initForWriting();
 		cacheForWriting.put( deltaMapKey, copy );
 		return copy;
@@ -190,7 +190,7 @@ public class HotRodAtomicHashMapProxy<K, V> extends AutoBatchSupport implements 
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder( "HotRodAtomicHashMapProxy{deltaMapKey=" );
+		StringBuilder sb = new StringBuilder( "AtomicHashMapProxy{deltaMapKey=" );
 		sb.append( deltaMapKey );
 		sb.append( "}" );
 		return sb.toString();

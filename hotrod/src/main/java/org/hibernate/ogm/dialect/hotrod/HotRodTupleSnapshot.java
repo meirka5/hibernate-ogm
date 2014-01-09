@@ -25,9 +25,6 @@ import java.util.Set;
 
 import org.hibernate.ogm.datastore.spi.TupleSnapshot;
 
-/**
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
- */
 public final class HotRodTupleSnapshot implements TupleSnapshot {
 
 	private final Map<String, Object> atomicMap;
