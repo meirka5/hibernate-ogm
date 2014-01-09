@@ -68,6 +68,11 @@
             <artifactId>infinispan-lucene-directory</artifactId>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>net.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <version>1.0</version>
+        </dependency>
 
         <!-- test dependencies -->
         <dependency>

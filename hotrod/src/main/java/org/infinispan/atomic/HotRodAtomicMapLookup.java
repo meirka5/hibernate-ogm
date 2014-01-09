@@ -1,10 +1,9 @@
-package org.hibernate.ogm.dialect.hotrod.atomic;
+package org.infinispan.atomic;
 
 import static org.infinispan.commons.util.Immutables.immutableMapWrap;
 
 import java.util.Map;
 
-import org.hibernate.ogm.grid.EntityKey;
 import org.infinispan.atomic.AtomicMap;
 import org.infinispan.atomic.FineGrainedAtomicMap;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -33,8 +32,8 @@ public class HotRodAtomicMapLookup {
 	 * @param <V> value param of the AtomicMap
 	 * @return an AtomicMap
 	 */
-	public static <MK, K, V> AtomicMap<K, V> getAtomicMap(RemoteCache<MK, ?> cache, MK key) {
-		return getAtomicMap( cache, key, true );
+	public static <MK, K, V> AtomicMap<K, V> getAtomicMap(RemoteCacheManager rcm, RemoteCache<MK, ?> cache, MK key) {
+		return getAtomicMap( rcm, cache, key, true );
 	}
 
 	/**
@@ -48,8 +47,8 @@ public class HotRodAtomicMapLookup {
 	 * @param <V> value param of the AtomicMap
 	 * @return an AtomicMap
 	 */
-	public static <MK, K, V> FineGrainedAtomicMap<K, V> getFineGrainedAtomicMap(RemoteCache<MK, ?> cache, MK key) {
-		return getFineGrainedAtomicMap( cache, key, true );
+	public static <MK, K, V> FineGrainedAtomicMap<K, V> getFineGrainedAtomicMap(RemoteCacheManager rcm, RemoteCache<MK, ?> cache, MK key) {
+		return getFineGrainedAtomicMap( rcm, cache, key, true );
 	}
 
 	/**
@@ -64,8 +63,8 @@ public class HotRodAtomicMapLookup {
 	 * @param <V> value param of the AtomicMap
 	 * @return an AtomicMap, or null if one did not exist.
 	 */
-	public static <MK, K, V> AtomicMap<K, V> getAtomicMap(RemoteCache<MK, ?> cache, MK key, boolean createIfAbsent) {
-		return (AtomicMap<K, V>) getMap( cache, key, createIfAbsent, false );
+	public static <MK, K, V> AtomicMap<K, V> getAtomicMap(RemoteCacheManager rcm, RemoteCache<MK, ?> cache, MK key, boolean createIfAbsent) {
+		return (AtomicMap<K, V>) getMap( rcm, cache, key, createIfAbsent, false );
 	}
 
 	/**
@@ -104,7 +103,7 @@ public class HotRodAtomicMapLookup {
 				return null;
 		}
 		HotRodAtomicHashMap<K, V> castValue = (HotRodAtomicHashMap<K, V>) value;
-		HotRodAtomicHashMapProxy<K, V> proxy = castValue.getProxy( (RemoteCache<Object, Object>) cache, key, fineGrained );
+		HotRodAtomicHashMapProxy<K, V> proxy = castValue.getProxy( rcm, (RemoteCache<Object, AtomicMap<K, V>>) cache, key, fineGrained );
 		return proxy;
 	}
 
@@ -119,8 +118,8 @@ public class HotRodAtomicMapLookup {
 	 * @param <V> value param of the AtomicMap
 	 * @return an immutable, read-only map
 	 */
-	public static <MK, K, V> Map<K, V> getReadOnlyAtomicMap(RemoteCache<MK, ?> cache, MK key) {
-		AtomicMap<K, V> am = getAtomicMap( cache, key, false );
+	public static <MK, K, V> Map<K, V> getReadOnlyAtomicMap(RemoteCacheManager rcm, RemoteCache<MK, ?> cache, MK key) {
+		AtomicMap<K, V> am = getAtomicMap( rcm, cache, key, false );
 		if ( am == null )
 			return InfinispanCollections.emptyMap();
 		else

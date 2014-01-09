@@ -40,7 +40,6 @@ import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
 import org.hibernate.ogm.dialect.GridDialect;
-import org.hibernate.ogm.dialect.hotrod.atomic.HotRodAtomicMapLookup;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
@@ -49,6 +48,7 @@ import org.hibernate.ogm.massindex.batchindexing.Consumer;
 import org.hibernate.ogm.type.GridType;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.Type;
+import org.infinispan.atomic.HotRodAtomicMapLookup;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.VersionedValue;
@@ -95,7 +95,7 @@ public class HotRodDialect implements GridDialect {
 	public Tuple createTuple(EntityKey key) {
 		RemoteCache<EntityKey, Map<String, Object>> cache = provider.getCache( ENTITY_STORE );
 		RemoteCacheManager cacheManager = provider.getRemoteCacheManager();
-		Map<String, Object> atomicMap = HotRodAtomicMapLookup.getFineGrainedAtomicMap( cacheManager, cache, key, true );
+		Map<String, Object> atomicMap = HotRodAtomicMapLookup.getFineGrainedAtomicMap( cacheManager, cache, key );
 		return new Tuple( new HotRodTupleSnapshot( atomicMap ) );
 	}
 

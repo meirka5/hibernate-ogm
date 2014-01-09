@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.ogm.datastore.spi.TupleSnapshot;
-import org.infinispan.atomic.FineGrainedAtomicMap;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>

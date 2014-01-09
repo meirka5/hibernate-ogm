@@ -34,7 +34,6 @@
     </parent>
     
     <artifactId>hibernate-ogm-hotrod</artifactId>
-    <packaging>jar</packaging>
 
     <name>Hibernate OGM for Hot Rod</name>
     <description>Persist objects in Hot Rod</description>
@@ -43,6 +42,11 @@
         <dependency>
             <groupId>org.hibernate.ogm</groupId>
             <artifactId>hibernate-ogm-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -77,10 +81,6 @@
 
         <!-- test dependencies -->
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-testing</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate.ogm</groupId>
             <artifactId>hibernate-ogm-core</artifactId>
             <type>test-jar</type>
@@ -110,6 +110,11 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -150,9 +155,9 @@
                 <groupId>org.bsc.maven</groupId>
                 <artifactId>maven-processor-plugin</artifactId>
             </plugin>
-            <plugin>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-            </plugin>
+<!--             <plugin> -->
+<!--                 <artifactId>maven-checkstyle-plugin</artifactId> -->
+<!--             </plugin> -->
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
             </plugin>

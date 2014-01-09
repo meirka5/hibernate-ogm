@@ -1,23 +1,15 @@
-package org.hibernate.ogm.dialect.hotrod.atomic;
+package org.infinispan.atomic;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import javax.transaction.SystemException;
-
-import org.infinispan.atomic.AtomicMap;
-import org.infinispan.atomic.AtomicMapLookup;
 import org.infinispan.batch.AutoBatchSupport;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.commons.util.InfinispanCollections;
-import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.context.Flag;
 import org.infinispan.marshall.core.MarshalledValue;
-import org.infinispan.transaction.LocalTransaction;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * A layer of indirection around an {@link HotRodAtomicHashMap} to provide consistency and isolation for concurrent
@@ -68,55 +60,24 @@ public class HotRodAtomicHashMapProxy<K, V> extends AutoBatchSupport implements 
 		return ahm;
 	}
 
-	/**
-	 * Looks up the CacheEntry stored in transactional context corresponding to this AtomicMap. If this AtomicMap has
-	 * yet to be touched by the current transaction, this method will return a null.
-	 * 
-	 * @return
-	 */
-	protected CacheEntry lookupEntryFromCurrentTransaction() {
-		// Prior to 5.1, this used to happen by grabbing any InvocationContext in ThreadLocal. Since ThreadLocals
-		// can no longer be relied upon in 5.1, we need to grab the TransactionTable and check if an ongoing
-		// transaction exists, peeking into transactional state instead.
-		try {
-//			Transaction tx = transactionManager.getTransaction();
-			LocalTransaction localTransaction = tx == null ? null : transactionTable.getLocalTransaction( tx );
-
-			// The stored localTransaction could be null, if this is the first call in a transaction. In which case
-			// we know that there is no transactional state to refer to - i.e., no entries have been looked up as yet.
-			return localTransaction == null ? null : localTransaction.lookupEntry( deltaMapKey );
-		}
-		catch (SystemException e) {
-			return null;
-		}
-	}
-
 	@SuppressWarnings("unchecked")
 	protected HotRodAtomicHashMap<K, V> getDeltaMapForWrite() {
-		CacheEntry lookedUpEntry = lookupEntryFromCurrentTransaction();
-
-		boolean lockedAndCopied = lookedUpEntry != null && lookedUpEntry.isChanged() && toMap( lookedUpEntry.getValue() ).copied;
-
-		if ( lockedAndCopied ) {
-			return getDeltaMapForRead();
-		}
-		else {
-			RemoteCache<Object, AtomicMap<K, V>> cacheForRead = cache;
+		RemoteCache<Object, AtomicMap<K, V>> cacheForRead = cache;
 //			if ( cache.getCacheConfiguration().transaction().lockingMode() == LockingMode.PESSIMISTIC ) {
 //				cacheForRead = cache.withFlags( Flag.FORCE_WRITE_LOCK );
 //			}
-			// acquire WL
-			HotRodAtomicHashMap<K, V> map = toMap( cacheForRead.get( deltaMapKey ) );
-			if ( map != null && !startedReadingMap )
-				startedReadingMap = true;
-			assertValid( map );
-
-			// copy for write
-			HotRodAtomicHashMap<K, V> copy = map == null ? new HotRodAtomicHashMap<K, V>( true ) : map.copy();
-			copy.initForWriting();
-			cacheForWriting.put( deltaMapKey, copy );
-			return copy;
+		// acquire WL
+		HotRodAtomicHashMap<K, V> map = toMap( cacheForRead.get( deltaMapKey ) );
+		if ( map != null && !startedReadingMap ) {
+			startedReadingMap = true;
 		}
+		assertValid( map );
+
+		// copy for write
+		HotRodAtomicHashMap<K, V> copy = map == null ? new HotRodAtomicHashMap<K, V>( cacheForRead.getRemoteCacheManager(), cacheForRead.getName(), true ) : map.copy();
+		copy.initForWriting();
+		cacheForWriting.put( deltaMapKey, copy );
+		return copy;
 	}
 
 	// readers

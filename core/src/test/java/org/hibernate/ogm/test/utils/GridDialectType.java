@@ -43,7 +43,7 @@ public enum GridDialectType {
 
 	NEO4J( "org.hibernate.ogm.test.utils.Neo4jTestHelper" ),
 
-	COUCHDB( "org.hibernate.ogm.test.utils.CouchDBTestHelper" );
+	COUCHDB( "org.hibernate.ogm.test.utils.CouchDBTestHelper" ),
 
 	HOTROD( "org.hibernate.ogm.test.utils.HotRodTestHelper" );
 
