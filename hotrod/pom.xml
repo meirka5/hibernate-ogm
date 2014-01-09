@@ -44,18 +44,12 @@
             <artifactId>hibernate-ogm-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.jcip</groupId>
-            <artifactId>jcip-annotations</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-search-orm</artifactId>
-            <optional>true</optional>
         </dependency>
         <!-- Currently we don't have explicit tests using it, but we still need to define
             a dependency to include the dependency in the distribution -->
@@ -77,6 +71,11 @@
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-client-hotrod</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>net.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <version>1.0</version>
         </dependency>
 
         <!-- test dependencies -->
@@ -155,12 +154,12 @@
                 <groupId>org.bsc.maven</groupId>
                 <artifactId>maven-processor-plugin</artifactId>
             </plugin>
+                <plugin>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                </plugin>
 <!--             <plugin> -->
 <!--                 <artifactId>maven-checkstyle-plugin</artifactId> -->
 <!--             </plugin> -->
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-            </plugin>
         </plugins>
     </build>
 
