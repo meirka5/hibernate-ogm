@@ -149,7 +149,6 @@ public final class HotRodAtomicHashMap<K, V> implements AtomicMap<K, V>, DeltaAw
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public void clear() {
 		FastCopyHashMap<K, V> originalEntries = delegate.clone();
 		ClearOperation<K, V> op = new ClearOperation<K, V>( originalEntries );
