@@ -17,7 +17,7 @@
  * MA  02110-1301, USA.
  */
 
-package org.hibernate.ogm.helper.annotation;
+package org.hibernate.ogm.util.redis.annotation;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -31,11 +31,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.ogm.helper.annotation.impl.ColumnFinder;
-import org.hibernate.ogm.helper.annotation.impl.IdFinder;
-import org.hibernate.ogm.helper.annotation.impl.JoinColumnFinder;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
+import org.hibernate.ogm.util.redis.annotation.impl.ColumnFinder;
+import org.hibernate.ogm.util.redis.annotation.impl.IdFinder;
+import org.hibernate.ogm.util.redis.annotation.impl.JoinColumnFinder;
 
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>

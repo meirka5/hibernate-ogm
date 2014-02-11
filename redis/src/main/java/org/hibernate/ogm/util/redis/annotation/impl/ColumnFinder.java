@@ -1,9 +1,9 @@
-package org.hibernate.ogm.helper.annotation.impl;
+package org.hibernate.ogm.util.redis.annotation.impl;
 
 import java.lang.annotation.Annotation;
 import java.util.regex.Pattern;
 
-import org.hibernate.ogm.helper.annotation.AbstractFinder;
+import org.hibernate.ogm.util.redis.annotation.AbstractFinder;
 
 public class ColumnFinder extends AbstractFinder {
 

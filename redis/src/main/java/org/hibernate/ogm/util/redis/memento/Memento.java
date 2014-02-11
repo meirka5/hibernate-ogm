@@ -17,7 +17,7 @@
  * MA  02110-1301, USA.
  */
 
-package org.hibernate.ogm.helper.memento;
+package org.hibernate.ogm.util.redis.memento;
 
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>

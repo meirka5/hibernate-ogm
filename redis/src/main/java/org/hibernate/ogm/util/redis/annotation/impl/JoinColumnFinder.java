@@ -1,4 +1,4 @@
-package org.hibernate.ogm.helper.annotation.impl;
+package org.hibernate.ogm.util.redis.annotation.impl;
 
 import java.lang.annotation.Annotation;
 

@@ -17,7 +17,7 @@
  * MA  02110-1301, USA.
  */
 
-package org.hibernate.ogm.helper.rollback;
+package org.hibernate.ogm.util.redis.rollback;
 
 import java.util.Map;
 
@@ -25,9 +25,9 @@ import org.hibernate.ogm.datastore.redis.impl.RedisDatastoreProvider;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.RowKey;
-import org.hibernate.ogm.helper.memento.CareTaker;
-import org.hibernate.ogm.helper.memento.Memento;
-import org.hibernate.ogm.helper.memento.Originator;
+import org.hibernate.ogm.util.redis.memento.CareTaker;
+import org.hibernate.ogm.util.redis.memento.Memento;
+import org.hibernate.ogm.util.redis.memento.Originator;
 
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>

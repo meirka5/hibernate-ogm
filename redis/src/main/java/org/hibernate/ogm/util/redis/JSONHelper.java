@@ -17,7 +17,7 @@
  * MA  02110-1301, USA.
  */
 
-package org.hibernate.ogm.helper;
+package org.hibernate.ogm.util.redis;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -33,7 +33,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.hibernate.ogm.grid.EntityKey;
-import org.hibernate.ogm.helper.annotation.AnnotationFinder;
+import org.hibernate.ogm.util.redis.annotation.AnnotationFinder;
 import org.json.JSONException;
 import org.json.JSONObject;
 
