@@ -1,19 +1,18 @@
 package org.hibernate.ogm.helper.annotation;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class AbstractFinder implements Finder {
+
 	/**
 	 * Extracts column name from @Column(name='xxx').
-	 * 
+	 *
 	 * @param annotationStr
-	 *            @Column representation as String.
-	 * @param pattern
-	 *            Pattern for the name property in @Column annotation.
+	 * @Column representation as String.
+	 * @param pattern Pattern for the name property in @Column annotation.
 	 * @return Column name.
 	 */
 	protected String extractColumnNameFrom(String annotationStr, Pattern pattern) {
@@ -26,16 +25,17 @@ public abstract class AbstractFinder implements Finder {
 
 		return columnName;
 	}
-	
+
 	protected String findFieldNameFor(String methodName, Field[] fields) {
-		
+
 		Pattern pattern = null;
-		if(methodName.startsWith( "get" )){
+		if ( methodName.startsWith( "get" ) ) {
 			pattern = Pattern.compile( "^" + methodName.substring( 3 ) + "$", Pattern.CASE_INSENSITIVE );
-		}else if(methodName.startsWith( "is" )){
+		}
+		else if ( methodName.startsWith( "is" ) ) {
 			pattern = Pattern.compile( "^" + methodName.substring( 2 ) + "$", Pattern.CASE_INSENSITIVE );
 		}
-		//Pattern pattern = Pattern.compile( "^" + methodName.substring( 3 ) + "$", Pattern.CASE_INSENSITIVE );
+		// Pattern pattern = Pattern.compile( "^" + methodName.substring( 3 ) + "$", Pattern.CASE_INSENSITIVE );
 		for ( Field field : fields ) {
 			Matcher matcher = pattern.matcher( field.getName() );
 			while ( matcher.find() ) {
@@ -45,14 +45,12 @@ public abstract class AbstractFinder implements Finder {
 
 		return "";
 	}
-	
+
 	/**
 	 * Copied from AnnotationFinder. Gets inherited method.
 	 * 
-	 * @param obj
-	 *            Object to be examined.
-	 * @param methodName
-	 *            Method name to be used to narrow.
+	 * @param obj Object to be examined.
+	 * @param methodName Method name to be used to narrow.
 	 * @return Method whose name equals to the parameter, methodName.
 	 */
 	protected Method getInheritedMethod(Object obj, String methodName) {

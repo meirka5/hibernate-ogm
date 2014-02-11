@@ -54,14 +54,14 @@ public class JSONHelper {
 
 	private final AnnotationFinder finder = new AnnotationFinder();
 	private final Gson gson = new GsonBuilder().registerTypeAdapter( Date.class, new JsonSerializer<Date>() {
+
 		@Override
 		public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
 			return new JsonPrimitive( src.getTime() );
 		}
 	} ).registerTypeAdapter( Date.class, new JsonDeserializer<Date>() {
 
-		public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-				throws JsonParseException {
+		public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			return new Date( json.getAsLong() );
 		}
 	} ).registerTypeAdapter( Calendar.class, new JsonSerializer<Calendar>() {
@@ -74,8 +74,7 @@ public class JSONHelper {
 	} ).registerTypeAdapter( Calendar.class, new JsonDeserializer<Calendar>() {
 
 		@Override
-		public Calendar deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-				throws JsonParseException {
+		public Calendar deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTimeInMillis( json.getAsLong() );
 			return calendar;
@@ -99,47 +98,32 @@ public class JSONHelper {
 
 	/**
 	 * Creates JSON representation based on the specified object.
-	 * 
-	 * @param obj
-	 *            To be JSONed.
+	 *
+	 * @param obj To be JSONed.
 	 * @return JSON representation of the specified object.
 	 */
 	public String toJSON(Object obj) {
 		return gson.toJson( obj );
 	}
 
-	/**
-	 * 
-	 * @param map
-	 * @return
-	 */
-	public String toJSON(Map map){
-		return new JSONObject(map).toString();
+	public String toJSON(Map map) {
+		return new JSONObject( map ).toString();
 	}
 
-	/**
-	 * 
-	 * @param json
-	 * @param key
-	 * @return
-	 */
 	public Object get(String json, String key) {
 		try {
 			return new JSONObject( json ).get( key );
 		}
-		catch ( JSONException ex ) {
+		catch (JSONException ex) {
 			throw new RuntimeException( ex );
 		}
 	}
 
 	/**
-	 * Creates Object from the specified JSON representation based on the
-	 * specified Class.
-	 * 
-	 * @param json
-	 *            To be turned to Object.
-	 * @param cls
-	 *            Used to turn the JSON to object.
+	 * Creates Object from the specified JSON representation based on the specified Class.
+	 *
+	 * @param json To be turned to Object.
+	 * @param cls Used to turn the JSON to object.
 	 * @return Object representation of the JSON.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -153,9 +137,8 @@ public class JSONHelper {
 
 	/**
 	 * Converts both key and value to Json.
-	 * 
-	 * @param map
-	 *            Map to be converted to Jsoned key and value pairs.
+	 *
+	 * @param map Map to be converted to Jsoned key and value pairs.
 	 * @return Jsoned map.
 	 */
 	@SuppressWarnings("rawtypes")
@@ -170,29 +153,26 @@ public class JSONHelper {
 	}
 
 	/**
-	 * Gets object from JSON when the specified field type is one of JSONed type
-	 * as the specified columnName on the specified Map.
+	 * Gets object from JSON when the specified field type is one of JSONed type as the specified columnName on the
+	 * specified Map.
 	 * 
-	 * @param field
-	 *            Corresponding field to the columnName.
-	 * @param columnName
-	 *            Column name used on the datastore.
-	 * @param map
-	 *            Stores entity objects.
+	 * @param field Corresponding field to the columnName.
+	 * @param columnName Column name used on the datastore.
+	 * @param map Stores entity objects.
 	 */
 	public void getObjectFromJsonOn(Class cls, String columnName, Map<String, Object> map) {
 
 		try {
 			map.put( columnName, fromJSON( (String) map.get( columnName ), cls ) );
 		}
-		catch ( JsonParseException ex ) {
-			throw new RuntimeException(ex);
+		catch (JsonParseException ex) {
+			throw new RuntimeException( ex );
 		}
 	}
 
 	/**
 	 * Converts the value for the column as JSON format.
-	 * 
+	 *
 	 * @param entityRecord
 	 * @return Newly created Map storing JSON format when required.
 	 * @throws ClassNotFoundException
@@ -214,13 +194,10 @@ public class JSONHelper {
 	}
 
 	/**
-	 * Converts Json to object representation for the return value from the
-	 * datastore when needed.
+	 * Converts Json to object representation for the return value from the datastore when needed.
 	 * 
-	 * @param key
-	 *            Used to retrieve the corresponding value.
-	 * @param tuple
-	 *            Contains key value pairs from the datastore.
+	 * @param key Used to retrieve the corresponding value.
+	 * @param tuple Contains key value pairs from the datastore.
 	 * @return Retrieved key value pairs with JSON modification when needed.
 	 */
 	public Map<String, Object> convertFromJsonOn(EntityKey key, Map<String, Object> tuple, Field[] fields) {
@@ -243,14 +220,12 @@ public class JSONHelper {
 
 		return tuple;
 	}
-	
+
 	/**
 	 * Puts object from JSON whose key is the field name.
-	 * 
-	 * @param field
-	 *            Current field in an iterator to be examined for its field type and annotations.
-	 * @param obj
-	 *            Object having the expected type.
+	 *
+	 * @param field Current field in an iterator to be examined for its field type and annotations.
+	 * @param obj Object having the expected type.
 	 * @param tuple
 	 */
 	private void putObjectFieldNameAsColumnName(Field field, Object obj, Map<String, Object> tuple) {
@@ -262,14 +237,12 @@ public class JSONHelper {
 			putObject( field, field.getType(), tuple );
 		}
 	}
-	
+
 	/**
 	 * Gets Object from JSON and puts the Object to the parameter, tuple.
-	 * 
-	 * @param field
-	 *            Current field in an iterator to be examined for its field type and annotations.
-	 * @param cls
-	 *            Expected class to be set as the field type.
+	 *
+	 * @param field Current field in an iterator to be examined for its field type and annotations.
+	 * @param cls Expected class to be set as the field type.
 	 * @param tuple
 	 */
 	private void putObject(Field field, Class cls, Map<String, Object> tuple) {
@@ -282,7 +255,6 @@ public class JSONHelper {
 	}
 
 	/**
-	 * 
 	 * @param field
 	 * @param tuple
 	 */
@@ -299,37 +271,21 @@ public class JSONHelper {
 		}
 	}
 
-	/**
-	 * 
-	 * @param field
-	 * @param tuple
-	 */
 	private void putObjectWithEmbeddable(Field field, Map<String, Object> tuple) {
-		//this field has @Embeddable and also has field and column mapping field
+		// this field has @Embeddable and also has field and column mapping field
 		putObjectWithInverseSide( field, tuple );
 		putObjectWith( field, finder.findAllColumnNamesFrom( field.getType(), "", true ), tuple );
 		putObjectWith( field, finder.findAllJoinColumnNamesFrom( field.getType(), "", true ), tuple );
 	}
 
-	/**
-	 * 
-	 * @param field
-	 * @param tuple
-	 */
 	private void putObjectWithInverseSide(Field field, Map<String, Object> tuple) {
 		for ( Field f : field.getType().getDeclaredFields() ) {
 			if ( tuple.get( field.getName() + "." + f.getName() ) != null ) {
 				getObjectFromJsonOn( String.class, field.getName() + "." + f.getName(), tuple );
 			}
 		}
-	}	
+	}
 
-	/**
-	 * 
-	 * @param field
-	 * @param map
-	 * @param tuple
-	 */
 	private void putObjectWith(Field field, Map<String, Class> map, Map<String, Object> tuple) {
 		if ( map != null && !map.isEmpty() ) {
 			for ( Iterator<Entry<String, Class>> itr = map.entrySet().iterator(); itr.hasNext(); ) {
@@ -341,11 +297,9 @@ public class JSONHelper {
 
 	/**
 	 * Gets Object from JSON whose keys representing some kind of associations and puts it to the parameter, tuple.
-	 * 
-	 * @param field
-	 *            Current field in an iterator to be examined for its field type and annotations.
-	 * @param map
-	 *            Stores field-column mapping.
+	 *
+	 * @param field Current field in an iterator to be examined for its field type and annotations.
+	 * @param map Stores field-column mapping.
 	 * @param tuple
 	 */
 	private void putObjectWithAssociation(Field field, Map<String, Class> map, Map<String, Object> tuple) {
@@ -358,17 +312,10 @@ public class JSONHelper {
 		putObjectAs( String.class, map, tuple );
 	}
 
-	/**
-	 * 
-	 * @param field
-	 * @param map
-	 * @param tuple
-	 */
 	private void putObjectWithColumn(Field field, Map<String, Object> tuple) {
 		// this field has some kind of field and column mapping
 
-		for ( Iterator<Entry<String, Class>> itr = finder
-				.findAllColumnNamesFrom( field.getDeclaringClass(), field.getName(), true ).entrySet().iterator(); itr
+		for ( Iterator<Entry<String, Class>> itr = finder.findAllColumnNamesFrom( field.getDeclaringClass(), field.getName(), true ).entrySet().iterator(); itr
 				.hasNext(); ) {
 
 			String columnName = itr.next().getKey();
@@ -385,15 +332,13 @@ public class JSONHelper {
 			}
 		}
 	}
-	
+
 	/**
 	 * Gets Object with the parameter,cls, Class from JSON and puts it to the parameter, tuple.
-	 * 
-	 * @param cls
-	 *            Expected class type used to deserialize JSON. if null then, uses the values, Class from the parameter,
-	 *            map.
-	 * @param map
-	 *            Stores field-column mapping.
+	 *
+	 * @param cls Expected class type used to deserialize JSON. if null then, uses the values, Class from the parameter,
+	 * map.
+	 * @param map Stores field-column mapping.
 	 * @param tuple
 	 */
 	private void putObjectAs(Class cls, Map<String, Class> map, Map<String, Object> tuple) {
@@ -416,36 +361,36 @@ public class JSONHelper {
 			}
 		}
 	}
-	
-	private Map<String,Class> createKeys(String fieldName, Map<String,Class> map,String separator){
-		
-		Map<String,Class> keyMap = new HashMap<String,Class>();
-		for(Iterator<Entry<String,Class>> itr = map.entrySet().iterator();itr.hasNext();){
-			Entry<String,Class> entry = itr.next();
+
+	private Map<String, Class> createKeys(String fieldName, Map<String, Class> map, String separator) {
+
+		Map<String, Class> keyMap = new HashMap<String, Class>();
+		for ( Iterator<Entry<String, Class>> itr = map.entrySet().iterator(); itr.hasNext(); ) {
+			Entry<String, Class> entry = itr.next();
 			keyMap.put( fieldName + separator + entry.getKey(), entry.getValue() );
 		}
 		return keyMap;
 	}
-	
+
 	/**
 	 * Checks if the type of the parameter, cls is stored as String or not based on types in org.hibernate.ogm.type.
+	 *
 	 * @param cls Examined if it's stored as String.
 	 * @return True if it's stored as String, otherwise false.
 	 */
-	private boolean isReturnAsString(Class cls){
-		
-		if ( cls.getCanonicalName().equals( "java.util.UUID" )
-				|| cls.getCanonicalName().equals( "java.math.BigDecimal" )
-				|| cls.getCanonicalName().equals( "java.net.URL" )
-				|| cls.getCanonicalName().equals( "java.math.BigInteger" ) ) {
+	private boolean isReturnAsString(Class cls) {
+
+		if ( cls.getCanonicalName().equals( "java.util.UUID" ) || cls.getCanonicalName().equals( "java.math.BigDecimal" )
+				|| cls.getCanonicalName().equals( "java.net.URL" ) || cls.getCanonicalName().equals( "java.math.BigInteger" ) ) {
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Creates association based on the parameter, associationAsJson.
+	 *
 	 * @param associationAsJson JSON representation of association.
 	 * @return Map representation of association.
 	 */
@@ -459,7 +404,7 @@ public class JSONHelper {
 				val.put( key, json.get( key ) );
 			}
 		}
-		catch ( JSONException e ) {
+		catch (JSONException e) {
 			throw new RuntimeException( e );
 		}
 

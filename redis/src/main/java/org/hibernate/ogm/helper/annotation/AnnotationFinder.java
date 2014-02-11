@@ -49,7 +49,7 @@ public class AnnotationFinder {
 	private static final String ID = "Id";
 	private static final String PUNCT = "\\p{Punct}";
 	private final Pattern embeddableAnnotationPattern = Pattern.compile( JPA_ANNOTATION_PREFIX + EMBEDDABLE + PUNCT );
-	private final Pattern entityAnnotationPattern = Pattern.compile( JPA_ANNOTATION_PREFIX + ENTITY +  PUNCT);
+	private final Pattern entityAnnotationPattern = Pattern.compile( JPA_ANNOTATION_PREFIX + ENTITY + PUNCT );
 	private final Pattern namePropertyPattern = Pattern.compile( "name\\p{Punct}\\w*" );
 	private final String GET_DECLARED_ANNOTATIONS = "getDeclaredAnnotations";
 	private final String GET_TYPE = "getType";
@@ -60,19 +60,21 @@ public class AnnotationFinder {
 	private final Finder columnFinder = new ColumnFinder();
 	private final Finder joinColumnFinder = new JoinColumnFinder();
 	private final Finder idFinder = new IdFinder();
-	
+
 	/**
 	 * Checks if a Class is annotated by @Embeddable or not.
+	 *
 	 * @param cls Class to be examined.
 	 * @return True if the Class is annotated by @Embeddable, otherwise false.
 	 */
 	public boolean isEmbeddableAnnotated(Class cls) {
 
-		return cls == null ? false : isAnnotatedBy( cls.getDeclaredAnnotations() , embeddableAnnotationPattern);
+		return cls == null ? false : isAnnotatedBy( cls.getDeclaredAnnotations(), embeddableAnnotationPattern );
 	}
 
 	/**
 	 * Checks if a Class is annotated by @Entity or not.
+	 * 
 	 * @param cls Class to be examined.
 	 * @return True if the Class is annotated by @Entity, otherwise false.
 	 */
@@ -80,9 +82,10 @@ public class AnnotationFinder {
 
 		return cls == null ? false : isAnnotatedBy( cls.getDeclaredAnnotations(), entityAnnotationPattern );
 	}
-	
+
 	/**
 	 * Checks if Annotation array has a pattern.
+	 * 
 	 * @param annotations Annotation array to be examined.
 	 * @param pattern Pattern to be checked against Annotation array.
 	 * @return True if one of the elements in Annotation array has the pattern, otherwise false.
@@ -91,23 +94,21 @@ public class AnnotationFinder {
 
 		for ( Annotation annotation : annotations ) {
 			Matcher matcher = pattern.matcher( annotation.toString() );
-			while(matcher.find()){
+			while ( matcher.find() ) {
 				return true;
 			}
 		}
 
 		return false;
 	}
-	
+
 	/**
 	 * Finds all @Column annotations on fields and methods from the parameter, cls. The method searches for the
 	 * annotation on every field and method. If the parameter, fieldName is specified, then the method only searches @Column
 	 * annotation on the corresponding field and method to the name.
 	 * 
-	 * @param cls
-	 *            Where the search starts.
-	 * @param fieldName
-	 *            Constraint for the search.
+	 * @param cls Where the search starts.
+	 * @param fieldName Constraint for the search.
 	 * @return Mapping information for @Column annotation having column name and the class.
 	 */
 	public Map<String, Class> findAllColumnNamesFrom(Class cls, String fieldName, boolean fast) {
@@ -117,11 +118,11 @@ public class AnnotationFinder {
 		}
 
 		Map<String, Class> columnMap = new HashMap<String, Class>();
-		findFieldColumns( cls, fieldName, columnMap ,fast);
-		findMethodColumns( cls, fieldName, columnMap , fast );
+		findFieldColumns( cls, fieldName, columnMap, fast );
+		findMethodColumns( cls, fieldName, columnMap, fast );
 		return columnMap;
 	}
-	
+
 	public Map<String, Class> findAllJoinColumnNamesFrom(Class cls, String fieldName, boolean fast) {
 
 		if ( isNull( cls ) ) {
@@ -133,8 +134,8 @@ public class AnnotationFinder {
 		findMethodJoinColumns( cls, fieldName, columnMap, fast );
 		return columnMap;
 	}
-	
-	public Map<String,Class> findAllIdsFrom(Class cls,String fieldName,boolean fast){
+
+	public Map<String, Class> findAllIdsFrom(Class cls, String fieldName, boolean fast) {
 		if ( isNull( cls ) ) {
 			return Collections.EMPTY_MAP;
 		}
@@ -142,55 +143,46 @@ public class AnnotationFinder {
 		findFieldIds( cls, fieldName, columnMap, fast );
 		findMethodIds( cls, fieldName, columnMap, fast );
 		return columnMap;
-		
+
 	}
-	
+
 	/**
-	 * 
 	 * @param cls
 	 * @param fieldName
 	 * @param columnMap
 	 * @param fast
 	 * @return
 	 */
-	public Map<String,Class> findFieldColumns(Class cls, String fieldName, Map<String, Class> columnMap,
-			boolean fast){
-		
-		return findFieldAnnotations(cls,fieldName,columnMap,
-				fast,columnFinder);
+	public Map<String, Class> findFieldColumns(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast) {
+
+		return findFieldAnnotations( cls, fieldName, columnMap, fast, columnFinder );
 	}
-	
+
 	/**
-	 * 
 	 * @param cls
 	 * @param fieldName
 	 * @param columnMap
 	 * @param fast
 	 * @return
 	 */
-	public Map<String, Class> findFieldJoinColumns(Class cls, String fieldName, Map<String, Class> columnMap,
-			boolean fast) {
+	public Map<String, Class> findFieldJoinColumns(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast) {
 		return findFieldAnnotations( cls, fieldName, columnMap, fast, joinColumnFinder );
 	}
-	
+
 	public Map<String, Class> findFieldIds(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast) {
 		return findFieldAnnotations( cls, fieldName, columnMap, fast, idFinder );
 	}
-	
+
 	/**
 	 * Finds fields equal to the parameter, fieldName, annotated by @Column
 	 * 
-	 * @param cls
-	 *            Class to be examined.
-	 * @param fieldName
-	 *            Field name to be checked against each field in Class.
-	 * @param columnMap
-	 *            Store found @Column as map. The key is column name specified in @Column and the value is Class
-	 *            represented by the field.
+	 * @param cls Class to be examined.
+	 * @param fieldName Field name to be checked against each field in Class.
+	 * @param columnMap Store found @Column as map. The key is column name specified in @Column and the value is Class
+	 * represented by the field.
 	 * @return columnMap.
 	 */
-	private Map<String, Class> findFieldAnnotations(Class cls, String fieldName, Map<String, Class> columnMap,
-			boolean fast, Finder finder) {
+	private Map<String, Class> findFieldAnnotations(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast, Finder finder) {
 
 		if ( isNull( cls ) ) {
 			return Collections.EMPTY_MAP;
@@ -221,53 +213,44 @@ public class AnnotationFinder {
 
 		return columnMap;
 	}
-	
+
 	/**
-	 * 
 	 * @param cls
 	 * @param fieldName
 	 * @param columnMap
 	 * @param fast
 	 * @return
 	 */
-	public Map<String,Class> findMethodColumns(Class cls, String fieldName, Map<String, Class> columnMap,
-			boolean fast){
-		
-		return findMethodAnnotations(cls,fieldName,columnMap,
-				fast,columnFinder);
+	public Map<String, Class> findMethodColumns(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast) {
+
+		return findMethodAnnotations( cls, fieldName, columnMap, fast, columnFinder );
 	}
-	
+
 	/**
-	 * 
 	 * @param cls
 	 * @param fieldName
 	 * @param columnMap
 	 * @param fast
 	 * @return
 	 */
-	public Map<String, Class> findMethodJoinColumns(Class cls, String fieldName, Map<String, Class> columnMap,
-			boolean fast) {
+	public Map<String, Class> findMethodJoinColumns(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast) {
 		return findMethodAnnotations( cls, fieldName, columnMap, fast, joinColumnFinder );
 	}
-	
+
 	public Map<String, Class> findMethodIds(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast) {
 		return findMethodAnnotations( cls, fieldName, columnMap, fast, idFinder );
 	}
-	
+
 	/**
 	 * Finds methods containing the parameter, fieldName, annotated by @Column
 	 * 
-	 * @param cls
-	 *            Class to be examined.
-	 * @param fieldName
-	 *            Field name to be checked against each method in Class.
-	 * @param columnMap
-	 *            Store found @Column as map. The key is column name specified in @Column and the value is Class
-	 *            represented by the field.
+	 * @param cls Class to be examined.
+	 * @param fieldName Field name to be checked against each method in Class.
+	 * @param columnMap Store found @Column as map. The key is column name specified in @Column and the value is Class
+	 * represented by the field.
 	 * @return columnMap.
 	 */
-	private Map<String, Class> findMethodAnnotations(Class cls, String fieldName, Map<String, Class> columnMap,
-			boolean fast, Finder finder) {
+	private Map<String, Class> findMethodAnnotations(Class cls, String fieldName, Map<String, Class> columnMap, boolean fast, Finder finder) {
 
 		if ( isNull( cls ) ) {
 			return Collections.EMPTY_MAP;
@@ -303,10 +286,8 @@ public class AnnotationFinder {
 	/**
 	 * Checks if the parameter, str has the parameter, pattern.
 	 * 
-	 * @param str
-	 *            String to be examined.
-	 * @param pattern
-	 *            Used to check the parameter, str.
+	 * @param str String to be examined.
+	 * @param pattern Used to check the parameter, str.
 	 * @return True if patter is included.
 	 */
 	private boolean hasPattern(String str, Pattern pattern) {
@@ -322,41 +303,28 @@ public class AnnotationFinder {
 	/**
 	 * Finds field annotated by @Column in List and adds it to the map, Map<String,Class>.
 	 * 
-	 * @param index
-	 *            Index in the List.
-	 * @param list
-	 *            Stores Field or Method.
-	 * @param columnName
-	 *            Used to check against every field or method name if the parameter is specified. If the parameter is
-	 *            null or ''
-	 *            then,
-	 *            all the fields or methods are picked up by the method instead of only fields or methods that have the
-	 *            specified name.
-	 * @param columnMap
-	 *            Store found field data as Map<String,Class>.
-	 * @param pattern
-	 *            Constraint for the search.
-	 * @param typeMethod
-	 *            Method to get the next candidate class, Field.getType() or Method.getReturnType().
-	 * @param fieldOrMethodGetter
-	 *            Method to get the next candidate fields or methods, Class.getDeclaredFields() or
-	 *            Class.getDeclaredMethods().
+	 * @param index Index in the List.
+	 * @param list Stores Field or Method.
+	 * @param columnName Used to check against every field or method name if the parameter is specified. If the
+	 * parameter is null or '' then, all the fields or methods are picked up by the method instead of only fields or
+	 * methods that have the specified name.
+	 * @param columnMap Store found field data as Map<String,Class>.
+	 * @param pattern Constraint for the search.
+	 * @param typeMethod Method to get the next candidate class, Field.getType() or Method.getReturnType().
+	 * @param fieldOrMethodGetter Method to get the next candidate fields or methods, Class.getDeclaredFields() or
+	 * Class.getDeclaredMethods().
 	 */
-	private void addTo(int index, List list, String columnName, Map<String, Class> columnMap, Pattern pattern,
-			String typeMethod, String fieldOrMethodGetter, Finder finder) {
+	private void addTo(int index, List list, String columnName, Map<String, Class> columnMap, Pattern pattern, String typeMethod, String fieldOrMethodGetter,
+			Finder finder) {
 		// TODO prepare for composite key support
 		try {
 			Object obj = list.get( index );
 
-			if ( pattern != null
-					&& !hasPattern( (String) obj.getClass().getDeclaredMethod( GET_NAME ).invoke( obj ), pattern ) ) {
+			if ( pattern != null && !hasPattern( (String) obj.getClass().getDeclaredMethod( GET_NAME ).invoke( obj ), pattern ) ) {
 				columnName = null;
 			}
-			else if ( pattern == null
-					|| ( pattern != null && hasPattern(
-							(String) obj.getClass().getDeclaredMethod( GET_NAME ).invoke( obj ), pattern ) ) ) {
-				columnName = finder.findAnnotation( (Annotation[]) getInheritedMethod( obj, GET_DECLARED_ANNOTATIONS )
-						.invoke( obj ), obj );
+			else if ( pattern == null || ( pattern != null && hasPattern( (String) obj.getClass().getDeclaredMethod( GET_NAME ).invoke( obj ), pattern ) ) ) {
+				columnName = finder.findAnnotation( (Annotation[]) getInheritedMethod( obj, GET_DECLARED_ANNOTATIONS ).invoke( obj ), obj );
 			}
 
 			Class cls = (Class) ( obj.getClass().getDeclaredMethod( typeMethod ).invoke( obj ) );
@@ -365,15 +333,13 @@ public class AnnotationFinder {
 			}
 
 			try {
-				list.addAll( Arrays.asList( addIfNotAlreadyExist( list,
-						(Object[]) cls.getDeclaredMethod( fieldOrMethodGetter ).invoke( cls ) ) ) );
+				list.addAll( Arrays.asList( addIfNotAlreadyExist( list, (Object[]) cls.getDeclaredMethod( fieldOrMethodGetter ).invoke( cls ) ) ) );
 			}
-			catch ( NoSuchMethodException ex ) {
-				list.addAll( Arrays.asList( addIfNotAlreadyExist( list,
-						(Object[]) cls.getClass().getDeclaredMethod( fieldOrMethodGetter ).invoke( cls ) ) ) );
+			catch (NoSuchMethodException ex) {
+				list.addAll( Arrays.asList( addIfNotAlreadyExist( list, (Object[]) cls.getClass().getDeclaredMethod( fieldOrMethodGetter ).invoke( cls ) ) ) );
 			}
 		}
-		catch ( Throwable ex ) {
+		catch (Throwable ex) {
 			throw new RuntimeException( ex );
 		}
 	}
@@ -381,10 +347,8 @@ public class AnnotationFinder {
 	/**
 	 * Gets inherited method.
 	 * 
-	 * @param obj
-	 *            Object to be examined.
-	 * @param methodName
-	 *            Method name to be used to narrow.
+	 * @param obj Object to be examined.
+	 * @param methodName Method name to be used to narrow.
 	 * @return Method whose name equals to the parameter, methodName.
 	 */
 	private Method getInheritedMethod(Object obj, String methodName) {
@@ -412,13 +376,10 @@ public class AnnotationFinder {
 
 	/**
 	 * Checks if a field or method is already contained in fields, the parameter. If there is, the field is not added,
-	 * otherwise added and is
-	 * examined for @Column annotation.
+	 * otherwise added and is examined for @Column annotation.
 	 * 
-	 * @param list
-	 *            List.
-	 * @param src
-	 *            Object array return by Class.getDeclaredFields() or Class.getDeclaredMethods().
+	 * @param list List.
+	 * @param src Object array return by Class.getDeclaredFields() or Class.getDeclaredMethods().
 	 * @return Object array containing only unique fields or methods.
 	 */
 	private Object[] addIfNotAlreadyExist(List list, Object[] src) {
@@ -448,8 +409,7 @@ public class AnnotationFinder {
 	/**
 	 * Checks if an Object is null or not.
 	 * 
-	 * @param obj
-	 *            Examined if it's null or not.
+	 * @param obj Examined if it's null or not.
 	 * @return True if it's not null, otherwise false.
 	 */
 	private boolean isNull(Object obj) {

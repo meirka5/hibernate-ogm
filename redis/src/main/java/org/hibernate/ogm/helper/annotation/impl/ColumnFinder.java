@@ -8,12 +8,11 @@ import org.hibernate.ogm.helper.annotation.AbstractFinder;
 public class ColumnFinder extends AbstractFinder {
 
 	private final Pattern namePropertyPattern = Pattern.compile( "name\\p{Punct}\\w*" );
-	
+
 	/**
 	 * Finds column name from @Column annotation in Annotation array.
-	 * 
-	 * @param annotations
-	 *            Annotation array to be examined.
+	 *
+	 * @param annotations Annotation array to be examined.
 	 * @return Column name from @Column annotation.
 	 */
 	@Override

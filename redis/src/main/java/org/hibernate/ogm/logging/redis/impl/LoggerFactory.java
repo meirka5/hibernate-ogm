@@ -1,6 +1,8 @@
-/* 
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
  * JBoss, Home of Professional Open Source
- * Copyright 2012 Red Hat Inc. and/or its affiliates and other contributors
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
  * as indicated by the @authors tag. All rights reserved.
  * See the copyright.txt in the distribution for a
  * full listing of individual contributors.
@@ -16,41 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
+package org.hibernate.ogm.logging.redis.impl;
 
-package org.hibernate.ogm.datastore.redis.impl;
-
-import java.util.Map;
-import java.util.Set;
-
-import org.hibernate.ogm.datastore.spi.TupleSnapshot;
+import org.jboss.logging.Logger;
 
 /**
- * @author Seiya Kawashima <skawashima@uchicago.edu>
+ * @author Davide D'Alto <davide@hibernate.org>
  */
-public class RedisTupleSnapshot implements TupleSnapshot {
+public class LoggerFactory {
 
-	private Map<String, Object> map;
-
-	public RedisTupleSnapshot(Map<String, Object> map) {
-		this.map = map;
+	public static Log getLogger() {
+		return Logger.getMessageLogger( Log.class, "Redis" );
 	}
 
-	@Override
-	public Object get(String column) {
-		return map.get( column );
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return map.isEmpty();
-	}
-
-	@Override
-	public Set<String> getColumnNames() {
-		return map.keySet();
-	}
-
-	public Map<String, Object> getMap() {
-		return map;
-	}
 }

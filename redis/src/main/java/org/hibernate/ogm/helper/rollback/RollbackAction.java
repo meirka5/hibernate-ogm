@@ -33,7 +33,7 @@ import org.hibernate.ogm.helper.memento.Originator;
  * @author Seiya Kawashima <skawashima@uchicago.edu>
  */
 public class RollbackAction {
-	
+
 	private final Originator originator;
 	private final CareTaker careTaker;
 	private final RedisDatastoreProvider redisDatastoreProvider;
@@ -71,8 +71,7 @@ public class RollbackAction {
 				redisDatastoreProvider.putAssociation( (AssociationKey) key, null );
 			}
 			else {
-				redisDatastoreProvider.putAssociation( (AssociationKey) key,
-						(Map<RowKey, Map<String, Object>>) originator.getObj() );
+				redisDatastoreProvider.putAssociation( (AssociationKey) key, (Map<RowKey, Map<String, Object>>) originator.getObj() );
 			}
 		}
 		else if ( key instanceof RowKey ) {
@@ -88,6 +87,7 @@ public class RollbackAction {
 
 	/**
 	 * Saves the current state for the possible rollback.
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -109,7 +109,7 @@ public class RollbackAction {
 
 		objs[0] = o;
 		objs[1] = new CareTaker( memento );
-		
+
 		return objs;
 	}
 }

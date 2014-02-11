@@ -24,21 +24,20 @@ public class RedisTestHelper implements TestableGridDialect {
 		RedisDatastoreProvider castProvider = getProvider( sessionFactory );
 		return castProvider.getEntityMap();
 	}
-	
+
 	private static RedisDatastoreProvider getProvider(SessionFactory sessionFactory) {
-		DatastoreProvider provider = ( (SessionFactoryImplementor) sessionFactory ).getServiceRegistry().getService(
-				DatastoreProvider.class );
+		DatastoreProvider provider = ( (SessionFactoryImplementor) sessionFactory ).getServiceRegistry().getService( DatastoreProvider.class );
 		if ( !( RedisDatastoreProvider.class.isInstance( provider ) ) ) {
 			throw new RuntimeException( "Not testing with RedisDatastoreProvider, cannot extract underlying map." );
 		}
 		return RedisDatastoreProvider.class.cast( provider );
 	}
-	
-	private static Map<AssociationKey, Map<RowKey, Map<String,Object>>> getAssociationCache(SessionFactory sessionFactory){
-		RedisDatastoreProvider castProvider = getProvider(sessionFactory);
+
+	private static Map<AssociationKey, Map<RowKey, Map<String, Object>>> getAssociationCache(SessionFactory sessionFactory) {
+		RedisDatastoreProvider castProvider = getProvider( sessionFactory );
 		return castProvider.getAssociationsMap();
 	}
-	
+
 	@Override
 	public boolean backendSupportsTransactions() {
 		return false;
@@ -46,7 +45,7 @@ public class RedisTestHelper implements TestableGridDialect {
 
 	@Override
 	public void dropSchemaAndDatabase(SessionFactory sessionFactory) {
-		RedisDatastoreProvider castProvider = getProvider(sessionFactory);
+		RedisDatastoreProvider castProvider = getProvider( sessionFactory );
 		castProvider.removeAll();
 	}
 
