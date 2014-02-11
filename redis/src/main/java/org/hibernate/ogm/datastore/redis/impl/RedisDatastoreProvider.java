@@ -46,6 +46,7 @@ import org.hibernate.ogm.helper.JSONHelper;
 import org.hibernate.ogm.helper.rollback.RollbackAction;
 import org.hibernate.ogm.logging.redis.impl.Log;
 import org.hibernate.ogm.logging.redis.impl.LoggerFactory;
+import org.hibernate.ogm.service.impl.LuceneBasedQueryParserService;
 import org.hibernate.ogm.service.impl.QueryParserService;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
@@ -71,6 +72,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	private static final String ENTITY_HSET = "OGM-Entity";
 	private static final String ASSOCIATION_HSET = "OGM-Association";
 	private static final String SEQUENCE_HSET = "OGM-Sequence";
+
 	// entityKeys is meant to execute assertions in tests only same as getEntityMap() and getAssociationsMap().
 	private final ConcurrentMap<String, EntityKey> entityKeys = new ConcurrentHashMap<String, EntityKey>();
 	// associationKeys is meant to execute assertions in tests only same as getEntityMap() and getAssociationsMap().
@@ -102,7 +104,6 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		log.redisStopping();
 		entityKeys.clear();
 		associationKeys.clear();
-
 		if ( pool != null ) {
 			pool.destroy();
 		}
@@ -240,19 +241,15 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	 * @return Newly created wrapper object.
 	 */
 	private Object createWrapperObject(String initValue, Class primitiveClass) {
-
 		Class wrapperClass = ClassUtils.primitiveToWrapper( primitiveClass );
-		Constructor ctor = null;
-
 		try {
-			ctor = wrapperClass.getDeclaredConstructor( String.class );
+			Constructor ctor = wrapperClass.getDeclaredConstructor( String.class );
 			return ctor.newInstance( initValue );
 		}
 		catch (Exception ex) {
 			throwHibernateExceptionFrom( ex );
+			return null;
 		}
-
-		return null;
 	}
 
 	/**
@@ -432,7 +429,6 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	}
 
 	public void putAssociation(AssociationKey key, Map<RowKey, Map<String, Object>> associationMap) {
-
 		RollbackAction rollbackAction = new RollbackAction( this, key );
 		associationKeys.put( jsonHelper.toJSON( getAssociationKeyAsMap( key ) ), key );
 
@@ -660,7 +656,6 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	}
 
 	public void removeAll() {
-
 		log.info( "about to remove all data in Redis" );
 		try {
 			jedis.flushDB();
@@ -682,6 +677,6 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 
 	@Override
 	public Class<? extends QueryParserService> getDefaultQueryParserServiceType() {
-		return null;
+		return LuceneBasedQueryParserService.class;
 	}
 }
