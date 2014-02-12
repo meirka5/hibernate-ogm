@@ -16,15 +16,15 @@ import org.hibernate.ogm.grid.RowKey;
  */
 public class RedisAssociationSnapshot implements AssociationSnapshot {
 
-	private final Map<RowKey, Map<String, String>> associationMap;
+	private final Map<RowKey, Map<String, Object>> associationMap;
 
-	public RedisAssociationSnapshot(Map<RowKey, Map<String, String>> associationMap) {
+	public RedisAssociationSnapshot(Map<RowKey, Map<String, Object>> associationMap) {
 		this.associationMap = associationMap;
 	}
 
 	@Override
 	public Tuple get(RowKey column) {
-		Map<String, String> rawResult = associationMap.get( column );
+		Map<String, Object> rawResult = associationMap.get( column );
 		return rawResult != null ? new Tuple( new RedisTupleSnapshot( rawResult ) ) : null;
 	}
 
@@ -43,7 +43,7 @@ public class RedisAssociationSnapshot implements AssociationSnapshot {
 		return associationMap.keySet();
 	}
 
-	public Map<RowKey, Map<String, String>> getUnderlyingMap() {
+	public Map<RowKey, Map<String, Object>> getUnderlyingMap() {
 		return associationMap;
 	}
 

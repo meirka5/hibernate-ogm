@@ -23,7 +23,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -261,7 +260,11 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return RedisDialect.class;
 	}
 
-	public Map<String, String> getEntityTuple(EntityKey entityKey, TupleContext context) {
+	public JedisPool getPool() {
+		return pool;
+	}
+
+	public Map<String, Object> getEntityTuple(EntityKey entityKey, TupleContext context) {
 		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
@@ -286,8 +289,8 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		}
 	}
 
-	private Map<String, String> convert(String[] keys, List<String> values) {
-		Map<String, String> resultsString = new HashMap<String, String>();
+	private Map<String, Object> convert(String[] keys, List<String> values) {
+		Map<String, Object> resultsString = new HashMap<String, Object>();
 		for ( int i = 0; i < keys.length; i++ ) {
 			String value = values.get( i );
 			if ( value != null ) {
@@ -354,18 +357,6 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		finally {
 			pool.returnResource( jedis );
 		}
-	}
-
-	/**
-	 * Gets entity key as Map containing id and table name.
-	 *
-	 * @return Map containing id and table name.
-	 */
-	private Map<String, String> getEntityKeyAsMap(EntityKey entityKey) {
-		Map<String, String> map = new HashMap<String, String>();
-		map.put( "id", entityKey.toString() );
-		map.put( "table", entityKey.getTable() );
-		return Collections.unmodifiableMap( map );
 	}
 
 	public void removeEntity(EntityKey key) {
@@ -527,17 +518,6 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 			entry = itr.next();
 		}
 		return associations;
-	}
-
-	public void removeAll() {
-		log.info( "About to remove all data in Redis" );
-		Jedis jedis = pool.getResource(); 
-		try {
-			jedis.flushAll();
-		}
-		finally {
-			pool.returnResource( jedis );
-		}
 	}
 
 	/**

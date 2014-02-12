@@ -40,6 +40,12 @@ import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
 import org.hibernate.ogm.datastore.spi.TupleOperation;
 import org.hibernate.ogm.dialect.GridDialect;
+import org.hibernate.ogm.dialect.redis.type.RedisBooleanType;
+import org.hibernate.ogm.dialect.redis.type.RedisByteType;
+import org.hibernate.ogm.dialect.redis.type.RedisDoubleType;
+import org.hibernate.ogm.dialect.redis.type.RedisIntegerType;
+import org.hibernate.ogm.dialect.redis.type.RedisLongType;
+import org.hibernate.ogm.dialect.redis.type.RedisPrimitiveByteType;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
@@ -84,7 +90,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext context) {
-		Map<String, String> entityMap = provider.getEntityTuple( key, context );
+		Map<String, Object> entityMap = provider.getEntityTuple( key, context );
 
 		if ( entityMap == null ) {
 			return null;
@@ -95,7 +101,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		return new Tuple( new RedisTupleSnapshot( new HashMap<String, String>() ) );
+		return new Tuple( new RedisTupleSnapshot() );
 	}
 
 	@Override
@@ -116,7 +122,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext context) {
-		Map<RowKey, Map<String, String>> associationMap = new HashMap<RowKey, Map<String, String>>();
+		Map<RowKey, Map<String, Object>> associationMap = new HashMap<RowKey, Map<String, Object>>();
 		return new Association( new RedisAssociationSnapshot( associationMap ) );
 	}
 

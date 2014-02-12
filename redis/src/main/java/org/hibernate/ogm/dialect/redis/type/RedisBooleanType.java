@@ -1,4 +1,4 @@
-package org.hibernate.ogm.dialect.redis;
+package org.hibernate.ogm.dialect.redis.type;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;

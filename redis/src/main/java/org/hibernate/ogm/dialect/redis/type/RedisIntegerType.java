@@ -1,25 +1,25 @@
-package org.hibernate.ogm.dialect.redis;
+package org.hibernate.ogm.dialect.redis.type;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.ogm.type.AbstractGenericBasicType;
 import org.hibernate.ogm.type.descriptor.StringMappedGridTypeDescriptor;
-import org.hibernate.type.descriptor.java.LongTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 
 /**
  * @author Andrea Boriero <dreborier@gmail.com/>
  */
-public class RedisLongType extends AbstractGenericBasicType<Long> {
+public class RedisIntegerType extends AbstractGenericBasicType<Integer> {
 
-	public static final RedisLongType INSTANCE = new RedisLongType();
+	public static final RedisIntegerType INSTANCE = new RedisIntegerType();
 
-	public RedisLongType() {
-		super( StringMappedGridTypeDescriptor.INSTANCE, LongTypeDescriptor.INSTANCE );
+	public RedisIntegerType() {
+		super( StringMappedGridTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String getName() {
-		return "redis_long";
+		return "redis_integer";
 	}
 
 	@Override
