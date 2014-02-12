@@ -44,6 +44,8 @@ public enum GridDialectType {
 
 	NEO4J( "org.hibernate.ogm.test.utils.Neo4jTestHelper", false ),
 
+	REDIS( "org.hibernate.ogm.test.utils.RedisTestHelper", false ),
+
 	COUCHDB( "org.hibernate.ogm.test.utils.CouchDBTestHelper", true );
 
 	private final String testHelperClassName;

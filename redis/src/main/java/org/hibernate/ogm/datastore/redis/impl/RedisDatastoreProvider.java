@@ -23,6 +23,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,8 +37,6 @@ import org.apache.commons.lang.ClassUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.ogm.datastore.impl.MapHelpers;
-import org.hibernate.ogm.datastore.impl.MapTupleSnapshot;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.AssociationOperation;
@@ -45,7 +44,6 @@ import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
 import org.hibernate.ogm.datastore.spi.TupleOperation;
-import org.hibernate.ogm.datastore.spi.TupleSnapshot;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.dialect.redis.RedisDialect;
 import org.hibernate.ogm.grid.AssociationKey;
@@ -61,7 +59,6 @@ import org.hibernate.service.spi.Stoppable;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 
@@ -71,12 +68,13 @@ import redis.clients.jedis.Transaction;
 public class RedisDatastoreProvider implements DatastoreProvider, Startable, Stoppable {
 
 	private static final Log log = LoggerFactory.getLogger();
-	private Map<String, String> requiredProperties;
-	private Pattern setterPattern;
-	private JedisPool pool;
 	private static final String PROPERTY_PREFIX = "hibernate.datastore.provider.redis_config.";
 	private static final String ASSOCIATION_HSET = "OGM-Association";
 	private static final String SEQUENCE_HSET = "OGM-Sequence";
+
+	private Map<String, String> requiredProperties;
+	private Pattern setterPattern;
+	private JedisPool pool;
 
 	private static final String SEQUENCE_LABEL = "nextSequence";
 
@@ -486,65 +484,25 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return Collections.unmodifiableMap( map );
 	}
 
-	public void setNextValue(RowKey key, IntegralDataTypeHolder value, int increment, int initialValue) {
-
-		Integer seq = getSequence( key );
-
-		if ( seq == null ) {
-
-			synchronized ( this ) {
+	public void setNextValue(RowKey rowKey, IntegralDataTypeHolder value, int increment, int initialValue) {
+		String sequenceId = rowKey.toString();
+		Jedis jedis = pool.getResource();
+		jedis = pool.getResource();
+		try {
+			Transaction tx = jedis.multi();
+			Response<String> sequenceValue = tx.get( sequenceId );
+			tx.exec();
+			tx.watch( sequenceId );
+			tx = jedis.multi();
+			if ( sequenceValue.get() == null ) {
+				tx.set( sequenceId, String.valueOf( initialValue ) );
+				tx.exec();
 				value.initialize( initialValue );
+			}  else {
+				Response<Long> incrBy = tx.incrBy( sequenceId, increment );
+				tx.exec();
+				value.initialize( incrBy.get() );
 			}
-
-			Map<String, Integer> nextSequence = new HashMap<String, Integer>();
-			nextSequence.put( SEQUENCE_LABEL, initialValue );
-			putSequence( key, nextSequence );
-		}
-		else {
-			int sequence = 0;
-
-			synchronized ( this ) {
-				sequence = seq + increment;
-				value.initialize( sequence );
-			}
-
-			Map<String, Integer> nextSequence = new HashMap<String, Integer>();
-			nextSequence.put( SEQUENCE_LABEL, sequence );
-			putSequence( key, nextSequence );
-		}
-	}
-
-	/**
-	 * Gets sequence.
-	 * 
-	 * @param rowKey Used to search for the corresponding sequence.
-	 * @return Sequence.
-	 */
-	public synchronized Integer getSequence(RowKey rowKey) {
-		Jedis jedis = pool.getResource();
-		if ( rowKey == null ) {
-			return null;
-		}
-
-		try {
-			Transaction tx = jedis.multi();
-			tx.exec();
-			return null;
-		}
-		finally {
-			pool.returnResource( jedis );
-		}
-
-	}
-
-	public synchronized void putSequence(RowKey key, Map<String, Integer> nextSequence) {
-		Jedis jedis = pool.getResource();
-		try {
-			Transaction tx = jedis.multi();
-			tx.exec();
-		}
-		catch (Exception ex) {
-			throwHibernateExceptionFrom( ex );
 		}
 		finally {
 			pool.returnResource( jedis );
@@ -572,10 +530,10 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	}
 
 	public void removeAll() {
-		log.info( "about to remove all data in Redis" );
+		log.info( "About to remove all data in Redis" );
 		Jedis jedis = pool.getResource(); 
 		try {
-			jedis.flushDB();
+			jedis.flushAll();
 		}
 		finally {
 			pool.returnResource( jedis );
