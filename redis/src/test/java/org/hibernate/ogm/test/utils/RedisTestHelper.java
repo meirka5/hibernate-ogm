@@ -17,12 +17,7 @@ public class RedisTestHelper implements TestableGridDialect {
 
 	@Override
 	public Map<String, Object> extractEntityTuple(SessionFactory sessionFactory, EntityKey key) {
-		return getEntityMap( sessionFactory ).get( key );
-	}
-
-	private static Map<EntityKey, Map<String, Object>> getEntityMap(SessionFactory sessionFactory) {
-		RedisDatastoreProvider castProvider = getProvider( sessionFactory );
-		return castProvider.getEntityMap();
+		return null;
 	}
 
 	private static RedisDatastoreProvider getProvider(SessionFactory sessionFactory) {
@@ -56,7 +51,7 @@ public class RedisTestHelper implements TestableGridDialect {
 
 	@Override
 	public long getNumberOfEntities(SessionFactory sessionFactory) {
-		return getEntityMap( sessionFactory ).size();
+		return 0;
 	}
 
 	@Override

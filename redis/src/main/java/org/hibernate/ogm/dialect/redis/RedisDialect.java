@@ -36,16 +36,24 @@ import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
+import org.hibernate.ogm.datastore.spi.TupleOperation;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.hibernate.ogm.grid.RowKey;
 import org.hibernate.ogm.massindex.batchindexing.Consumer;
+import org.hibernate.ogm.type.BigDecimalType;
+import org.hibernate.ogm.type.ByteType;
 import org.hibernate.ogm.type.GridType;
+import org.hibernate.ogm.type.IntegerType;
+import org.hibernate.ogm.type.Iso8601StringCalendarType;
+import org.hibernate.ogm.type.Iso8601StringDateType;
+import org.hibernate.ogm.type.LongType;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
@@ -53,8 +61,9 @@ import org.hibernate.type.Type;
  */
 public class RedisDialect implements GridDialect {
 
+	private static final Log log = LoggerFactory.make();
+
 	private final RedisDatastoreProvider provider;
-	private Log log = LoggerFactory.make();
 
 	public RedisDialect(RedisDatastoreProvider provider) {
 		this.provider = provider;
@@ -69,7 +78,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext context) {
-		Map<String, Object> entityMap = provider.getEntityTuple( key );
+		Map<String, String> entityMap = provider.getEntityTuple( key, context );
 
 		if ( entityMap == null ) {
 			return null;
@@ -80,15 +89,29 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		Map<String, Object> tuple = new HashMap<String, Object>();
+		Map<String, String> tuple = new HashMap<String, String>();
 		return new Tuple( new RedisTupleSnapshot( tuple ) );
 	}
 
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey key) {
-		Map<String, Object> entityRecord = ( (RedisTupleSnapshot) tuple.getSnapshot() ).getMap();
-		MapHelpers.applyTupleOpsOnMap( tuple, entityRecord );
-		provider.putEntity( key, provider.getJsonHelper().convertJsonAsNeededOn( entityRecord ) );
+		Map<String, String> entityRecord = ( (RedisTupleSnapshot) tuple.getSnapshot() ).getMap();
+		applyTupleOpsOnMap( tuple, entityRecord );
+		provider.putEntity( key, entityRecord );
+	}
+
+	private void applyTupleOpsOnMap(Tuple tuple, Map<String, String> map) {
+		for ( TupleOperation action : tuple.getOperations() ) {
+			switch ( action.getType() ) {
+				case PUT_NULL:
+				case PUT:
+					map.put( action.getColumn(), String.valueOf( action.getValue() ) );
+					break;
+				case REMOVE:
+					map.remove( action.getColumn() );
+					break;
+			}
+		}
 	}
 
 	@Override
@@ -131,6 +154,35 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public GridType overrideType(Type type) {
+		if ( type == StandardBasicTypes.BIG_DECIMAL ) {
+			return BigDecimalType.INSTANCE;
+		}
+		// persist calendars as ISO8601 strings, including TZ info
+		else if ( type == StandardBasicTypes.CALENDAR ) {
+			return Iso8601StringCalendarType.DATE_TIME;
+		}
+		else if ( type == StandardBasicTypes.CALENDAR_DATE ) {
+			return Iso8601StringCalendarType.DATE;
+		}
+		// persist date as ISO8601 strings, in UTC, without TZ info
+		else if ( type == StandardBasicTypes.DATE ) {
+			return Iso8601StringDateType.DATE;
+		}
+		else if ( type == StandardBasicTypes.TIME ) {
+			return Iso8601StringDateType.TIME;
+		}
+		else if ( type == StandardBasicTypes.TIMESTAMP ) {
+			return Iso8601StringDateType.DATE_TIME;
+		}
+		else if ( type == StandardBasicTypes.BYTE ) {
+			return ByteType.INSTANCE;
+		}
+		else if ( type == StandardBasicTypes.LONG ) {
+			return RedisLongType.INSTANCE;
+		}
+		else if ( type == StandardBasicTypes.INTEGER ) {
+			return RedisIntegerType.INSTANCE;
+		}
 		return null;
 	}
 

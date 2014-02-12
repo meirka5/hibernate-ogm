@@ -29,9 +29,9 @@ import org.hibernate.ogm.datastore.spi.TupleSnapshot;
  */
 public class RedisTupleSnapshot implements TupleSnapshot {
 
-	private Map<String, Object> map;
+	private Map<String, String> map;
 
-	public RedisTupleSnapshot(Map<String, Object> map) {
+	public RedisTupleSnapshot(Map<String, String> map) {
 		this.map = map;
 	}
 
@@ -50,7 +50,7 @@ public class RedisTupleSnapshot implements TupleSnapshot {
 		return map.keySet();
 	}
 
-	public Map<String, Object> getMap() {
+	public Map<String, String> getMap() {
 		return map;
 	}
 }
