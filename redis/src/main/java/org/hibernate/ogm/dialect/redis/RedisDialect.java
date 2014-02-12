@@ -46,17 +46,21 @@ import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.hibernate.ogm.grid.RowKey;
 import org.hibernate.ogm.massindex.batchindexing.Consumer;
 import org.hibernate.ogm.type.BigDecimalType;
+import org.hibernate.ogm.type.BigIntegerType;
+import org.hibernate.ogm.type.BooleanType;
 import org.hibernate.ogm.type.ByteType;
 import org.hibernate.ogm.type.GridType;
 import org.hibernate.ogm.type.IntegerType;
 import org.hibernate.ogm.type.Iso8601StringCalendarType;
 import org.hibernate.ogm.type.Iso8601StringDateType;
 import org.hibernate.ogm.type.LongType;
+import org.hibernate.ogm.type.PrimitiveByteArrayType;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
 
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>
@@ -141,6 +145,9 @@ public class RedisDialect implements GridDialect {
 		if ( type == StandardBasicTypes.BIG_DECIMAL ) {
 			return BigDecimalType.INSTANCE;
 		}
+		if ( type == StandardBasicTypes.BIG_INTEGER ) {
+			return BigIntegerType.INSTANCE;
+		}
 		// persist calendars as ISO8601 strings, including TZ info
 		else if ( type == StandardBasicTypes.CALENDAR ) {
 			return Iso8601StringCalendarType.DATE_TIME;
@@ -159,7 +166,7 @@ public class RedisDialect implements GridDialect {
 			return Iso8601StringDateType.DATE_TIME;
 		}
 		else if ( type == StandardBasicTypes.BYTE ) {
-			return ByteType.INSTANCE;
+			return RedisByteType.INSTANCE;
 		}
 		else if ( type == StandardBasicTypes.LONG ) {
 			return RedisLongType.INSTANCE;
@@ -169,6 +176,12 @@ public class RedisDialect implements GridDialect {
 		}
 		else if ( type == StandardBasicTypes.DOUBLE ) {
 			return RedisDoubleType.INSTANCE;
+		}
+		else if ( type == StandardBasicTypes.BOOLEAN ) {
+			return RedisBooleanType.INSTANCE;
+		}
+		else if ( type == StandardBasicTypes.MATERIALIZED_BLOB ) {
+			return RedisPrimitiveByteType.INSTANCE;
 		}
 		return null;
 	}

@@ -3,14 +3,12 @@
  */
 package org.hibernate.ogm.test.utils;
 
-import org.hibernate.ogm.test.simpleentity.InheritanceTest;
-import org.hibernate.ogm.test.simpleentity.NullableFieldValueTest;
-
+import org.hibernate.ogm.test.type.BuiltInTypeTest;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  *
  */
-public class RedisTest extends NullableFieldValueTest {
+public class RedisTest extends BuiltInTypeTest {
 
 }
