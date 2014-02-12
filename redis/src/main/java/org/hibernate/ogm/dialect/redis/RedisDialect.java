@@ -28,17 +28,13 @@ import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.ogm.datastore.impl.EmptyTupleSnapshot;
-import org.hibernate.ogm.datastore.impl.MapHelpers;
+import org.hibernate.ogm.datastore.impl.MapTupleSnapshot;
 import org.hibernate.ogm.datastore.map.impl.MapAssociationSnapshot;
-import org.hibernate.ogm.datastore.redis.impl.RedisAssociationSnapshot;
 import org.hibernate.ogm.datastore.redis.impl.RedisDatastoreProvider;
-import org.hibernate.ogm.datastore.redis.impl.RedisTupleSnapshot;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
-import org.hibernate.ogm.datastore.spi.AssociationOperation;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
-import org.hibernate.ogm.datastore.spi.TupleOperation;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.dialect.redis.type.RedisBooleanType;
 import org.hibernate.ogm.dialect.redis.type.RedisByteType;
@@ -53,27 +49,17 @@ import org.hibernate.ogm.grid.RowKey;
 import org.hibernate.ogm.massindex.batchindexing.Consumer;
 import org.hibernate.ogm.type.BigDecimalType;
 import org.hibernate.ogm.type.BigIntegerType;
-import org.hibernate.ogm.type.BooleanType;
-import org.hibernate.ogm.type.ByteType;
 import org.hibernate.ogm.type.GridType;
-import org.hibernate.ogm.type.IntegerType;
 import org.hibernate.ogm.type.Iso8601StringCalendarType;
 import org.hibernate.ogm.type.Iso8601StringDateType;
-import org.hibernate.ogm.type.LongType;
-import org.hibernate.ogm.type.PrimitiveByteArrayType;
-import org.hibernate.ogm.util.impl.Log;
-import org.hibernate.ogm.util.impl.LoggerFactory;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
 
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>
  */
 public class RedisDialect implements GridDialect {
-
-	private static final Log log = LoggerFactory.make();
 
 	private final RedisDatastoreProvider provider;
 
@@ -96,12 +82,12 @@ public class RedisDialect implements GridDialect {
 			return null;
 		}
 
-		return new Tuple( new RedisTupleSnapshot( entityMap ) );
+		return new Tuple( new MapTupleSnapshot( entityMap ) );
 	}
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		return new Tuple( new RedisTupleSnapshot() );
+		return new Tuple( new MapTupleSnapshot() );
 	}
 
 	@Override
@@ -123,7 +109,7 @@ public class RedisDialect implements GridDialect {
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext context) {
 		Map<RowKey, Map<String, Object>> associationMap = new HashMap<RowKey, Map<String, Object>>();
-		return new Association( new RedisAssociationSnapshot( associationMap ) );
+		return new Association( new MapAssociationSnapshot( associationMap ) );
 	}
 
 	@Override

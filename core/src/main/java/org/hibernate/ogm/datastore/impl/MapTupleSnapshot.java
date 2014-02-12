@@ -20,6 +20,7 @@
  */
 package org.hibernate.ogm.datastore.impl;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +31,10 @@ import org.hibernate.ogm.datastore.spi.TupleSnapshot;
  */
 public final class MapTupleSnapshot implements TupleSnapshot {
 	private final Map<String, Object> map;
+
+	public MapTupleSnapshot() {
+		this.map = new HashMap<String, Object>();
+	}
 
 	public MapTupleSnapshot(Map<String, Object> map) {
 		this.map = map;

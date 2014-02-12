@@ -6,11 +6,10 @@ import java.util.Set;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.ogm.cfg.OgmConfiguration;
+import org.hibernate.ogm.datastore.redis.Redis;
 import org.hibernate.ogm.datastore.redis.impl.RedisDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
-import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
-import org.hibernate.ogm.grid.RowKey;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.options.navigation.context.GlobalContext;
 
@@ -59,7 +58,7 @@ public class RedisTestHelper implements TestableGridDialect {
 		Jedis jedis = pool.getResource();
 		Transaction tx = jedis.multi();
 		try {
-			tx.flushAll();
+			tx.flushDB();
 			tx.exec();
 		} finally {
 			pool.returnResource( jedis );
@@ -113,7 +112,7 @@ public class RedisTestHelper implements TestableGridDialect {
 
 	@Override
 	public GlobalContext<?, ?> configureDatastore(OgmConfiguration configuration) {
-		return null;
+		return configuration.configureOptionsFor( Redis.class );
 	}
 
 }
