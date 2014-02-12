@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,8 +36,16 @@ import org.apache.commons.lang.ClassUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.ogm.datastore.impl.MapHelpers;
+import org.hibernate.ogm.datastore.impl.MapTupleSnapshot;
+import org.hibernate.ogm.datastore.spi.Association;
+import org.hibernate.ogm.datastore.spi.AssociationContext;
+import org.hibernate.ogm.datastore.spi.AssociationOperation;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
+import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
+import org.hibernate.ogm.datastore.spi.TupleOperation;
+import org.hibernate.ogm.datastore.spi.TupleSnapshot;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.dialect.redis.RedisDialect;
 import org.hibernate.ogm.grid.AssociationKey;
@@ -52,6 +61,7 @@ import org.hibernate.service.spi.Stoppable;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 
@@ -64,7 +74,6 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	private Map<String, String> requiredProperties;
 	private Pattern setterPattern;
 	private JedisPool pool;
-	private Jedis jedis;
 	private static final String PROPERTY_PREFIX = "hibernate.datastore.provider.redis_config.";
 	private static final String ASSOCIATION_HSET = "OGM-Association";
 	private static final String SEQUENCE_HSET = "OGM-Sequence";
@@ -254,12 +263,8 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return RedisDialect.class;
 	}
 
-	public JSONHelper getJsonHelper() {
-		return jsonHelper;
-	}
-
 	public Map<String, String> getEntityTuple(EntityKey entityKey, TupleContext context) {
-		jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
 			String[] columns = null;
@@ -297,6 +302,20 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return resultsString;
 	}
 
+	private Map<String, Object> convertForAssociation(String[] keys, List<String> values) {
+		Map<String, Object> resultsString = new HashMap<String, Object>();
+		for ( int i = 0; i < keys.length; i++ ) {
+			String value = values.get( i );
+			if ( value != null ) {
+				resultsString.put( keys[i], value );
+			}
+		}
+		if ( resultsString.isEmpty() ) {
+			return null;
+		}
+		return resultsString;
+	}
+
 	/**
 	 * Reused from VoldemortDatastoreProvider. Gets the declared fields from the specified class.
 	 *
@@ -317,11 +336,21 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return fields;
 	}
 
-	public void putEntity(EntityKey key, Map<String, String> tuple) {
-		jedis = pool.getResource();
+	public void putEntity(EntityKey key, Tuple tuple) {
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
-			tx.hmset( key.toString(), tuple );
+			for ( TupleOperation action : tuple.getOperations() ) {
+				switch ( action.getType() ) {
+					case PUT:
+						tx.hset( key.toString(), action.getColumn(), (String) action.getValue() );
+						break;
+					case PUT_NULL:
+					case REMOVE:
+						tx.hdel( key.toString(), action.getColumn() );
+						break;
+				}
+			}
 			tx.exec();
 		}
 		finally {
@@ -334,7 +363,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	 *
 	 * @return Map containing id and table name.
 	 */
-	public Map<String, String> getEntityKeyAsMap(EntityKey entityKey) {
+	private Map<String, String> getEntityKeyAsMap(EntityKey entityKey) {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put( "id", entityKey.toString() );
 		map.put( "table", entityKey.getTable() );
@@ -342,7 +371,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	}
 
 	public void removeEntity(EntityKey key) {
-		jedis = pool.getResource();
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
 			Response<Map<String, String>> hgetAll = tx.hgetAll( key.toString() );
@@ -350,7 +379,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 			Map<String, String> map = hgetAll.get();
 			tx = jedis.multi();
 			String[] keySet = map.keySet().toArray( new String[map.keySet().size()] );
-			Response<Long> hdel = tx.hdel( key.toString(), keySet );
+			tx.hdel( key.toString(), keySet );
 			tx.exec();
 		}
 		finally {
@@ -358,79 +387,83 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		}
 	}
 
-	public Map<RowKey, Map<String, Object>> getAssociation(AssociationKey key) {
-
-		Response<String> res = null;
-		boolean isNull = false;
+	public Map<RowKey, Map<String, Object>> getAssociation(AssociationKey key, AssociationContext context) {
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
-			res = tx.hget( ASSOCIATION_HSET, jsonHelper.toJSON( getAssociationKeyAsMap( key ) ) );
+			Response<Set<String>> smembers = tx.smembers( key.toString() );
 			tx.exec();
-		}
-		catch (NullPointerException ex) {
-			isNull = true;
-		}
-		catch (Exception ex) {
-			throwHibernateExceptionFrom( ex );
+			Set<String> rowKeys = smembers.get();
+			String[] rowKeyColumnNames = key.getRowKeyColumnNames();
+			Map<RowKey, Map<String, Object>> result =  new HashMap<RowKey, Map<String,Object>>();
+			for ( String rowKey : rowKeys ) {
+				tx = jedis.multi();
+				Response<List<String>> list = tx.hmget( rowKey, rowKeyColumnNames );
+				tx.exec();
+				List<String> rowKeyValues = list.get();
+				RowKey rk = new RowKey( key.getTable(), rowKeyColumnNames, rowKeyValues.toArray() );
+				Map<String, Object> convert = convertForAssociation( rowKeyColumnNames, rowKeyValues );
+				result.put( rk, convert );
+			}
+			return result;
 		}
 		finally {
 			pool.returnResource( jedis );
 		}
-
-		if ( isNull ) {
-			return null;
-		}
-
-		return createAssociationFrom( res.get() );
 	}
 
-	/**
-	 * Copied from VoldemortDatastoreProvider. Creates association from the specified Jsoned string.
-	 *
-	 * @param jsonedAssociation Representation of association as JSON.
-	 * @return Association based on the specified string.
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private Map<RowKey, Map<String, Object>> createAssociationFrom(String jsonedAssociation) {
-
-		Map associationMap = (Map) jsonHelper.fromJSON( jsonedAssociation, Map.class );
-		Map<RowKey, Map<String, Object>> association = new HashMap<RowKey, Map<String, Object>>();
-		String key = "";
-		RowKey rowKey = null;
-		for ( Iterator itr = associationMap.keySet().iterator(); itr.hasNext(); ) {
-			key = (String) itr.next();
-			rowKey = (RowKey) jsonHelper.fromJSON( key, RowKey.class );
-			association.put( rowKey, jsonHelper.createAssociation( (String) associationMap.get( key ) ) );
-		}
-
-		return association;
-	}
-
-	public void putAssociation(AssociationKey key, Map<RowKey, Map<String, Object>> associationMap) {
-		RollbackAction rollbackAction = new RollbackAction( this, key );
+	public void putAssociation(Association association, AssociationKey key) {
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
-			Response<Long> res = tx.hset( ASSOCIATION_HSET, jsonHelper.toJSON( getAssociationKeyAsMap( key ) ),
-					jsonHelper.toJSON( jsonHelper.convertKeyAndValueToJsonOn( associationMap ) ) );
+			for ( AssociationOperation action : association.getOperations() ) {
+				switch ( action.getType() ) {
+					case PUT:
+						tx.sadd( key.toString(), action.getKey().toString() );
+						putAssociation( tx, action );
+						break;
+					case PUT_NULL:
+					case REMOVE:
+						tx.hdel( action.getKey().toString(), action.getKey().getColumnNames() );
+						break;
+				}
+			}
 			tx.exec();
-		}
-		catch (Exception ex) {
-			rollbackAction.rollback();
 		}
 		finally {
 			pool.returnResource( jedis );
+		}
+	}
+
+	private void putAssociation(Transaction tx, AssociationOperation action) {
+		Tuple tuple = action.getValue();
+		if (tuple != null) {
+			for ( TupleOperation tupleOperation : tuple.getOperations() ) {
+				RowKey rowKey = action.getKey();
+				switch ( tupleOperation.getType() ) {
+					case PUT:
+						tx.hset( rowKey.toString(), tupleOperation.getColumn(), (String) tupleOperation.getValue() );
+						break;
+					case PUT_NULL:
+					case REMOVE:
+						tx.hdel( rowKey.toString(), tupleOperation.getColumn() );
+						break;
+				}
+			}
 		}
 	}
 
 	public void removeAssociation(AssociationKey key) {
-		RollbackAction rollbackAction = new RollbackAction( this, key );
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
-			tx.hdel( ASSOCIATION_HSET, jsonHelper.toJSON( getAssociationKeyAsMap( key ) ) );
+			Response<Set<String>> smembers = tx.smembers( key.toString() );
 			tx.exec();
-		}
-		catch (Exception ex) {
-			rollbackAction.rollback();
+			Set<String> set = smembers.get();
+			String[] array = set.toArray( new String[set.size()] );
+			tx = jedis.multi();
+			tx.srem( key.toString(), array );
+			tx.exec();
 		}
 		finally {
 			pool.returnResource( jedis );
@@ -488,97 +521,47 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 	 * @return Sequence.
 	 */
 	public synchronized Integer getSequence(RowKey rowKey) {
-
+		Jedis jedis = pool.getResource();
 		if ( rowKey == null ) {
 			return null;
 		}
 
-		Response<String> res = null;
-		boolean isNull = false;
 		try {
 			Transaction tx = jedis.multi();
-			res = tx.hget( SEQUENCE_HSET, jsonHelper.toJSON( getRowKeyAsMap( rowKey ) ) );
 			tx.exec();
-		}
-		catch (NullPointerException ex) {
-			isNull = true;
-		}
-		catch (Exception ex) {
-			throwHibernateExceptionFrom( ex );
-		}
-		finally {
-			pool.returnResource( jedis );
-		}
-
-		if ( isNull ) {
 			return null;
 		}
+		finally {
+			pool.returnResource( jedis );
+		}
 
-		return (Integer) jsonHelper.get( res.get(), SEQUENCE_LABEL );
 	}
 
-	/**
-	 * Puts sequence.
-	 * 
-	 * @param key
-	 * @param nextSequence
-	 */
 	public synchronized void putSequence(RowKey key, Map<String, Integer> nextSequence) {
-
-		RollbackAction rollbackAction = new RollbackAction( this, key );
-
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
-			tx.hset( SEQUENCE_HSET, jsonHelper.toJSON( getRowKeyAsMap( key ) ), jsonHelper.toJSON( nextSequence ) );
 			tx.exec();
 		}
 		catch (Exception ex) {
-			rollbackAction.rollback();
 			throwHibernateExceptionFrom( ex );
 		}
 		finally {
 			pool.returnResource( jedis );
 		}
-	}
-
-	/**
-	 * Reused from VoldemortDialect. Gets row key as Map object containing owning columns.
-	 *
-	 * @return Row key as Map representation.
-	 */
-	public Map<String, Object> getRowKeyAsMap(RowKey rowKey) {
-		Map<String, Object> map = new HashMap<String, Object>();
-
-		if ( rowKey.getColumnNames() != null && rowKey.getColumnValues() != null ) {
-			for ( int i = 0; i < rowKey.getColumnNames().length; i++ ) {
-				map.put( rowKey.getColumnNames()[i], rowKey.getColumnValues()[i] );
-			}
-		}
-		map.put( "table", rowKey.getTable() );
-		return Collections.unmodifiableMap( map );
 	}
 
 	public Map<AssociationKey, Map<RowKey, Map<String, Object>>> getAssociationsMap() {
 		Map<AssociationKey, Map<RowKey, Map<String, Object>>> associations = new HashMap<AssociationKey, Map<RowKey, Map<String, Object>>>();
-		boolean isNull = false;
 		Response<Map<String, String>> res = null;
+		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
 			res = tx.hgetAll( ASSOCIATION_HSET );
 			tx.exec();
 		}
-		catch (NullPointerException ex) {
-			isNull = true;
-		}
-		catch (Exception ex) {
-			throwHibernateExceptionFrom( ex );
-		}
 		finally {
 			pool.returnResource( jedis );
-		}
-
-		if ( isNull ) {
-			return Collections.EMPTY_MAP;
 		}
 
 		Entry<String, String> entry = null;
@@ -590,7 +573,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 
 	public void removeAll() {
 		log.info( "about to remove all data in Redis" );
-		jedis = pool.getResource(); 
+		Jedis jedis = pool.getResource(); 
 		try {
 			jedis.flushDB();
 		}

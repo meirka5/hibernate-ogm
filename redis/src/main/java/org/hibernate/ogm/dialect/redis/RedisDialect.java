@@ -30,10 +30,12 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.ogm.datastore.impl.EmptyTupleSnapshot;
 import org.hibernate.ogm.datastore.impl.MapHelpers;
 import org.hibernate.ogm.datastore.map.impl.MapAssociationSnapshot;
+import org.hibernate.ogm.datastore.redis.impl.RedisAssociationSnapshot;
 import org.hibernate.ogm.datastore.redis.impl.RedisDatastoreProvider;
 import org.hibernate.ogm.datastore.redis.impl.RedisTupleSnapshot;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
+import org.hibernate.ogm.datastore.spi.AssociationOperation;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
 import org.hibernate.ogm.datastore.spi.TupleOperation;
@@ -89,29 +91,12 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		Map<String, String> tuple = new HashMap<String, String>();
-		return new Tuple( new RedisTupleSnapshot( tuple ) );
+		return new Tuple( new RedisTupleSnapshot( new HashMap<String, String>() ) );
 	}
 
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey key) {
-		Map<String, String> entityRecord = ( (RedisTupleSnapshot) tuple.getSnapshot() ).getMap();
-		applyTupleOpsOnMap( tuple, entityRecord );
-		provider.putEntity( key, entityRecord );
-	}
-
-	private void applyTupleOpsOnMap(Tuple tuple, Map<String, String> map) {
-		for ( TupleOperation action : tuple.getOperations() ) {
-			switch ( action.getType() ) {
-				case PUT_NULL:
-				case PUT:
-					map.put( action.getColumn(), String.valueOf( action.getValue() ) );
-					break;
-				case REMOVE:
-					map.remove( action.getColumn() );
-					break;
-			}
-		}
+		provider.putEntity( key, tuple );
 	}
 
 	@Override
@@ -121,20 +106,19 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext context) {
-		Map<RowKey, Map<String, Object>> associationMap = provider.getAssociation( key );
+		Map<RowKey, Map<String, Object>> associationMap = provider.getAssociation( key, context );
 		return associationMap == null ? null : new Association( new MapAssociationSnapshot( associationMap ) );
 	}
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext context) {
-		Map<RowKey, Map<String, Object>> associationMap = new HashMap<RowKey, Map<String, Object>>();
-		return new Association( new MapAssociationSnapshot( associationMap ) );
+		Map<RowKey, Map<String, String>> associationMap = new HashMap<RowKey, Map<String, String>>();
+		return new Association( new RedisAssociationSnapshot( associationMap ) );
 	}
 
 	@Override
 	public void updateAssociation(Association association, AssociationKey key, AssociationContext context) {
-		MapHelpers.updateAssociation( association, key );
-		provider.putAssociation( key, ( (MapAssociationSnapshot) association.getSnapshot() ).getUnderlyingMap() );
+		provider.putAssociation( association, key);
 	}
 
 	@Override
@@ -182,6 +166,9 @@ public class RedisDialect implements GridDialect {
 		}
 		else if ( type == StandardBasicTypes.INTEGER ) {
 			return RedisIntegerType.INSTANCE;
+		}
+		else if ( type == StandardBasicTypes.DOUBLE ) {
+			return RedisDoubleType.INSTANCE;
 		}
 		return null;
 	}
