@@ -19,8 +19,10 @@
 
 package org.hibernate.ogm.dialect.redis;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -29,8 +31,10 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.ogm.datastore.redis.impl.RedisDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
+import org.hibernate.ogm.datastore.spi.AssociationOperation;
 import org.hibernate.ogm.datastore.spi.Tuple;
 import org.hibernate.ogm.datastore.spi.TupleContext;
+import org.hibernate.ogm.datastore.spi.TupleOperation;
 import org.hibernate.ogm.dialect.GridDialect;
 import org.hibernate.ogm.dialect.redis.type.RedisBooleanType;
 import org.hibernate.ogm.dialect.redis.type.RedisByteType;
@@ -52,6 +56,11 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Response;
+import redis.clients.jedis.Transaction;
+
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>
  */
@@ -72,13 +81,21 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext context) {
-		Map<String, String> entityMap = provider.getEntityTuple( key, context );
-
-		if ( entityMap == null ) {
-			return null;
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		try {
+			Transaction tx = jedis.multi();
+			Response<Map<String, String>> response = tx.hgetAll( key.toString() );
+			tx.exec();
+			Map<String, String> entityMap = response.get();
+			if ( entityMap.isEmpty() ) {
+				return null;
+			}
+			return new Tuple( new RedisTupleSnapshot( entityMap ) );
 		}
-
-		return new Tuple( new RedisTupleSnapshot( entityMap ) );
+		finally {
+			pool.returnResource( jedis );
+		}
 	}
 
 	@Override
@@ -88,18 +105,79 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey key) {
-		provider.putEntity( key, tuple );
+		String id = key.toString();
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		try {
+			jedis.watch( id );
+			Transaction tx = jedis.multi();
+			for ( TupleOperation action : tuple.getOperations() ) {
+				switch ( action.getType() ) {
+					case PUT:
+						tx.hset( id, action.getColumn(), (String) action.getValue() );
+						break;
+					case PUT_NULL:
+					case REMOVE:
+						tx.hdel( id, action.getColumn() );
+						break;
+				}
+			}
+			tx.exec();
+		}
+		finally {
+			pool.returnResource( jedis );
+		}
 	}
 
 	@Override
 	public void removeTuple(EntityKey key) {
-		provider.removeEntity( key );
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		try {
+			Transaction tx = jedis.multi();
+			tx.del( key.toString() );
+			tx.exec();
+		}
+		finally {
+			pool.returnResource( jedis );
+		}
 	}
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext context) {
-		Map<RowKey, Map<String, String>> associationMap = provider.getAssociation( key, context );
-		return associationMap == null ? null : new Association( new RedisAssociationSnapshot( associationMap ) );
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		try {
+			Transaction tx = jedis.multi();
+			Response<Set<String>> smembers = tx.smembers( key.toString() );
+			tx.exec();
+			Set<String> rowKeys = smembers.get();
+			String[] rowKeyColumnNames = key.getRowKeyColumnNames();
+			Map<RowKey, Map<String, String>> result = new HashMap<RowKey, Map<String, String>>();
+			for ( String rowKey : rowKeys ) {
+				tx = jedis.multi();
+				Response<Map<String, String>> list = tx.hgetAll( rowKey );
+				tx.exec();
+				Map associationValues = list.get();
+				RowKey rk = createRowKey( key, rowKeyColumnNames, associationValues );
+				result.put( rk, associationValues );
+			}
+			if ( result.isEmpty() ) {
+				return null;
+			}
+			return new Association( new RedisAssociationSnapshot( result ) );
+		}
+		finally {
+			pool.returnResource( jedis );
+		}
+	}
+
+	private RowKey createRowKey(AssociationKey key, String[] rowKeyColumnNames, Map associationValues) {
+		Object[] rowKeyValues = new Object[rowKeyColumnNames.length];
+		for ( int i = 0; i < rowKeyColumnNames.length; i++ ) {
+			rowKeyValues[i] = associationValues.get( rowKeyColumnNames[i] );
+		}
+		return new RowKey( key.getTable(), rowKeyColumnNames, rowKeyValues );
 	}
 
 	@Override
@@ -109,12 +187,73 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void updateAssociation(Association association, AssociationKey key, AssociationContext context) {
-		provider.putAssociation( association, key );
+		String associationId = key.toString();
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		try {
+			jedis.watch( associationId );
+			Transaction tx = jedis.multi();
+			for ( AssociationOperation action : association.getOperations() ) {
+				switch ( action.getType() ) {
+					case PUT:
+						tx.sadd( associationId, action.getKey().toString() );
+						putAssociation( tx, key, action );
+						break;
+					case PUT_NULL:
+					case REMOVE:
+						tx.srem( associationId, action.getKey().toString() );
+						tx.del( action.getKey().toString() );
+						break;
+				}
+			}
+			tx.exec();
+ 		}
+		finally {
+			pool.returnResource( jedis );
+		}
+	}
+
+	private void putAssociation(Transaction tx, AssociationKey key, AssociationOperation action) {
+		String rowKey = action.getKey().toString();
+		Tuple tuple = action.getValue();
+		if ( tuple != null ) {
+			for ( TupleOperation tupleOperation : tuple.getOperations() ) {
+				switch ( tupleOperation.getType() ) {
+					case PUT:
+						tx.hset( rowKey, tupleOperation.getColumn(), (String) tupleOperation.getValue() );
+						break;
+					case PUT_NULL:
+					case REMOVE:
+						tx.hdel( rowKey, tupleOperation.getColumn() );
+						break;
+				}
+			}
+		}
 	}
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext context) {
-		provider.removeAssociation( key );
+		String id = key.toString();
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		try {
+			jedis.watch( id );
+			Transaction tx = jedis.multi();
+			Response<Set<String>> rowKeysResponse = tx.smembers( id );
+			tx.exec();
+			Set<String> rowKeys = rowKeysResponse.get();
+			tx = jedis.multi();
+			String[] members = rowKeys.toArray( new String[rowKeys.size()] );
+			if (members.length > 0) {
+				tx.srem( id, members );
+				tx.del( members );
+			}
+			tx.del( id );
+			tx.exec();
+		}
+		finally {
+			pool.returnResource( jedis );
+		}
 	}
 
 	@Override
@@ -124,7 +263,30 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void nextValue(RowKey key, IntegralDataTypeHolder value, int increment, int initialValue) {
-		provider.setNextValue( key, value, increment, initialValue );
+		String sequenceId = key.toString();
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		jedis = pool.getResource();
+		try {
+			Transaction tx = jedis.multi();
+			Response<String> sequenceValue = tx.get( sequenceId );
+			tx.exec();
+			tx.watch( sequenceId );
+			tx = jedis.multi();
+			if ( sequenceValue.get() == null ) {
+				tx.set( sequenceId, String.valueOf( initialValue ) );
+				tx.exec();
+				value.initialize( initialValue );
+			}
+			else {
+				Response<Long> incrBy = tx.incrBy( sequenceId, increment );
+				tx.exec();
+				value.initialize( incrBy.get() );
+			}
+		}
+		finally {
+			pool.returnResource( jedis );
+		}
 	}
 
 	@Override
