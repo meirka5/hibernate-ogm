@@ -20,7 +20,6 @@
  */
 package org.hibernate.ogm.dialect.redis;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,10 +30,6 @@ import org.hibernate.ogm.datastore.spi.TupleSnapshot;
  */
 public final class RedisTupleSnapshot implements TupleSnapshot {
 	private final Map<String, String> map;
-
-	public RedisTupleSnapshot() {
-		this.map = new HashMap<String, String>();
-	}
 
 	public RedisTupleSnapshot(Map<String, String> map) {
 		this.map = map;

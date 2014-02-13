@@ -42,6 +42,7 @@ import org.hibernate.ogm.dialect.redis.type.RedisDoubleType;
 import org.hibernate.ogm.dialect.redis.type.RedisIntegerType;
 import org.hibernate.ogm.dialect.redis.type.RedisLongType;
 import org.hibernate.ogm.dialect.redis.type.RedisPrimitiveByteType;
+import org.hibernate.ogm.exception.NotSupportedException;
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
@@ -100,7 +101,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		return new Tuple( new RedisTupleSnapshot() );
+		return new Tuple();
 	}
 
 	@Override
@@ -337,11 +338,30 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void forEachTuple(Consumer consumer, EntityKeyMetadata... entityKeyMetadatas) {
+		JedisPool pool = provider.getPool();
+		Jedis jedis = pool.getResource();
+		for ( EntityKeyMetadata entityKeyMetadata : entityKeyMetadatas ) {
+			try {
+				Transaction tx = jedis.multi();
+				Response<Set<String>> keys = tx.keys( "EntityKey{table='" + entityKeyMetadata.getTable() + "'*" );
+				tx.exec();
+				for ( String entityKey : keys.get() ) {
+					tx = jedis.multi();
+					Response<Map<String, String>> tupleMap = tx.hgetAll( entityKey );
+					tx.exec();
+					Tuple tuple = new Tuple( new RedisTupleSnapshot( tupleMap.get() ) );
+					consumer.consume( tuple );
+				}
+			}
+			finally {
+				pool.returnResource( jedis );
+			}
+		}
 	}
 
 	@Override
 	public Iterator<Tuple> executeBackendQuery(CustomQuery customQuery, EntityKeyMetadata[] metadatas) {
-		return null;
+		throw new NotSupportedException( "TBD", "Native queries not supported for Redis" );
 	}
 
 }

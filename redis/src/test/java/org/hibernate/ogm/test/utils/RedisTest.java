@@ -3,14 +3,14 @@
  */
 package org.hibernate.ogm.test.utils;
 
-import org.hibernate.ogm.test.associations.collection.types.MapTest;
+import org.hibernate.ogm.test.massindex.AssociationMassIndexerTest;
 
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  *
  */
-public class RedisTest extends MapTest {
+public class RedisTest extends AssociationMassIndexerTest {
 
 }
 	
