@@ -16,16 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-
 package org.hibernate.ogm.datastore.redis.impl;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.ogm.cfg.OgmProperties;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
 import org.hibernate.ogm.datastore.spi.AssociationOperation;
@@ -103,58 +100,22 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		return pool;
 	}
 
-	public Map<String, Object> getEntityTuple(EntityKey entityKey, TupleContext context) {
+	public Map<String, String> getEntityTuple(EntityKey entityKey, TupleContext context) {
 		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
-			String[] columns = null;
-			if ( context == null ) {
-				columns = entityKey.getColumnNames();
-			}
-			else {
-				List<String> selectableColumns = context.getSelectableColumns();
-				columns = new String[entityKey.getColumnNames().length + selectableColumns.size()];
-				int keySize = entityKey.getColumnNames().length;
-				System.arraycopy( entityKey.getColumnNames(), 0, columns, 0, keySize );
-				System.arraycopy( selectableColumns.toArray( new String[selectableColumns.size()] ), 0, columns, keySize, selectableColumns.size() );
-			}
 			String key = entityKey.toString();
-			Response<List<String>> list = tx.hmget( key, columns );
+			Response<Map<String, String>> response = tx.hgetAll( key );
 			tx.exec();
-			List<String> results = list.get();
-			return convert( columns, results );
+			Map<String, String> entityTuple = response.get();
+			if ( entityTuple.isEmpty() ) {
+				return null;
+			}
+			return entityTuple;
 		}
 		finally {
 			pool.returnResource( jedis );
 		}
-	}
-
-	private Map<String, Object> convert(String[] keys, List<String> values) {
-		Map<String, Object> resultsString = new HashMap<String, Object>();
-		for ( int i = 0; i < keys.length; i++ ) {
-			String value = values.get( i );
-			if ( value != null ) {
-				resultsString.put( keys[i], value );
-			}
-		}
-		if ( resultsString.isEmpty() ) {
-			return null;
-		}
-		return resultsString;
-	}
-
-	private Map<String, Object> convertForAssociation(String[] keys, List<String> values) {
-		Map<String, Object> resultsString = new HashMap<String, Object>();
-		for ( int i = 0; i < keys.length; i++ ) {
-			String value = values.get( i );
-			if ( value != null ) {
-				resultsString.put( keys[i], value );
-			}
-		}
-		if ( resultsString.isEmpty() ) {
-			return null;
-		}
-		return resultsString;
 	}
 
 	public void putEntity(EntityKey key, Tuple tuple) {
@@ -196,7 +157,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		}
 	}
 
-	public Map<RowKey, Map<String, Object>> getAssociation(AssociationKey key, AssociationContext context) {
+	public Map<RowKey, Map<String, String>> getAssociation(AssociationKey key, AssociationContext context) {
 		Jedis jedis = pool.getResource();
 		try {
 			Transaction tx = jedis.multi();
@@ -204,15 +165,18 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 			tx.exec();
 			Set<String> rowKeys = smembers.get();
 			String[] rowKeyColumnNames = key.getRowKeyColumnNames();
-			Map<RowKey, Map<String, Object>> result = new HashMap<RowKey, Map<String, Object>>();
+			Map<RowKey, Map<String, String>> result = new HashMap<RowKey, Map<String, String>>();
 			for ( String rowKey : rowKeys ) {
 				tx = jedis.multi();
-				Response<List<String>> list = tx.hmget( rowKey, rowKeyColumnNames );
+				Response<Map<String, String>> list = tx.hgetAll( rowKey );
 				tx.exec();
-				List<String> rowKeyValues = list.get();
-				RowKey rk = new RowKey( key.getTable(), rowKeyColumnNames, rowKeyValues.toArray() );
-				Map<String, Object> convert = convertForAssociation( rowKeyColumnNames, rowKeyValues );
-				result.put( rk, convert );
+				Map associationValues = list.get();
+				Object[] rowKeyValues = new Object[rowKeyColumnNames.length];
+				for ( int i = 0; i < rowKeyColumnNames.length; i++ ) {
+					rowKeyValues[i] = associationValues.get( rowKeyColumnNames[i] );
+				}
+				RowKey rk = new RowKey( key.getTable(), rowKeyColumnNames, rowKeyValues );
+				result.put( rk, associationValues );
 			}
 			if ( result.isEmpty() ) {
 				return null;
@@ -254,7 +218,10 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 				RowKey rowKey = action.getKey();
 				switch ( tupleOperation.getType() ) {
 					case PUT:
-						tx.hset( rowKey.toString(), tupleOperation.getColumn(), (String) tupleOperation.getValue() );
+						String column = tupleOperation.getColumn();
+						String value = (String) tupleOperation.getValue();
+						String id = rowKey.toString();
+						tx.hset( id, column, value );
 						break;
 					case PUT_NULL:
 					case REMOVE:

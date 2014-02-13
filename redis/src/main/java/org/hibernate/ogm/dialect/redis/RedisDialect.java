@@ -19,7 +19,6 @@
 
 package org.hibernate.ogm.dialect.redis;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -27,9 +26,6 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.loader.custom.CustomQuery;
-import org.hibernate.ogm.datastore.impl.EmptyTupleSnapshot;
-import org.hibernate.ogm.datastore.impl.MapTupleSnapshot;
-import org.hibernate.ogm.datastore.map.impl.MapAssociationSnapshot;
 import org.hibernate.ogm.datastore.redis.impl.RedisDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.Association;
 import org.hibernate.ogm.datastore.spi.AssociationContext;
@@ -76,18 +72,18 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple getTuple(EntityKey key, TupleContext context) {
-		Map<String, Object> entityMap = provider.getEntityTuple( key, context );
+		Map<String, String> entityMap = provider.getEntityTuple( key, context );
 
 		if ( entityMap == null ) {
 			return null;
 		}
 
-		return new Tuple( new MapTupleSnapshot( entityMap ) );
+		return new Tuple( new RedisTupleSnapshot( entityMap ) );
 	}
 
 	@Override
 	public Tuple createTuple(EntityKey key) {
-		return new Tuple( new MapTupleSnapshot() );
+		return new Tuple( new RedisTupleSnapshot() );
 	}
 
 	@Override
@@ -102,19 +98,18 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Association getAssociation(AssociationKey key, AssociationContext context) {
-		Map<RowKey, Map<String, Object>> associationMap = provider.getAssociation( key, context );
-		return associationMap == null ? null : new Association( new MapAssociationSnapshot( associationMap ) );
+		Map<RowKey, Map<String, String>> associationMap = provider.getAssociation( key, context );
+		return associationMap == null ? null : new Association( new RedisAssociationSnapshot( associationMap ) );
 	}
 
 	@Override
 	public Association createAssociation(AssociationKey key, AssociationContext context) {
-		Map<RowKey, Map<String, Object>> associationMap = new HashMap<RowKey, Map<String, Object>>();
-		return new Association( new MapAssociationSnapshot( associationMap ) );
+		return new Association( new RedisAssociationSnapshot() );
 	}
 
 	@Override
 	public void updateAssociation(Association association, AssociationKey key, AssociationContext context) {
-		provider.putAssociation( association, key);
+		provider.putAssociation( association, key );
 	}
 
 	@Override
