@@ -102,12 +102,12 @@ public class RedisTestHelper implements TestableGridDialect {
 
 	@Override
 	public long getNumberOfAssociations(SessionFactory sessionFactory, AssociationStorageType type) {
-		return 0;
+		throw new UnsupportedOperationException( "This datastore does not support different association storage strategies." );
 	}
 
 	@Override
 	public long getNumberOEmbeddedCollections(SessionFactory sessionFactory) {
-		return 0;
+		throw new UnsupportedOperationException( "This datastore does not support storing collections embedded within entities." );
 	}
 
 	@Override

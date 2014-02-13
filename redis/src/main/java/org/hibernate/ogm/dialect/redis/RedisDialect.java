@@ -124,7 +124,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public Tuple createTupleAssociation(AssociationKey associationKey, RowKey rowKey) {
-		return new Tuple( EmptyTupleSnapshot.INSTANCE );
+		return new Tuple();
 	}
 
 	@Override
