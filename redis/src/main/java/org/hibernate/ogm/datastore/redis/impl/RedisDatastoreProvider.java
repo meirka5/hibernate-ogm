@@ -214,6 +214,9 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 				Map<String, Object> convert = convertForAssociation( rowKeyColumnNames, rowKeyValues );
 				result.put( rk, convert );
 			}
+			if ( result.isEmpty() ) {
+				return null;
+			}
 			return result;
 		}
 		finally {
@@ -229,7 +232,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 				switch ( action.getType() ) {
 					case PUT:
 						tx.sadd( key.toString(), action.getKey().toString() );
-						putAssociation( tx, action );
+						putAssociation( tx,key, action );
 						break;
 					case PUT_NULL:
 					case REMOVE:
@@ -244,7 +247,7 @@ public class RedisDatastoreProvider implements DatastoreProvider, Startable, Sto
 		}
 	}
 
-	private void putAssociation(Transaction tx, AssociationOperation action) {
+	private void putAssociation(Transaction tx, AssociationKey key, AssociationOperation action) {
 		Tuple tuple = action.getValue();
 		if ( tuple != null ) {
 			for ( TupleOperation tupleOperation : tuple.getOperations() ) {
