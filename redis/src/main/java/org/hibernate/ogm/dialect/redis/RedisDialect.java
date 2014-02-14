@@ -281,48 +281,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public GridType overrideType(Type type) {
-		if ( type == StandardBasicTypes.BIG_DECIMAL ) {
-			return BigDecimalType.INSTANCE;
-		}
-		if ( type == StandardBasicTypes.BIG_INTEGER ) {
-			return BigIntegerType.INSTANCE;
-		}
-		// persist calendars as ISO8601 strings, including TZ info
-		else if ( type == StandardBasicTypes.CALENDAR ) {
-			return Iso8601StringCalendarType.DATE_TIME;
-		}
-		else if ( type == StandardBasicTypes.CALENDAR_DATE ) {
-			return Iso8601StringCalendarType.DATE;
-		}
-		// persist date as ISO8601 strings, in UTC, without TZ info
-		else if ( type == StandardBasicTypes.DATE ) {
-			return Iso8601StringDateType.DATE;
-		}
-		else if ( type == StandardBasicTypes.TIME ) {
-			return Iso8601StringDateType.TIME;
-		}
-		else if ( type == StandardBasicTypes.TIMESTAMP ) {
-			return Iso8601StringDateType.DATE_TIME;
-		}
-		else if ( type == StandardBasicTypes.BYTE ) {
-			return RedisByteType.INSTANCE;
-		}
-		else if ( type == StandardBasicTypes.LONG ) {
-			return RedisLongType.INSTANCE;
-		}
-		else if ( type == StandardBasicTypes.INTEGER ) {
-			return RedisIntegerType.INSTANCE;
-		}
-		else if ( type == StandardBasicTypes.DOUBLE ) {
-			return RedisDoubleType.INSTANCE;
-		}
-		else if ( type == StandardBasicTypes.BOOLEAN ) {
-			return RedisBooleanType.INSTANCE;
-		}
-		else if ( type == StandardBasicTypes.MATERIALIZED_BLOB ) {
-			return RedisPrimitiveByteType.INSTANCE;
-		}
-		return null;
+		return TypeConverter.INSTANCE.convert( type );
 	}
 
 	@Override
