@@ -42,8 +42,8 @@ import redis.clients.jedis.JedisPool;
  */
 public class RedisNextValueGenerationTest {
 
-	private static final int LOOPS = 1;
-	private static final int THREADS = 5;
+	private static final int LOOPS = 2;
+	private static final int THREADS = 10;
 
 	private GridDialect dialect;
 	private RedisDatastoreProvider provider;
@@ -91,7 +91,7 @@ public class RedisNextValueGenerationTest {
 
 	@Test
 	public void testThreadSafty() throws InterruptedException {
-		final RowKey test = new RowKey( "test", new String[0], new Object[0] );
+		final RowKey sequenceKey = new RowKey( "test", new String[0], new Object[0] );
 		Thread[] threads = new Thread[THREADS];
 		for ( int i = 0; i < threads.length; i++ ) {
 			threads[i] = new Thread( new Runnable() {
@@ -99,7 +99,7 @@ public class RedisNextValueGenerationTest {
 				public void run() {
 					final IdentifierGeneratorHelper.BigIntegerHolder value = new IdentifierGeneratorHelper.BigIntegerHolder();
 					for ( int i = 0; i < LOOPS; i++ ) {
-						dialect.nextValue( test, value, 1, 0 );
+						dialect.nextValue( sequenceKey, value, 1, 0 );
 					}
 				}
 			} );
@@ -109,7 +109,7 @@ public class RedisNextValueGenerationTest {
 			thread.join();
 		}
 		final IdentifierGeneratorHelper.BigIntegerHolder value = new IdentifierGeneratorHelper.BigIntegerHolder();
-		dialect.nextValue( test, value, 0, 1 );
+		dialect.nextValue( sequenceKey, value, 1, 0 );
 		assertThat( value.makeValue().intValue(), equalTo( LOOPS * THREADS ) );
 	}
 }
