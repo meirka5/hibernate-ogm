@@ -42,6 +42,7 @@
         <hibernate.ogm.mongodb.module.slot>main</hibernate.ogm.mongodb.module.slot>
         <hibernate.ogm.neo4j.module.slot>main</hibernate.ogm.neo4j.module.slot>
         <hibernate.ogm.couchdb.module.slot>main</hibernate.ogm.couchdb.module.slot>
+        <hibernate.ogm.redis.module.slot>main</hibernate.ogm.redis.module.slot>
         <assembly.name>${project.artifactId}-${project.version}</assembly.name>
     </properties>
 
@@ -101,7 +102,11 @@
         <dependency>
             <groupId>org.hibernate.ogm</groupId>
             <artifactId>hibernate-ogm-neo4j</artifactId>
-            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.ogm</groupId>
+            <artifactId>hibernate-ogm-redis</artifactId>
             <optional>true</optional>
         </dependency>
     </dependencies>

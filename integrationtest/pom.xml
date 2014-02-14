@@ -187,6 +187,7 @@
     <modules>
         <module>testcase</module>
         <module>mongodb</module>
+        <module>redis</module>
     </modules>
 
     <profiles>

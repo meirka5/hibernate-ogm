@@ -55,6 +55,11 @@
              <outputDirectory>/org/hibernate/ogm/couchdb/main</outputDirectory>
              <filtered>true</filtered>
         </file>
+        <file>
+             <source>${module.xml.basedir}/ogm/redis/module.xml</source>
+             <outputDirectory>/org/hibernate/ogm/redis/main</outputDirectory>
+             <filtered>true</filtered>
+        </file>
    </files>
 
     <dependencySets>
@@ -115,6 +120,16 @@
                   <include>org.scala-lang:scala-library</include>
                   <include>com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru</include>
               </includes>
+        </dependencySet>
+        <dependencySet>
+             <useProjectArtifact>false</useProjectArtifact>
+             <outputDirectory>org/hibernate/ogm/redis/${hibernate.ogm.redis.module.slot}</outputDirectory>
+             <useTransitiveFiltering>false</useTransitiveFiltering>
+             <unpack>false</unpack>
+             <includes>
+                 <include>org.hibernate.ogm:hibernate-ogm-redis</include>
+                 <include>redis.clients:jedis</include>
+             </includes>
        </dependencySet>
     </dependencySets>
 </assembly>
