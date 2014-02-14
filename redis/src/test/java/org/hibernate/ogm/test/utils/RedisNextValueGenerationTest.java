@@ -49,7 +49,7 @@ public class RedisNextValueGenerationTest {
 	private RedisDatastoreProvider provider;
 
 	@Before
-	public void setUp() {
+	public void createDialect() {
 		provider = new RedisDatastoreProvider();
 		provider.configure( new Properties() );
 		provider.start();
@@ -57,7 +57,7 @@ public class RedisNextValueGenerationTest {
 	}
 
 	@After
-	public void tearDown() {
+	public void flushDB() {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
@@ -79,7 +79,7 @@ public class RedisNextValueGenerationTest {
 	}
 
 	@Test
-	public void testTwoIncrements() {
+	public void testIncrements() {
 		final int initialValue = 5;
 		final RowKey sequenceNode = new RowKey( "initialSequence", new String[0], new Object[0] );
 		final IdentifierGeneratorHelper.BigIntegerHolder sequenceValue = new IdentifierGeneratorHelper.BigIntegerHolder();
