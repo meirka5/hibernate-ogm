@@ -265,12 +265,10 @@ public class RedisDialect implements GridDialect {
 			Long response = jedis.setnx( sequenceId, String.valueOf( initialValue ) );
 			boolean created = response.equals( 1L );
 			if ( created ) {
-				System.out.println( Thread.currentThread().getId() + " initial: " + initialValue );
 				return initialValue;
 			}
 			else {
 				Long newValue = jedis.incrBy( sequenceId, increment );
-				System.out.println( Thread.currentThread().getId() + " newvalue: " + newValue );
 				return newValue.intValue();
 			}
 		}
