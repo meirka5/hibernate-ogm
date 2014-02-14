@@ -23,12 +23,12 @@ package org.hibernate.ogm.dialect.redis;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.ogm.dialect.redis.type.RedisBooleanType;
-import org.hibernate.ogm.dialect.redis.type.RedisByteType;
-import org.hibernate.ogm.dialect.redis.type.RedisDoubleType;
-import org.hibernate.ogm.dialect.redis.type.RedisIntegerType;
-import org.hibernate.ogm.dialect.redis.type.RedisLongType;
-import org.hibernate.ogm.dialect.redis.type.RedisPrimitiveByteType;
+import org.hibernate.ogm.dialect.redis.type.BooleanAsStringType;
+import org.hibernate.ogm.dialect.redis.type.ByteAsStringType;
+import org.hibernate.ogm.dialect.redis.type.DoubleAsStringType;
+import org.hibernate.ogm.dialect.redis.type.IntegerAsStringType;
+import org.hibernate.ogm.dialect.redis.type.LongAsStringType;
+import org.hibernate.ogm.dialect.redis.type.PrimitiveByteAsStringType;
 import org.hibernate.ogm.type.BigDecimalType;
 import org.hibernate.ogm.type.BigIntegerType;
 import org.hibernate.ogm.type.GridType;
@@ -57,12 +57,12 @@ public class TypeConverter {
 		conversion.put( StandardBasicTypes.DATE, Iso8601StringDateType.DATE );
 		conversion.put( StandardBasicTypes.TIME, Iso8601StringDateType.TIME );
 		conversion.put( StandardBasicTypes.TIMESTAMP, Iso8601StringDateType.DATE_TIME );
-		conversion.put( StandardBasicTypes.BYTE, RedisByteType.INSTANCE );
-		conversion.put( StandardBasicTypes.LONG, RedisLongType.INSTANCE );
-		conversion.put( StandardBasicTypes.INTEGER, RedisIntegerType.INSTANCE );
-		conversion.put( StandardBasicTypes.DOUBLE, RedisDoubleType.INSTANCE );
-		conversion.put( StandardBasicTypes.BOOLEAN, RedisBooleanType.INSTANCE );
-		conversion.put( StandardBasicTypes.MATERIALIZED_BLOB, RedisPrimitiveByteType.INSTANCE );
+		conversion.put( StandardBasicTypes.BYTE, ByteAsStringType.INSTANCE );
+		conversion.put( StandardBasicTypes.LONG, LongAsStringType.INSTANCE );
+		conversion.put( StandardBasicTypes.INTEGER, IntegerAsStringType.INSTANCE );
+		conversion.put( StandardBasicTypes.DOUBLE, DoubleAsStringType.INSTANCE );
+		conversion.put( StandardBasicTypes.BOOLEAN, BooleanAsStringType.INSTANCE );
+		conversion.put( StandardBasicTypes.MATERIALIZED_BLOB, PrimitiveByteAsStringType.INSTANCE );
 		return conversion;
 	}
 

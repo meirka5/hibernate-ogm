@@ -14,11 +14,11 @@ import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
  * @author Davide D'Alto <davide@hibernate.org>
  *
  */
-public class RedisByteType extends AbstractGenericBasicType<Byte> {
+public class ByteAsStringType extends AbstractGenericBasicType<Byte> {
 
-	public static final RedisByteType INSTANCE = new RedisByteType();
+	public static final ByteAsStringType INSTANCE = new ByteAsStringType();
 
-	public RedisByteType() {
+	public ByteAsStringType() {
 		super( StringMappedGridTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );
 	}
 

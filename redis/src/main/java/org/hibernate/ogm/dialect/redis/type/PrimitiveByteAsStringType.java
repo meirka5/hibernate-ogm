@@ -29,11 +29,11 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  */
-public class RedisPrimitiveByteType extends AbstractGenericBasicType<byte[]> {
+public class PrimitiveByteAsStringType extends AbstractGenericBasicType<byte[]> {
 
-	public static final RedisPrimitiveByteType INSTANCE = new RedisPrimitiveByteType();
+	public static final PrimitiveByteAsStringType INSTANCE = new PrimitiveByteAsStringType();
 
-	public RedisPrimitiveByteType() {
+	public PrimitiveByteAsStringType() {
 		super( StringMappedGridTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
 	}
 

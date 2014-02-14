@@ -4,22 +4,22 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.ogm.type.AbstractGenericBasicType;
 import org.hibernate.ogm.type.descriptor.StringMappedGridTypeDescriptor;
-import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 
 /**
  * @author Andrea Boriero <dreborier@gmail.com/>
  */
-public class RedisIntegerType extends AbstractGenericBasicType<Integer> {
+public class BooleanAsStringType extends AbstractGenericBasicType<Boolean> {
 
-	public static final RedisIntegerType INSTANCE = new RedisIntegerType();
+	public static final BooleanAsStringType INSTANCE = new BooleanAsStringType();
 
-	public RedisIntegerType() {
-		super( StringMappedGridTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
+	public BooleanAsStringType() {
+		super( StringMappedGridTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String getName() {
-		return "redis_integer";
+		return "redis_boolean";
 	}
 
 	@Override
