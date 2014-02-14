@@ -97,9 +97,8 @@ public class RedisNextValueGenerationTest {
 			threads[i] = new Thread( new Runnable() {
 				@Override
 				public void run() {
-					final IdentifierGeneratorHelper.BigIntegerHolder value = new IdentifierGeneratorHelper.BigIntegerHolder();
 					for ( int i = 0; i < LOOPS; i++ ) {
-						dialect.nextValue( sequenceKey, value, 1, 0 );
+						addOne( dialect, sequenceKey );
 					}
 				}
 			} );
@@ -108,8 +107,17 @@ public class RedisNextValueGenerationTest {
 		for ( Thread thread : threads ) {
 			thread.join();
 		}
+		int value = addOne( dialect,sequenceKey );
+		assertThat( value, equalTo( LOOPS * THREADS ) );
+	}
+
+	/**
+	 * Starting from 0, it will add 1 to the sequence and retun the 
+	 */
+	private static int addOne(final GridDialect dialect, final RowKey sequenceKey) {
 		final IdentifierGeneratorHelper.BigIntegerHolder value = new IdentifierGeneratorHelper.BigIntegerHolder();
 		dialect.nextValue( sequenceKey, value, 1, 0 );
-		assertThat( value.makeValue().intValue(), equalTo( LOOPS * THREADS ) );
+		return value.makeValue().intValue();
 	}
+
 }
