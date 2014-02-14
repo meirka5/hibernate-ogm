@@ -22,10 +22,12 @@
 <module xmlns="urn:jboss:module:1.1" name="org.hibernate.ogm.redis" slot="${hibernate.ogm.redis.module.slot}">
     <resources>
         <resource-root path="hibernate-ogm-redis-${project.version}.jar" />
-        <resource-root path="redis.clients:jedis-2.3.1.jar" />
+        <resource-root path="jedis-2.3.1.jar" />
+        <resource-root path="commons-pool2-2.0.jar" />
     </resources>
     <dependencies>
         <module name="org.hibernate" export="true" services="import" slot="${hibernate.ogm.module.slot}" />
+        <module name="javax.persistence.api" />
         <module name="org.jboss.logging" />
     </dependencies>
 </module>

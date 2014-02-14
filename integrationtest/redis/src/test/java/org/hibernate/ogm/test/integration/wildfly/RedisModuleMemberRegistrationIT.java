@@ -57,7 +57,7 @@ public class RedisModuleMemberRegistrationIT extends ModuleMemberRegistrationSce
 	public static Archive<?> createTestArchive() {
 		return new ModuleMemberRegistrationDeployment.Builder( RedisModuleMemberRegistrationIT.class )
 				.persistenceXml( persistenceXml() )
-				.manifestDependencies( "org.hibernate:ogm services, org.hibernate.ogm.couchdb services" )
+				.manifestDependencies( "org.hibernate:ogm services, org.hibernate.ogm.redis services" )
 				.createDeployment();
 	}
 
