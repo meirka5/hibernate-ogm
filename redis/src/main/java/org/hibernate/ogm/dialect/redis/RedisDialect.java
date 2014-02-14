@@ -61,6 +61,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>
@@ -265,24 +266,43 @@ public class RedisDialect implements GridDialect {
 	@Override
 	public void nextValue(RowKey key, IntegralDataTypeHolder value, int increment, int initialValue) {
 		String sequenceId = key.toString();
+		boolean done = false;
+		int nextValue = -1;
+		do {
+			try {
+				nextValue = nextValue( increment, initialValue, sequenceId );
+				done = true;
+			}
+			catch (JedisDataException e) {
+				try {
+					Thread.sleep( 20 );
+				}
+				catch (InterruptedException e1) {
+					throw new RuntimeException( e1 );
+				}
+			}
+		} while ( !done );
+		value.initialize( nextValue );
+	}
+
+	private int nextValue(int increment, int initialValue, String sequenceId) {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
-		jedis = pool.getResource();
 		try {
-			Transaction tx = jedis.multi();
-			Response<String> sequenceValue = tx.get( sequenceId );
-			tx.exec();
-			tx.watch( sequenceId );
-			tx = jedis.multi();
-			if ( sequenceValue.get() == null ) {
-				tx.set( sequenceId, String.valueOf( initialValue ) );
-				tx.exec();
-				value.initialize( initialValue );
+			Long response = jedis.setnx( sequenceId, String.valueOf( initialValue ) );
+			boolean created = response.equals( 1L );
+			if ( created ) {
+				System.out.println( Thread.currentThread().getId() + " initial: " + initialValue );
+				return initialValue;
 			}
 			else {
-				Response<Long> incrBy = tx.incrBy( sequenceId, increment );
+				jedis.watch( sequenceId );
+				Transaction tx = jedis.multi();
+				Response<Long> newValue = tx.incrBy( sequenceId, increment );
 				tx.exec();
-				value.initialize( incrBy.get() );
+				Long long1 = newValue.get();
+				System.out.println( Thread.currentThread().getId() + " newvalue: " + long1 );
+				return long1.intValue();
 			}
 		}
 		finally {

@@ -13,12 +13,17 @@
 
     <name>Hibernate OGM Redis integration</name>
     <description>Persist data in Redis</description>
-        
+
     <dependencies>
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>${redisVersion}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.jedis-lock</groupId>
+            <artifactId>jedis-lock</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>commons-lang</groupId>

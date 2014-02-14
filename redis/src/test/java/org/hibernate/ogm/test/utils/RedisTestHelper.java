@@ -56,10 +56,8 @@ public class RedisTestHelper implements TestableGridDialect {
 		RedisDatastoreProvider provider = getProvider( sessionFactory );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
-		Transaction tx = jedis.multi();
 		try {
-			tx.flushDB();
-			tx.exec();
+			jedis.flushDB();
 		} finally {
 			pool.returnResource( jedis );
 		}
