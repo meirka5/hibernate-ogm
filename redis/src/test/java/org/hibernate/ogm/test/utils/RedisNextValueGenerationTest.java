@@ -83,9 +83,10 @@ public class RedisNextValueGenerationTest {
 		final int initialValue = 5;
 		final RowKey sequenceNode = new RowKey( "initialSequence", new String[0], new Object[0] );
 		final IdentifierGeneratorHelper.BigIntegerHolder sequenceValue = new IdentifierGeneratorHelper.BigIntegerHolder();
-		dialect.nextValue( sequenceNode, sequenceValue, 1, initialValue );
-		dialect.nextValue( sequenceNode, sequenceValue, 1, initialValue );
-		assertThat( sequenceValue.makeValue().intValue(), equalTo( initialValue + 1) );
+		dialect.nextValue( sequenceNode, sequenceValue, 2, initialValue );
+		dialect.nextValue( sequenceNode, sequenceValue, 3, initialValue );
+		dialect.nextValue( sequenceNode, sequenceValue, 4, initialValue );
+		assertThat( sequenceValue.makeValue().intValue(), equalTo( 12 ) );
 	}
 
 	@Test

@@ -61,7 +61,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
-import redis.clients.jedis.exceptions.JedisDataException;
 
 /**
  * @author Seiya Kawashima <skawashima@uchicago.edu>
@@ -136,9 +135,7 @@ public class RedisDialect implements GridDialect {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			Transaction tx = jedis.multi();
-			tx.del( key.toString() );
-			tx.exec();
+			jedis.del( key.toString() );
 		}
 		finally {
 			pool.returnResource( jedis );
@@ -150,17 +147,11 @@ public class RedisDialect implements GridDialect {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			Transaction tx = jedis.multi();
-			Response<Set<String>> smembers = tx.smembers( key.toString() );
-			tx.exec();
-			Set<String> rowKeys = smembers.get();
+			Set<String> rowKeys = jedis.smembers( key.toString() );
 			String[] rowKeyColumnNames = key.getRowKeyColumnNames();
 			Map<RowKey, Map<String, String>> result = new HashMap<RowKey, Map<String, String>>();
 			for ( String rowKey : rowKeys ) {
-				tx = jedis.multi();
-				Response<Map<String, String>> list = tx.hgetAll( rowKey );
-				tx.exec();
-				Map associationValues = list.get();
+				Map<String, String> associationValues = jedis.hgetAll( rowKey );
 				RowKey rk = createRowKey( key, rowKeyColumnNames, associationValues );
 				result.put( rk, associationValues );
 			}
@@ -174,7 +165,7 @@ public class RedisDialect implements GridDialect {
 		}
 	}
 
-	private RowKey createRowKey(AssociationKey key, String[] rowKeyColumnNames, Map associationValues) {
+	private RowKey createRowKey(AssociationKey key, String[] rowKeyColumnNames, Map<String, String> associationValues) {
 		Object[] rowKeyValues = new Object[rowKeyColumnNames.length];
 		for ( int i = 0; i < rowKeyColumnNames.length; i++ ) {
 			rowKeyValues[i] = associationValues.get( rowKeyColumnNames[i] );
@@ -240,11 +231,8 @@ public class RedisDialect implements GridDialect {
 		Jedis jedis = pool.getResource();
 		try {
 			jedis.watch( id );
+			Set<String> rowKeys = jedis.smembers( id );
 			Transaction tx = jedis.multi();
-			Response<Set<String>> rowKeysResponse = tx.smembers( id );
-			tx.exec();
-			Set<String> rowKeys = rowKeysResponse.get();
-			tx = jedis.multi();
 			String[] members = rowKeys.toArray( new String[rowKeys.size()] );
 			if (members.length > 0) {
 				tx.srem( id, members );
@@ -266,22 +254,7 @@ public class RedisDialect implements GridDialect {
 	@Override
 	public void nextValue(RowKey key, IntegralDataTypeHolder value, int increment, int initialValue) {
 		String sequenceId = key.toString();
-		boolean done = false;
-		int nextValue = -1;
-		do {
-			try {
-				nextValue = nextValue( increment, initialValue, sequenceId );
-				done = true;
-			}
-			catch (JedisDataException e) {
-				try {
-					Thread.sleep( 20 );
-				}
-				catch (InterruptedException e1) {
-					throw new RuntimeException( e1 );
-				}
-			}
-		} while ( !done );
+		int nextValue = nextValue( increment, initialValue, sequenceId );
 		value.initialize( nextValue );
 	}
 
@@ -296,13 +269,9 @@ public class RedisDialect implements GridDialect {
 				return initialValue;
 			}
 			else {
-				jedis.watch( sequenceId );
-				Transaction tx = jedis.multi();
-				Response<Long> newValue = tx.incrBy( sequenceId, increment );
-				tx.exec();
-				Long long1 = newValue.get();
-				System.out.println( Thread.currentThread().getId() + " newvalue: " + long1 );
-				return long1.intValue();
+				Long newValue = jedis.incrBy( sequenceId, increment );
+				System.out.println( Thread.currentThread().getId() + " newvalue: " + newValue );
+				return newValue.intValue();
 			}
 		}
 		finally {
