@@ -35,8 +35,8 @@ import org.codehaus.jackson.annotate.JsonTypeName;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.hibernate.ogm.datastore.spi.Tuple;
-import org.hibernate.ogm.dialect.couchdb.util.impl.Identifier;
 import org.hibernate.ogm.grid.EntityKey;
+import org.hibernate.ogm.util.impl.Identifier;
 
 /**
  * Contains the information related to a {@link Tuple}. The use of this class is to serialize and deserialize the JSON
