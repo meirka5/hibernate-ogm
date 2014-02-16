@@ -2,6 +2,7 @@ package org.hibernate.ogm.test.utils;
 
 import static org.hibernate.ogm.dialect.redis.DomainSpace.ASSOCIATION;
 import static org.hibernate.ogm.dialect.redis.DomainSpace.ENTITY;
+import static org.hibernate.ogm.dialect.redis.IdGenerator.*;
 
 import java.util.Map;
 import java.util.Set;
@@ -30,12 +31,9 @@ public class RedisTestHelper implements TestableGridDialect {
 		RedisDatastoreProvider provider = getProvider( sessionFactory );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
-		Transaction tx = jedis.multi();
 		try {
-			Response<Map<String, String>> hgetAllResponse = tx.hgetAll( key.toString() );
-			tx.exec();
 			@SuppressWarnings("rawtypes")
-			Map map = hgetAllResponse.get();
+			Map map = jedis.hgetAll( generateId( ENTITY, key ) );
 			return map;
 		} finally {
 			pool.returnResource( jedis );

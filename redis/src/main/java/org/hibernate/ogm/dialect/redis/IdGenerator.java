@@ -41,13 +41,13 @@ public final class IdGenerator {
 			builder.append( String.valueOf( columnValues[i] ) );
 			builder.append( "', " );
 		}
-		String id = builder.substring( 0, builder.length() - 2 ) + "]";
+		String id = builder.substring( 0, builder.length() - 2 );
 		return id;
 	}
 
 	private static void appendPrefix(DomainSpace domain, String table, StringBuilder builder) {
 		builder.append( domain.getPrefix() );
 		builder.append( table );
-		builder.append( "[" );
+		builder.append( "::" );
 	}
 }

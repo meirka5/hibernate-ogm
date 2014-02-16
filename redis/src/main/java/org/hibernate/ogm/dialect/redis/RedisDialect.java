@@ -281,7 +281,8 @@ public class RedisDialect implements GridDialect {
 		Jedis jedis = pool.getResource();
 		for ( EntityKeyMetadata entityKeyMetadata : entityKeyMetadatas ) {
 			try {
-				Set<String> keys = jedis.keys( generatePrefix( ENTITY, entityKeyMetadata.getTable() ) );
+				String generatePrefix = generatePrefix( ENTITY, entityKeyMetadata.getTable() );
+				Set<String> keys = jedis.keys( generatePrefix + "*" );
 				for ( String entityKey : keys ) {
 					Map<String, String> tupleMap = jedis.hgetAll( entityKey );
 					Tuple tuple = new Tuple( new RedisTupleSnapshot( tupleMap ) );
