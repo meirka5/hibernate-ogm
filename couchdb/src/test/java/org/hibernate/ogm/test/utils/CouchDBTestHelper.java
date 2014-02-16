@@ -40,7 +40,6 @@ import org.hibernate.ogm.dialect.couchdb.backend.impl.CouchDBDatastore;
 import org.hibernate.ogm.dialect.couchdb.backend.json.impl.EntityDocument;
 import org.hibernate.ogm.dialect.couchdb.backend.json.impl.GenericResponse;
 import org.hibernate.ogm.dialect.couchdb.model.impl.CouchDBTupleSnapshot;
-import org.hibernate.ogm.dialect.couchdb.util.impl.Identifier;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.logging.couchdb.impl.Log;
 import org.hibernate.ogm.logging.couchdb.impl.LoggerFactory;
@@ -51,6 +50,7 @@ import org.hibernate.ogm.test.utils.backend.json.AssociationCountResponse;
 import org.hibernate.ogm.test.utils.backend.json.EntityCountResponse;
 import org.hibernate.ogm.test.utils.backend.json.designdocument.AssociationsDesignDocument;
 import org.hibernate.ogm.test.utils.backend.json.designdocument.EntitiesDesignDocument;
+import org.hibernate.ogm.util.impl.Identifier;
 import org.jboss.resteasy.client.exception.ResteasyClientException;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 

@@ -2,7 +2,7 @@ package org.hibernate.ogm.test.utils;
 
 import static org.hibernate.ogm.dialect.redis.DomainSpace.ASSOCIATION;
 import static org.hibernate.ogm.dialect.redis.DomainSpace.ENTITY;
-import static org.hibernate.ogm.dialect.redis.IdGenerator.*;
+import static org.hibernate.ogm.dialect.redis.RedisIdentifier.*;
 
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +33,7 @@ public class RedisTestHelper implements TestableGridDialect {
 		Jedis jedis = pool.getResource();
 		try {
 			@SuppressWarnings("rawtypes")
-			Map map = jedis.hgetAll( generateId( ENTITY, key ) );
+			Map map = jedis.hgetAll( createId( ENTITY, key ) );
 			return map;
 		} finally {
 			pool.returnResource( jedis );

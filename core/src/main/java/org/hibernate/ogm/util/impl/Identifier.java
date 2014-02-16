@@ -18,12 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.ogm.dialect.couchdb.util.impl;
+package org.hibernate.ogm.util.impl;
 
 import java.util.regex.Pattern;
 
 import org.hibernate.ogm.grid.AssociationKey;
 import org.hibernate.ogm.grid.EntityKey;
+import org.hibernate.ogm.grid.RowKey;
 
 /**
  * Generates the ids used to create the {@link org.hibernate.ogm.dialect.couchdb.backend.json.impl.Document}
@@ -42,7 +43,7 @@ public class Identifier {
 	 * @return the value of the generate id
 	 */
 	public static String createEntityId(EntityKey key) {
-		return key.getTable() + ":" + fromColumnValues( key.getColumnNames() ) + ":" + fromColumnValues( key.getColumnValues() );
+		return createId( key.getTable(), key.getColumnNames(), key.getColumnValues() );
 	}
 
 	/**
@@ -52,10 +53,22 @@ public class Identifier {
 	 * @return the value of the generate id
 	 */
 	public static String createAssociationId(AssociationKey key) {
-		return key.getTable() + ":" + fromColumnValues( key.getColumnNames() ) + ":" + fromColumnValues( key.getColumnValues() );
+		return createId( key.getTable(), key.getColumnNames(), key.getColumnValues() );
 	}
 
-	private static String fromColumnValues(Object[] columnValues) {
+	public static String createRowId(RowKey key) {
+		return createId( key.getTable(), key.getColumnNames(), key.getColumnValues() );
+	}
+
+	private static String createId(String table, String[] columnNames, Object[] columnValues) {
+		return createPrefix( table ) + fromValues( columnNames ) + ":" + fromValues( columnValues );
+	}
+
+	public static String createPrefix(String table) {
+		return table + ":";
+	}
+
+	private static String fromValues(Object[] columnValues) {
 		String id = "";
 		for ( int i = 0; i < columnValues.length; i++ ) {
 			id += escapeCharsValuesUsedAsColumnValuesSeparator( columnValues[i] ) + COLUMN_VALUES_SEPARATOR;
@@ -67,4 +80,5 @@ public class Identifier {
 		final String value = String.valueOf( columnValue );
 		return escapingPattern.matcher( value ).replaceAll( "/_" );
 	}
+
 }

@@ -23,8 +23,8 @@ import static org.hibernate.ogm.dialect.redis.DomainSpace.ENTITY;
 import static org.hibernate.ogm.dialect.redis.DomainSpace.ASSOCIATION;
 import static org.hibernate.ogm.dialect.redis.DomainSpace.ASSOCIATION_ROW;
 import static org.hibernate.ogm.dialect.redis.DomainSpace.SEQUENCE;
-import static org.hibernate.ogm.dialect.redis.IdGenerator.generateId;
-import static org.hibernate.ogm.dialect.redis.IdGenerator.generatePrefix;
+import static org.hibernate.ogm.dialect.redis.RedisIdentifier.createId;
+import static org.hibernate.ogm.dialect.redis.RedisIdentifier.createPrefix;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -80,7 +80,7 @@ public class RedisDialect implements GridDialect {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			Map<String, String> entityMap = jedis.hgetAll( generateId( ENTITY, entityKey ) );
+			Map<String, String> entityMap = jedis.hgetAll( createId( ENTITY, entityKey ) );
 			if ( entityMap.isEmpty() ) {
 				return null;
 			}
@@ -98,7 +98,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey entityKey) {
-		String key = generateId( ENTITY, entityKey );
+		String key = createId( ENTITY, entityKey );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
@@ -127,7 +127,7 @@ public class RedisDialect implements GridDialect {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.del( generateId( ENTITY, entityKey ) );
+			jedis.del( createId( ENTITY, entityKey ) );
 		}
 		finally {
 			pool.returnResource( jedis );
@@ -139,7 +139,7 @@ public class RedisDialect implements GridDialect {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			Set<String> rowKeys = jedis.smembers( generateId( ASSOCIATION, associationKey ) );
+			Set<String> rowKeys = jedis.smembers( createId( ASSOCIATION, associationKey ) );
 			String[] rowKeyColumnNames = associationKey.getRowKeyColumnNames();
 			Map<RowKey, Map<String, String>> result = new HashMap<RowKey, Map<String, String>>();
 			for ( String rowKey : rowKeys ) {
@@ -172,7 +172,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void updateAssociation(Association association, AssociationKey associationKey, AssociationContext context) {
-		String key = generateId( ASSOCIATION, associationKey );
+		String key = createId( ASSOCIATION, associationKey );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
@@ -181,12 +181,12 @@ public class RedisDialect implements GridDialect {
 			for ( AssociationOperation action : association.getOperations() ) {
 				switch ( action.getType() ) {
 					case PUT:
-						tx.sadd( key, generateId( ASSOCIATION_ROW, action.getKey() ) );
+						tx.sadd( key, createId( ASSOCIATION_ROW, action.getKey() ) );
 						putAssociation( tx, associationKey, action );
 						break;
 					case PUT_NULL:
 					case REMOVE:
-						String rowKey = generateId( ASSOCIATION_ROW, action.getKey() );
+						String rowKey = createId( ASSOCIATION_ROW, action.getKey() );
 						tx.srem( key, rowKey );
 						tx.del( rowKey );
 						break;
@@ -200,7 +200,7 @@ public class RedisDialect implements GridDialect {
 	}
 
 	private void putAssociation(Transaction tx, AssociationKey associationKey, AssociationOperation action) {
-		String rowKey = generateId(ASSOCIATION_ROW, action.getKey());
+		String rowKey = createId(ASSOCIATION_ROW, action.getKey());
 		Tuple tuple = action.getValue();
 		if ( tuple != null ) {
 			for ( TupleOperation tupleOperation : tuple.getOperations() ) {
@@ -219,7 +219,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext context) {
-		String id = generateId( ASSOCIATION, key );
+		String id = createId( ASSOCIATION, key );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
@@ -246,8 +246,8 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void nextValue(RowKey key, IntegralDataTypeHolder value, int increment, int initialValue) {
-		String sequenceId = generateId( SEQUENCE, key );
-		int nextValue = nextValue( increment, initialValue, generateId( SEQUENCE, key ) );
+		String sequenceId = createId( SEQUENCE, key );
+		int nextValue = nextValue( increment, initialValue, createId( SEQUENCE, key ) );
 		value.initialize( nextValue );
 	}
 
@@ -281,7 +281,7 @@ public class RedisDialect implements GridDialect {
 		Jedis jedis = pool.getResource();
 		for ( EntityKeyMetadata entityKeyMetadata : entityKeyMetadatas ) {
 			try {
-				String generatePrefix = generatePrefix( ENTITY, entityKeyMetadata.getTable() );
+				String generatePrefix = createPrefix( ENTITY, entityKeyMetadata.getTable() );
 				Set<String> keys = jedis.keys( generatePrefix + "*" );
 				for ( String entityKey : keys ) {
 					Map<String, String> tupleMap = jedis.hgetAll( entityKey );
