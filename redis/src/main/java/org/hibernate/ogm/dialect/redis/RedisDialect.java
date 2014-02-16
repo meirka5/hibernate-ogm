@@ -19,6 +19,13 @@
 
 package org.hibernate.ogm.dialect.redis;
 
+import static org.hibernate.ogm.dialect.redis.DomainSpace.ENTITY;
+import static org.hibernate.ogm.dialect.redis.DomainSpace.ASSOCIATION;
+import static org.hibernate.ogm.dialect.redis.DomainSpace.ASSOCIATION_ROW;
+import static org.hibernate.ogm.dialect.redis.DomainSpace.SEQUENCE;
+import static org.hibernate.ogm.dialect.redis.IdGenerator.generateId;
+import static org.hibernate.ogm.dialect.redis.IdGenerator.generatePrefix;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,7 +55,6 @@ import org.hibernate.type.Type;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Response;
 import redis.clients.jedis.Transaction;
 
 /**
@@ -70,14 +76,11 @@ public class RedisDialect implements GridDialect {
 	}
 
 	@Override
-	public Tuple getTuple(EntityKey key, TupleContext context) {
+	public Tuple getTuple(EntityKey entityKey, TupleContext context) {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			Transaction tx = jedis.multi();
-			Response<Map<String, String>> response = tx.hgetAll( key.toString() );
-			tx.exec();
-			Map<String, String> entityMap = response.get();
+			Map<String, String> entityMap = jedis.hgetAll( generateId( ENTITY, entityKey ) );
 			if ( entityMap.isEmpty() ) {
 				return null;
 			}
@@ -94,21 +97,21 @@ public class RedisDialect implements GridDialect {
 	}
 
 	@Override
-	public void updateTuple(Tuple tuple, EntityKey key) {
-		String id = key.toString();
+	public void updateTuple(Tuple tuple, EntityKey entityKey) {
+		String key = generateId( ENTITY, entityKey );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.watch( id );
+			jedis.watch( key );
 			Transaction tx = jedis.multi();
 			for ( TupleOperation action : tuple.getOperations() ) {
 				switch ( action.getType() ) {
 					case PUT:
-						tx.hset( id, action.getColumn(), (String) action.getValue() );
+						tx.hset( key, action.getColumn(), (String) action.getValue() );
 						break;
 					case PUT_NULL:
 					case REMOVE:
-						tx.hdel( id, action.getColumn() );
+						tx.hdel( key, action.getColumn() );
 						break;
 				}
 			}
@@ -120,11 +123,11 @@ public class RedisDialect implements GridDialect {
 	}
 
 	@Override
-	public void removeTuple(EntityKey key) {
+	public void removeTuple(EntityKey entityKey) {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.del( key.toString() );
+			jedis.del( generateId( ENTITY, entityKey ) );
 		}
 		finally {
 			pool.returnResource( jedis );
@@ -132,16 +135,16 @@ public class RedisDialect implements GridDialect {
 	}
 
 	@Override
-	public Association getAssociation(AssociationKey key, AssociationContext context) {
+	public Association getAssociation(AssociationKey associationKey, AssociationContext context) {
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			Set<String> rowKeys = jedis.smembers( key.toString() );
-			String[] rowKeyColumnNames = key.getRowKeyColumnNames();
+			Set<String> rowKeys = jedis.smembers( generateId( ASSOCIATION, associationKey ) );
+			String[] rowKeyColumnNames = associationKey.getRowKeyColumnNames();
 			Map<RowKey, Map<String, String>> result = new HashMap<RowKey, Map<String, String>>();
 			for ( String rowKey : rowKeys ) {
 				Map<String, String> associationValues = jedis.hgetAll( rowKey );
-				RowKey rk = createRowKey( key, rowKeyColumnNames, associationValues );
+				RowKey rk = createRowKey( associationKey, rowKeyColumnNames, associationValues );
 				result.put( rk, associationValues );
 			}
 			if ( result.isEmpty() ) {
@@ -168,23 +171,24 @@ public class RedisDialect implements GridDialect {
 	}
 
 	@Override
-	public void updateAssociation(Association association, AssociationKey key, AssociationContext context) {
-		String associationId = key.toString();
+	public void updateAssociation(Association association, AssociationKey associationKey, AssociationContext context) {
+		String key = generateId( ASSOCIATION, associationKey );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
-			jedis.watch( associationId );
+			jedis.watch( key );
 			Transaction tx = jedis.multi();
 			for ( AssociationOperation action : association.getOperations() ) {
 				switch ( action.getType() ) {
 					case PUT:
-						tx.sadd( associationId, action.getKey().toString() );
-						putAssociation( tx, key, action );
+						tx.sadd( key, generateId( ASSOCIATION_ROW, action.getKey() ) );
+						putAssociation( tx, associationKey, action );
 						break;
 					case PUT_NULL:
 					case REMOVE:
-						tx.srem( associationId, action.getKey().toString() );
-						tx.del( action.getKey().toString() );
+						String rowKey = generateId( ASSOCIATION_ROW, action.getKey() );
+						tx.srem( key, rowKey );
+						tx.del( rowKey );
 						break;
 				}
 			}
@@ -195,8 +199,8 @@ public class RedisDialect implements GridDialect {
 		}
 	}
 
-	private void putAssociation(Transaction tx, AssociationKey key, AssociationOperation action) {
-		String rowKey = action.getKey().toString();
+	private void putAssociation(Transaction tx, AssociationKey associationKey, AssociationOperation action) {
+		String rowKey = generateId(ASSOCIATION_ROW, action.getKey());
 		Tuple tuple = action.getValue();
 		if ( tuple != null ) {
 			for ( TupleOperation tupleOperation : tuple.getOperations() ) {
@@ -215,7 +219,7 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void removeAssociation(AssociationKey key, AssociationContext context) {
-		String id = key.toString();
+		String id = generateId( ASSOCIATION, key );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
 		try {
@@ -242,8 +246,8 @@ public class RedisDialect implements GridDialect {
 
 	@Override
 	public void nextValue(RowKey key, IntegralDataTypeHolder value, int increment, int initialValue) {
-		String sequenceId = key.toString();
-		int nextValue = nextValue( increment, initialValue, sequenceId );
+		String sequenceId = generateId( SEQUENCE, key );
+		int nextValue = nextValue( increment, initialValue, generateId( SEQUENCE, key ) );
 		value.initialize( nextValue );
 	}
 
@@ -277,14 +281,10 @@ public class RedisDialect implements GridDialect {
 		Jedis jedis = pool.getResource();
 		for ( EntityKeyMetadata entityKeyMetadata : entityKeyMetadatas ) {
 			try {
-				Transaction tx = jedis.multi();
-				Response<Set<String>> keys = tx.keys( "EntityKey{table='" + entityKeyMetadata.getTable() + "'*" );
-				tx.exec();
-				for ( String entityKey : keys.get() ) {
-					tx = jedis.multi();
-					Response<Map<String, String>> tupleMap = tx.hgetAll( entityKey );
-					tx.exec();
-					Tuple tuple = new Tuple( new RedisTupleSnapshot( tupleMap.get() ) );
+				Set<String> keys = jedis.keys( generatePrefix( ENTITY, entityKeyMetadata.getTable() ) );
+				for ( String entityKey : keys ) {
+					Map<String, String> tupleMap = jedis.hgetAll( entityKey );
+					Tuple tuple = new Tuple( new RedisTupleSnapshot( tupleMap ) );
 					consumer.consume( tuple );
 				}
 			}

@@ -1,5 +1,8 @@
 package org.hibernate.ogm.test.utils;
 
+import static org.hibernate.ogm.dialect.redis.DomainSpace.ASSOCIATION;
+import static org.hibernate.ogm.dialect.redis.DomainSpace.ENTITY;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +12,7 @@ import org.hibernate.ogm.cfg.OgmConfiguration;
 import org.hibernate.ogm.datastore.redis.Redis;
 import org.hibernate.ogm.datastore.redis.impl.RedisDatastoreProvider;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
+import org.hibernate.ogm.dialect.redis.DomainSpace;
 import org.hibernate.ogm.grid.EntityKey;
 import org.hibernate.ogm.options.generic.document.AssociationStorageType;
 import org.hibernate.ogm.options.navigation.context.GlobalContext;
@@ -73,11 +77,8 @@ public class RedisTestHelper implements TestableGridDialect {
 		RedisDatastoreProvider provider = getProvider( sessionFactory );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
-		Transaction tx = jedis.multi();
 		try {
-			Response<Set<String>> keys = tx.keys( "EntityKey*" );
-			tx.exec();
-			return keys.get().size();
+			return jedis.keys( match( ENTITY ) ).size();
 		} finally {
 			pool.returnResource( jedis );
 		}
@@ -88,14 +89,15 @@ public class RedisTestHelper implements TestableGridDialect {
 		RedisDatastoreProvider provider = getProvider( sessionFactory );
 		JedisPool pool = provider.getPool();
 		Jedis jedis = pool.getResource();
-		Transaction tx = jedis.multi();
 		try {
-			Response<Set<String>> keys = tx.keys( "AssociationKey*" );
-			tx.exec();
-			return keys.get().size();
+			return jedis.keys( match( ASSOCIATION ) ).size();
 		} finally {
 			pool.returnResource( jedis );
 		}
+	}
+
+	private String match(DomainSpace soace) {
+		return soace.getPrefix() + "*";
 	}
 
 	@Override
