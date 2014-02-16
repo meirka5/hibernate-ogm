@@ -43,7 +43,7 @@ import redis.clients.jedis.JedisPool;
 public class RedisNextValueGenerationTest {
 
 	private static final int LOOPS = 2;
-	private static final int THREADS = 10;
+	private static final int THREADS = 20;
 
 	private GridDialect dialect;
 	private RedisDatastoreProvider provider;
