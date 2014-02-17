@@ -14,6 +14,11 @@
     <name>Hibernate OGM Redis integration</name>
     <description>Persist data in Redis</description>
 
+    <properties>
+        <redis.hostname>${env.REDIS_HOSTNAME}</redis.hostname>
+        <redis.port>${env.REDIS_PORT}</redis.port>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.hibernate.ogm</groupId>
@@ -63,6 +68,12 @@
     </dependencies>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -15,6 +15,11 @@
     <name>Hibernate OGM for CouchDB</name>
     <description>Persist objects in CouchDB</description>
 
+    <properties>
+        <couchdb.hostname>${env.COUCHDB_HOSTNAME}</couchdb.hostname>
+        <couchdb.port>${env.COUCHDB_PORT}</couchdb.port>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.hibernate.ogm</groupId>
@@ -96,6 +101,12 @@
     </dependencies>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
