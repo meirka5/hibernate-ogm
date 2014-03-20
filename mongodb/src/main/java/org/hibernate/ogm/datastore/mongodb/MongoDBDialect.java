@@ -24,7 +24,6 @@ import static org.hibernate.ogm.datastore.mongodb.dialect.impl.MongoDBTupleSnaps
 import static org.hibernate.ogm.datastore.mongodb.dialect.impl.MongoDBTupleSnapshot.SnapshotType.UPDATE;
 import static org.hibernate.ogm.datastore.mongodb.dialect.impl.MongoHelpers.addEmptyAssociationField;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -806,7 +805,7 @@ public class MongoDBDialect implements BatchableGridDialect {
 		}
 
 		@Override
-		public void close() throws IOException {
+		public void close() {
 			cursor.close();
 		}
 	}
