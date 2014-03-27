@@ -6,14 +6,11 @@
  */
 package org.hibernate.ogm.datastore.mongodb.impl;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.Iterator;
-
 import org.hibernate.ogm.datastore.mongodb.MongoDBDialect;
 import org.hibernate.ogm.datastore.mongodb.dialect.impl.MongoDBTupleSnapshot;
 import org.hibernate.ogm.datastore.mongodb.dialect.impl.MongoDBTupleSnapshot.SnapshotType;
 import org.hibernate.ogm.datastore.spi.Tuple;
+import org.hibernate.ogm.dialect.TupleIterator;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.hibernate.ogm.grid.RowKey;
 
@@ -27,7 +24,7 @@ import com.mongodb.DBObject;
  * @author Davide D'Alto <davide@hibernate.org>
  * @author Gunnar Morling
  */
-public class MongoDBResultTupleIterable implements Iterable<Tuple>, Closeable {
+public class MongoDBResultTupleIterable implements Iterable<Tuple> {
 
 	private final DBCursor cursor;
 	private final EntityKeyMetadata keyMetaData;
@@ -44,16 +41,11 @@ public class MongoDBResultTupleIterable implements Iterable<Tuple>, Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
-		cursor.close();
-	}
-
-	@Override
-	public Iterator<Tuple> iterator() {
+	public TupleIterator iterator() {
 		return new MongoDBResultsCursorIterator( cursor, keyMetaData );
 	}
 
-	private static class MongoDBResultsCursorIterator implements Iterator<Tuple> {
+	private static class MongoDBResultsCursorIterator implements TupleIterator {
 
 		private final DBCursor cursor;
 		private final EntityKeyMetadata keyMetaData;
@@ -84,6 +76,11 @@ public class MongoDBResultTupleIterable implements Iterable<Tuple>, Closeable {
 		@Override
 		public void remove() {
 			cursor.remove();
+		}
+
+		@Override
+		public void close() {
+			cursor.close();
 		}
 	}
 }
