@@ -7,8 +7,6 @@
 package org.hibernate.ogm.datastore.mongodb.query.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -22,13 +20,10 @@ import org.hibernate.internal.AbstractQueryImpl;
 import org.hibernate.ogm.datastore.mongodb.impl.MongoDBDatastoreProvider;
 import org.hibernate.ogm.datastore.mongodb.impl.MongoDBResultTupleIterable;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
-import org.hibernate.ogm.datastore.spi.Tuple;
-import org.hibernate.ogm.dialect.TupleIterator;
 import org.hibernate.ogm.grid.EntityKeyMetadata;
 import org.hibernate.ogm.hibernatecore.impl.OgmSession;
-import org.hibernate.ogm.loader.OgmLoader;
-import org.hibernate.ogm.loader.OgmLoadingContext;
 import org.hibernate.ogm.persister.OgmEntityPersister;
+import org.hibernate.ogm.util.parser.impl.ObjectLoadingIterator;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -55,9 +50,9 @@ public class MongoDBQueryImpl extends AbstractQueryImpl {
 	}
 
 	@Override
-	public Iterator<?> iterate() throws HibernateException {
+	public ObjectLoadingIterator iterate() throws HibernateException {
 		MongoDBResultTupleIterable resultsCursor = getResultsCursor();
-		return new ObjectLoadingIterator( resultsCursor.iterator() );
+		return new ObjectLoadingIterator( session, resultsCursor.iterator(), entityType, projections.keySet() );
 	}
 
 	@Override
@@ -72,15 +67,17 @@ public class MongoDBQueryImpl extends AbstractQueryImpl {
 
 	@Override
 	public List<?> list() throws HibernateException {
-		Iterator<?> results = iterate();
-
-		List<Object> result = new ArrayList<Object>();
-
-		while ( results.hasNext() ) {
-			result.add( results.next() );
+		ObjectLoadingIterator results = iterate();
+		try {
+			List<Object> result = new ArrayList<Object>();
+			while ( results.hasNext() ) {
+				result.add( results.next() );
+			}
+			return result;
 		}
-
-		return result;
+		finally {
+			results.close();
+		}
 	}
 
 	private boolean isProjection() {
@@ -121,55 +118,4 @@ public class MongoDBQueryImpl extends AbstractQueryImpl {
 		return new EntityKeyMetadata( persister.getTableName(), persister.getRootTableIdentifierColumnNames() );
 	}
 
-	public class ObjectLoadingIterator implements Iterator<Object> {
-
-		private final Iterator<Tuple> resultIterator;
-
-		private ObjectLoadingIterator(TupleIterator resultsCursor) {
-			resultIterator = resultsCursor;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return resultIterator.hasNext();
-		}
-
-		@Override
-		public Object next() {
-			Tuple next = resultIterator.next();
-
-			if ( isProjection() ) {
-				return getAsProjection( next );
-			}
-			else {
-				return getAsManagedEntity( next );
-			}
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException( "Not implemented yet" );
-		}
-
-		private Object getAsManagedEntity(Tuple tuple) {
-			OgmEntityPersister persister = (OgmEntityPersister) ( session.getFactory() ).getEntityPersister( entityType.getName() );
-			OgmLoader loader = new OgmLoader( new OgmEntityPersister[] { persister } );
-			OgmLoadingContext ogmLoadingContext = new OgmLoadingContext();
-			ogmLoadingContext.setTuples( Arrays.asList( tuple ) );
-
-			return loader.loadEntities( session, LockOptions.NONE, ogmLoadingContext ).iterator().next();
-		}
-
-		private Object[] getAsProjection(Tuple tuple) {
-			Object[] projectionResult = new Object[projections.keySet().size()];
-			int i = 0;
-
-			for ( String column : projections.keySet() ) {
-				projectionResult[i] = tuple.get( column );
-				i++;
-			}
-
-			return projectionResult;
-		}
-	}
 }
