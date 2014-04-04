@@ -6,10 +6,14 @@
  */
 package org.hibernate.ogm.datastore.neo4j.impl;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.ogm.datastore.neo4j.Neo4jDialect;
+import org.hibernate.ogm.datastore.neo4j.dialect.impl.Neo4jSequenceGenerator;
 import org.hibernate.ogm.datastore.neo4j.spi.GraphDatabaseServiceFactory;
 import org.hibernate.ogm.datastore.spi.DatastoreProvider;
 import org.hibernate.ogm.dialect.GridDialect;
@@ -35,6 +39,8 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 
 	private ServiceRegistryImplementor registry;
 
+	private Neo4jSequenceGenerator sequenceGenerator;
+
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.registry = serviceRegistry;
@@ -58,6 +64,7 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 	@Override
 	public void start() {
 		this.neo4jDb = graphDbFactory.create();
+		this.sequenceGenerator = new Neo4jSequenceGenerator( neo4jDb );
 		this.graphDbFactory = null;
 	}
 
@@ -68,5 +75,34 @@ public class Neo4jDatastoreProvider implements DatastoreProvider, Startable, Sto
 
 	public GraphDatabaseService getDataBase() {
 		return neo4jDb;
+	}
+
+	public SchemaBuilder getSchemaBuilder() {
+		return new SchemaBuilder();
+	}
+
+	public Neo4jSequenceGenerator getSequenceGenerator() {
+		return this.sequenceGenerator;
+	}
+
+	public class SchemaBuilder {
+
+		private final Map<String, Set<String>> sequences = new HashMap<String, Set<String>>();
+
+		public SchemaBuilder addSequence(String generatorKey, String segmentValue) {
+			if ( sequences.containsKey( generatorKey ) ) {
+				sequences.get( generatorKey ).add( segmentValue );
+			}
+			else {
+				Set<String> segments = new HashSet<String>();
+				segments.add( segmentValue );
+				sequences.put( generatorKey, segments );
+			}
+			return this;
+		}
+
+		public void update() {
+			sequenceGenerator.createUniqueConstraint( sequences );
+		}
 	}
 }
