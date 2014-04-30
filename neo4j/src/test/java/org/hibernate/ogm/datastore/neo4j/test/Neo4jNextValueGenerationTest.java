@@ -40,11 +40,13 @@ import org.hibernate.ogm.grid.RowKey;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * @author Davide D'Alto <davide@hibernate.org>
  */
+@Ignore
 public class Neo4jNextValueGenerationTest {
 
 	private static final String HIBERNATE_SEQUENCES = "hibernate_sequences";
