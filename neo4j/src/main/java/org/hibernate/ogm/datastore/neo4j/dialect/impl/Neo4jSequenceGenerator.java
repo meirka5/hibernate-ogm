@@ -77,7 +77,9 @@ public class Neo4jSequenceGenerator {
 	 * Defines the amount of time the generation of the sequence should be attempted. A value of 1 should be enough
 	 * because errors are expected only when two thread try to create the same node.
 	 */
-	private static final int MAX_GENERATION_ATTEMPT = 5;
+	private static final int MAX_GENERATION_ATTEMPT = 10;
+
+	private static final int MAX_WAIT_IN_MS = 10000;
 
 	private final Map<RowKey, String> queryCache = new HashMap<RowKey, String>();
 
@@ -153,10 +155,19 @@ public class Neo4jSequenceGenerator {
 				// In this case the two node will have the same sequence name and the same initial value, viol;ating the
 				// uniwue constraint defined at startup.
 				log.errorGeneratingSequence( e );
+				sleep();
 			}
 		}
 		// This should never happen
 		throw log.cannotGenerateSequence();
+	}
+
+	private void sleep() {
+		try {
+			Thread.sleep( MAX_WAIT_IN_MS / MAX_GENERATION_ATTEMPT );
+		}
+		catch (InterruptedException e) {
+		}
 	}
 
 	private int sequence(RowKey rowKey, int increment, final int initialValue) {
