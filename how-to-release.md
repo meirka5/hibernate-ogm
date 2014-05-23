@@ -66,7 +66,6 @@ Verify:
    ```
 
 6. Log in to [Nexus](https://repository.jboss.org/nexus):
-
    - check all artifacts you expect are there
    - close and release the repository. See [more details about using the staging repository](https://community.jboss.org/wiki/MavenDeployingARelease)
    - if there is a problem, drop the staging repo, fix the problem and re-deploy
