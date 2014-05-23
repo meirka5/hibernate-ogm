@@ -91,14 +91,14 @@ Verify:
 
    ```
        rsync -rzh --progress --delete \
-             --protocol=28 docs/ hibernate@filemgmt.jboss.org:/docs_htdocs/hibernate/ogm/<version-family>
+             --protocol=28 docs/ hibernate@filemgmt.jboss.org:/docs_htdocs/hibernate/ogm/[version-family]
    ```
 
    or alternatively
 
    ```
-       scp -r api hibernate@filemgmt.jboss.org:docs_htdocs/hibernate/ogm/<version-family>
-       scp -r reference hibernate@filemgmt.jboss.org:docs_htdocs/hibernate/ogm/<version-family>
+       scp -r api hibernate@filemgmt.jboss.org:docs_htdocs/hibernate/ogm/[version-family]
+       scp -r reference hibernate@filemgmt.jboss.org:docs_htdocs/hibernate/ogm/[version-family]
    ```
 
 3. If it is a final release you have to add the symbolic link /docs_htdocs/hibernate/stable/ogm
