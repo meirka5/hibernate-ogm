@@ -65,7 +65,7 @@ Verify:
        git push upstream <release-version>  
    ```
 
-6. Log in to [Nexus](https://repository.jboss.org/nexus) and close the temporary staging repository.
+6. Log in to [Nexus](https://repository.jboss.org/nexus):
 
    - check all artifacts you expect are there
    - close and release the repository. See [more details about using the staging repository](https://community.jboss.org/wiki/MavenDeployingARelease)
