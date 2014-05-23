@@ -32,7 +32,7 @@ Verify:
        mvn clean install -Pdist -s settings-example.xml 
    ```
 
-4. the distribution package as built by Maven (distribution/target/hibernate-ogm-<version>-dist).
+4. the distribution package as built by Maven (distribution/target/hibernate-ogm- < version>-dist).
 
    They should contain the appropriate dependencies, without duplicates. The creation of these directories is driven by the assembly plugin (distribution/src/main/assembly/dist.xml) which is very specific and might break with the inclusion of new dependencies.
 
