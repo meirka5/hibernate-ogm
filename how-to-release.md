@@ -12,7 +12,7 @@ Make sure you have:
 
   - [Nexus](https://repository.jboss.org/nexus/index.html): you can try to login on the Nexus web interface
   - [SourceForge](https://sourceforge.net): you need to have the authorization on the hibernate-ogm project
-  - Documentation: you have to be able to connect via ssh to hibernate@filemgmt.jboss.org:/docs_htdocs/hibernate/ogm/**<version>**
+  - Documentation: you have to be able to connect via ssh to hibernate@filemgmt.jboss.org:/docs_htdocs/hibernate/ogm/[version]
 
 ## Release process
 
@@ -32,7 +32,7 @@ Verify:
        mvn clean install -Pdist -s settings-example.xml 
    ```
 
-4. the distribution package as built by Maven (distribution/target/hibernate-ogm-**<version>**-dist).
+4. the distribution package as built by Maven (distribution/target/hibernate-ogm-[version]-dist).
 
    They should contain the appropriate dependencies, without duplicates. The creation of these directories is driven by the assembly plugin (distribution/src/main/assembly/dist.xml) which is very specific and might break with the inclusion of new dependencies.
 
@@ -81,8 +81,8 @@ Verify:
 ### Publish
 
 1. Upload the distribution packages to SourceForge (they should be under target/checkout/target). You need to be member of the Hibernate project team of Sourceforge to do that. [See Sourceforge instructions](https://sourceforge.net/p/forge/documentation/Release%20Files%20for%20Download/)
-   - Copy the _changelog.txt__ (in target/checkout/distribution/target/hibernate-ogm-**<version>**-dist)
-   - Copy the _readme.txt__ (in target/checkout/distribution/target/hibernate-ogm-**<version>**-dist)
+   - Copy the _changelog.txt__ (in target/checkout/distribution/target/hibernate-ogm-[version]-dist)
+   - Copy the _readme.txt__ (in target/checkout/distribution/target/hibernate-ogm-[version]-dist)
    - Copy the _.zip distribution_ (in target/checkout/distribution/target)
    - Copy the _.tar.gz distribution_ (in target/checkout/distribution/target)
    - Copy the .zip containing the _JBoss Modules_ (in target/checkout/modules/target)
