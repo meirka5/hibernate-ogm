@@ -85,9 +85,4 @@ public final class Neo4jTupleSnapshot implements TupleSnapshot {
 		}
 		return names;
 	}
-
-	public Node getNode() {
-		return node;
-	}
-
 }

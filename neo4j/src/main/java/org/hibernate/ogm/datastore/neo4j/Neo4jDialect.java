@@ -24,6 +24,7 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.ogm.datastore.map.impl.MapTupleSnapshot;
 import org.hibernate.ogm.datastore.neo4j.dialect.impl.CypherCRUD;
 import org.hibernate.ogm.datastore.neo4j.dialect.impl.MapsTupleIterator;
 import org.hibernate.ogm.datastore.neo4j.dialect.impl.Neo4jAssociationSnapshot;
@@ -108,9 +109,11 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 
 	@Override
 	public Tuple createTuple(EntityKey key, TupleContext tupleContext) {
-		Node node = neo4jCRUD.createNodeUnlessExists( key, ENTITY );
-		GraphLogger.log( "Created node: %1$s", node );
-		return createTuple( node, tupleContext );
+		Map<String, Object> map = new HashMap<String, Object>( key.getColumnNames().length );
+		for ( int i = 0; i < key.getColumnNames().length; i++ ) {
+			map.put( key.getColumnNames()[i], key.getColumnValues()[i] );
+		}
+		return new Tuple( new MapTupleSnapshot( map ) );
 	}
 
 	private static Tuple createTuple(Node entityNode) {
@@ -123,8 +126,7 @@ public class Neo4jDialect extends BaseGridDialect implements QueryableGridDialec
 
 	@Override
 	public void updateTuple(Tuple tuple, EntityKey key, TupleContext tupleContext) {
-		Neo4jTupleSnapshot snapshot = (Neo4jTupleSnapshot) tuple.getSnapshot();
-		Node node = snapshot.getNode();
+		Node node = neo4jCRUD.createNodeUnlessExists( key, ENTITY );
 		applyTupleOperations( tuple, node, tuple.getOperations(), tupleContext );
 		GraphLogger.log( "Updated node: %1$s", node );
 	}
