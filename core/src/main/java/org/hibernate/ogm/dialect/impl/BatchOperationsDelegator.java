@@ -14,6 +14,7 @@ import org.hibernate.ogm.dialect.batch.spi.RemoveAssociationOperation;
 import org.hibernate.ogm.dialect.batch.spi.RemoveTupleOperation;
 import org.hibernate.ogm.dialect.batch.spi.UpdateAssociationOperation;
 import org.hibernate.ogm.dialect.batch.spi.UpdateTupleOperation;
+import org.hibernate.ogm.dialect.spi.Facetable;
 import org.hibernate.ogm.dialect.spi.AssociationContext;
 import org.hibernate.ogm.dialect.spi.ModelConsumer;
 import org.hibernate.ogm.dialect.spi.GridDialect;
@@ -179,5 +180,23 @@ public class BatchOperationsDelegator implements GridDialect {
 
 	private AssociationContext withQueue(AssociationContext associationContext) {
 		return new AssociationContext( associationContext, getOperationQueue() );
+	}
+
+	@Override
+	public <TYPE extends Facetable> TYPE asFacetOrNull(Class<TYPE> clazz) {
+		if ( clazz.isAssignableFrom( BatchableGridDialect.class ) ) {
+			return (TYPE) this;
+		}
+		return dialect.asFacetOrNull( clazz );
+	}
+
+	@Override
+	public boolean hasFacet(Class<? extends Facetable> facet) {
+		if ( facet.isAssignableFrom( BatchOperationsDelegator.class ) ) {
+			return true;
+		}
+		else {
+			return dialect.hasFacet( facet );
+		}
 	}
 }

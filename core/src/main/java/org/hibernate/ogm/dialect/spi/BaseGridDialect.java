@@ -20,4 +20,17 @@ public abstract class BaseGridDialect implements GridDialect {
 	public GridType overrideType(Type type) {
 		return null;
 	}
+
+	@Override
+	public <TYPE extends Facetable> TYPE asFacetOrNull(Class<TYPE> facet) {
+		if ( facet.isInstance( this ) ) {
+			return (TYPE) this;
+		}
+		return null;
+	}
+
+	@Override
+	public boolean hasFacet(Class<? extends Facetable> facet) {
+		return facet.isInstance( this ) ;
+	}
 }

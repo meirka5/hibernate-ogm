@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.ogm.dialect.spi.Facetable;
 import org.hibernate.ogm.dialect.spi.AssociationContext;
 import org.hibernate.ogm.dialect.spi.ModelConsumer;
 import org.hibernate.ogm.dialect.spi.GridDialect;
@@ -179,5 +180,23 @@ public class GridDialectLogger implements GridDialect, Configurable, ServiceRegi
 
 	public GridDialect getGridDialect() {
 		return gridDialect;
+	}
+
+	@Override
+	public <TYPE extends Facetable> TYPE asFacetOrNull(Class<TYPE> clazz) {
+		if ( clazz.isAssignableFrom( GridDialectLogger.class ) ) {
+			return (TYPE) this;
+		}
+		return gridDialect.asFacetOrNull( clazz );
+	}
+
+	@Override
+	public boolean hasFacet(Class<? extends Facetable> facet) {
+		if ( facet.isAssignableFrom( GridDialectLogger.class ) ) {
+			return true;
+		}
+		else {
+			return gridDialect.hasFacet( facet );
+		}
 	}
 }

@@ -28,7 +28,7 @@ import org.hibernate.type.Type;
  * @author Emmanuel Bernard
  * @author Gunnar Morling
  */
-public interface GridDialect extends Service {
+public interface GridDialect extends Facetable, Service {
 
 	LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode);
 

@@ -50,12 +50,9 @@ public class NativeNoSqlQueryInterpreterInitiator implements SessionFactoryServi
 
 	private NativeQueryInterpreter getParameterMetadataRecognizer(ServiceRegistryImplementor registry) {
 		GridDialect gridDialect = registry.getService( GridDialect.class );
-
-		if ( gridDialect instanceof QueryableGridDialect ) {
-			return new NativeNoSqlQueryInterpreter( (QueryableGridDialect) gridDialect );
+		if ( gridDialect.hasFacet( QueryableGridDialect.class ) ) {
+			return new NativeNoSqlQueryInterpreter( gridDialect.asFacetOrNull( QueryableGridDialect.class ) );
 		}
-		else {
-			return null;
-		}
+		return null;
 	}
 }
