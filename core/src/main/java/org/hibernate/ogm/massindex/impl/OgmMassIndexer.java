@@ -18,9 +18,9 @@ import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
 import org.hibernate.search.MassIndexer;
 import org.hibernate.search.batchindexing.MassIndexerProgressMonitor;
+import org.hibernate.search.batchindexing.impl.SimpleIndexingProgressMonitor;
 import org.hibernate.search.engine.spi.SearchFactoryImplementor;
-import org.hibernate.search.impl.SimpleIndexingProgressMonitor;
-import org.hibernate.search.jmx.IndexingProgressMonitor;
+import org.hibernate.search.jmx.impl.JMXRegistrar.IndexingProgressMonitor;
 
 /**
  * {@link MassIndexer} that can be register in Hibernate Search to index existing data stores.
@@ -72,12 +72,6 @@ public class OgmMassIndexer implements MassIndexer {
 	@Override
 	public MassIndexer threadsForSubsequentFetching(int numberOfThreads) {
 		log.unsupportedIndexerConfigurationOption( "threadForSubsequentFetching" );
-		return this;
-	}
-
-	@Override
-	@Deprecated
-	public MassIndexer threadsForIndexWriter(int numberOfThreads) {
 		return this;
 	}
 

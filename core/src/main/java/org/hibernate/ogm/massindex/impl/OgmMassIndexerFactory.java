@@ -11,9 +11,8 @@ import java.util.Properties;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.ogm.dialect.spi.GridDialect;
 import org.hibernate.search.MassIndexer;
+import org.hibernate.search.batchindexing.spi.MassIndexerFactory;
 import org.hibernate.search.engine.spi.SearchFactoryImplementor;
-import org.hibernate.search.hcore.impl.MassIndexerFactoryProvider;
-import org.hibernate.search.spi.MassIndexerFactory;
 
 /**
  * {@link MassIndexerFactory} that can be used to register the {@link OgmMassIndexer} to Hibernate Search.
