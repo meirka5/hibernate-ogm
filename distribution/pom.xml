@@ -30,6 +30,25 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
             </plugin>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-rules</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rules>
+                        <requireJavaVersion>
+                            <version>[1.7, 1.9)</version>
+                        </requireJavaVersion>
+                        <DependencyConvergence />
+                    </rules>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
