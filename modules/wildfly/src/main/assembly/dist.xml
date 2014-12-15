@@ -61,7 +61,7 @@
             <outputDirectory>/org/parboiled/${org.parboiled.module.slot}</outputDirectory>
             <filtered>true</filtered>
         </file>
-   </files>
+    </files>
 
     <dependencySets>
         <!--  ORM -->
@@ -153,14 +153,24 @@
                   <include>com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru</include>
               </includes>
        </dependencySet>
+       <!-- HQL -->
+       <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputDirectory>org/hibernate/hql/${hibernate.hql.module.slot}</outputDirectory>
+            <useTransitiveFiltering>false</useTransitiveFiltering>
+            <unpack>false</unpack>
+            <outputFileNameMapping>${artifact.artifactId}-${hibernateParserVersion}.jar</outputFileNameMapping>
+            <includes>
+                <include>org.hibernate.hql:hibernate-hql-parser</include>
+                <include>org.hibernate.hql:hibernate-hql-lucene</include>
+            </includes>
+       </dependencySet>
        <dependencySet>
             <useProjectArtifact>false</useProjectArtifact>
             <outputDirectory>org/hibernate/hql/${hibernate.hql.module.slot}</outputDirectory>
             <useTransitiveFiltering>false</useTransitiveFiltering>
             <unpack>false</unpack>
             <includes>
-                <include>org.hibernate.hql:hibernate-hql-parser</include>
-                <include>org.hibernate.hql:hibernate-hql-lucene</include>
                 <include>org.antlr:antlr-runtime</include>
             </includes>
        </dependencySet>
