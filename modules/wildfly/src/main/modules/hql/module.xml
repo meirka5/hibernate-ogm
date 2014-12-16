@@ -18,8 +18,7 @@
 
     <dependencies>
         <module name="javax.api"/>
-        <module name="org.apache.lucene" slot="${org.apache.lucene.module.slot}" />
-        <module name="org.hibernate.search.engine" export="true" services="import" optional="true" slot="${hibernateSearchVersion}" />
+        <module name="org.hibernate.search.engine" optional="true" slot="${hibernateSearchVersion}" />
         <module name="org.jboss.logging"/>
     </dependencies>
 </module>
