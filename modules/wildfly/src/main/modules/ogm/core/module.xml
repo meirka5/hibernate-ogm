@@ -14,7 +14,7 @@
         <module name="org.hibernate" slot="${hibernateVersion}" export="true" />
         <module name="org.hibernate.commons-annotations" />
         <module name="org.hibernate.hql" slot="${hibernate.hql.module.slot}" services="export" optional="true" />
-        <module name="org.hibernate.search.orm" slot="${hibernateSearchVersion}-orm-${hibernateVersion}"  export="true" services="export" optional="true" />
+        <module name="org.hibernate.search.orm" slot="${hibernateSearchVersion}-orm-${hibernateVersion}" export="true" services="export" optional="true" />
 
         <module name="javax.api" />
         <module name="javax.persistence.api" />
