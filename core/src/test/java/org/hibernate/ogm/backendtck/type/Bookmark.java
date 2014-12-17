@@ -6,23 +6,13 @@
  */
 package org.hibernate.ogm.backendtck.type;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
-
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 /**
  * @author Nicolas Helleringer
@@ -43,6 +33,7 @@ public class Bookmark {
 	private Integer stockCount;
 	private Date creationDate;
 	private URL url;
+	private Short urlPort;
 	private String description;
 	private BigDecimal siteWeight;
 	private BigInteger visitCount;
@@ -51,6 +42,7 @@ public class Bookmark {
 	private Date destructionDate;
 	private Calendar creationCalendar;
 	private Boolean favourite;
+	private Float visitRatio;
 	private Double taxPercentage;
 	private Classifier classifier;
 	private Classifier classifierAsOrdinal;
@@ -96,6 +88,15 @@ public class Bookmark {
 
 	public void setUrl(URL url) {
 		this.url = url;
+	}
+
+	@Column(name = "url_port")
+	public Short getUrlPort() {
+		return urlPort;
+	}
+
+	public void setUrlPort(Short urlPort) {
+		this.urlPort = urlPort;
 	}
 
 	@Column(name = "site_weight")
@@ -158,7 +159,7 @@ public class Bookmark {
 		return destructionDate;
 	}
 
-	public void setDestructionDate(Date destructionDate) {
+ 	public void setDestructionDate(Date destructionDate) {
 		this.destructionDate = destructionDate;
 	}
 
@@ -176,6 +177,16 @@ public class Bookmark {
 	// public Calendar getUpdateCalendar() { return updateCalendar; }
 	// public void setUpdateCalendar(Calendar updateCalendar) { this.updateCalendar = updateCalendar; }
 	// private Calendar updateCalendar;
+
+
+	@Column(name = "visit_ratio")
+	public Float getVisitRatio() {
+		return visitRatio;
+	}
+
+	public void setVisitRatio(Float visitRatio) {
+		this.visitRatio = visitRatio;
+	}
 
 	@Temporal(TemporalType.TIMESTAMP)
 	public Calendar getDestructionCalendar() {

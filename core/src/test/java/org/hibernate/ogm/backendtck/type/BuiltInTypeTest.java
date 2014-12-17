@@ -6,19 +6,6 @@
  */
 package org.hibernate.ogm.backendtck.type;
 
-import static org.hibernate.ogm.utils.TestHelper.extractEntityTuple;
-import static org.junit.Assert.assertEquals;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
-import java.util.Random;
-import java.util.TimeZone;
-import java.util.UUID;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.ogm.backendtck.type.Bookmark.Classifier;
@@ -31,6 +18,14 @@ import org.hibernate.ogm.utils.OgmTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.*;
+
+import static org.hibernate.ogm.utils.TestHelper.extractEntityTuple;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard &lt;emmanuel@hibernate.org&gt;
@@ -69,11 +64,11 @@ public class BuiltInTypeTest extends OgmTestCase {
 		b.setSiteWeight( weight );
 		BigInteger visitCount = new BigInteger( "444" );
 		b.setVisitCount( visitCount );
-		b.setFavourite( Boolean.TRUE );
+		b.setFavourite(Boolean.TRUE);
 		Byte displayMask = Byte.valueOf( (byte) '8' );
 		b.setDisplayMask( displayMask );
 		b.setClassifier( Classifier.HOME );
-		b.setClassifierAsOrdinal( Classifier.WORK );
+		b.setClassifierAsOrdinal(Classifier.WORK);
 
 		Date now = new Date( System.currentTimeMillis() );
 		Calendar nowCalendar = Calendar.getInstance();
@@ -95,9 +90,13 @@ public class BuiltInTypeTest extends OgmTestCase {
 		b.setSerialNumber( serialNumber );
 		final Long userId = RANDOM.nextLong();
 		log.infof( "User ID created: $s", userId );
-		b.setUserId( userId );
+		b.setUserId(userId);
 		final Integer stockCount = Integer.valueOf( RANDOM.nextInt() );
-		b.setStockCount( stockCount );
+		b.setStockCount(stockCount);
+		final Short urlPort = Short.valueOf( (short) 80 );
+//		b.setUrlPort(urlPort);
+		final Float visitRatio = Float.valueOf( (float) 10.4);
+		b.setVisitRatio(visitRatio);
 		b.setType( BookmarkType.URL );
 		b.setTaxPercentage( 12.34d );
 		session.persist( b );
@@ -115,8 +114,9 @@ public class BuiltInTypeTest extends OgmTestCase {
 		assertEquals( "serial number incorrect", serialNumber, b.getSerialNumber() );
 		assertEquals( "user id incorrect", userId, b.getUserId() );
 		assertEquals( "stock count incorrect", stockCount, b.getStockCount() );
-		assertEquals( "stock count incorrect", stockCount, b.getStockCount() );
-		assertEquals( "Tax percentage as double inscorrect", 0, b.getTaxPercentage().compareTo( 12.34d ) );
+//		assertEquals( "url port incorrect", urlPort, b.getUrlPort() );
+		assertEquals( "visit ratio incorrect", visitRatio, b.getVisitRatio() );
+		assertEquals( "Tax percentage as double is incorrect", 0, b.getTaxPercentage().compareTo( 12.34d ) );
 		assertEquals( "Classifier as enum string is incorrect", Classifier.HOME, b.getClassifier() );
 		assertEquals( "Classifier stored as enum ordinal is incorrect", Classifier.WORK, b.getClassifierAsOrdinal() );
 
@@ -172,13 +172,15 @@ public class BuiltInTypeTest extends OgmTestCase {
 		b.setId( "42" );
 		b.setUrl( new URL( "http://www.hibernate.org/" ) );
 		BigDecimal weight = new BigDecimal( "21.77" );
-		b.setSiteWeight( weight );
+		b.setSiteWeight(weight);
 		BigInteger visitCount = new BigInteger( "444" );
-		b.setVisitCount( visitCount );
+		b.setVisitCount(visitCount);
 		UUID serialNumber = UUID.randomUUID();
-		b.setSerialNumber( serialNumber );
+		b.setSerialNumber(serialNumber);
 		final Long userId = RANDOM.nextLong();
-		b.setUserId( userId );
+		b.setUserId(userId);
+		Short urlPort = Short.valueOf( "443" );
+		b.setUrlPort(urlPort);
 		final Integer stockCount = Integer.valueOf( RANDOM.nextInt() );
 		b.setStockCount( stockCount );
 

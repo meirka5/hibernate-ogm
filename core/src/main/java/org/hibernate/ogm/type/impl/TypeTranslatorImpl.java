@@ -6,39 +6,20 @@
  */
 package org.hibernate.ogm.type.impl;
 
-import static org.hibernate.ogm.util.impl.CollectionHelper.newHashMap;
-
-import java.util.Collections;
-import java.util.Map;
-
 import org.hibernate.ogm.dialect.spi.GridDialect;
 import org.hibernate.ogm.type.spi.GridType;
 import org.hibernate.ogm.type.spi.TypeTranslator;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
-import org.hibernate.type.AbstractStandardBasicType;
-import org.hibernate.type.CustomType;
+import org.hibernate.type.*;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
-import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
-import org.hibernate.type.descriptor.java.CalendarDateTypeDescriptor;
-import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
-import org.hibernate.type.descriptor.java.ClassTypeDescriptor;
-import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
-import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
-import org.hibernate.type.descriptor.java.LongTypeDescriptor;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
+import org.hibernate.type.descriptor.java.*;
 import org.hibernate.usertype.UserType;
+
+import java.util.Collections;
+import java.util.Map;
+
+import static org.hibernate.ogm.util.impl.CollectionHelper.newHashMap;
 
 /**
  * @author Emmanuel Bernard
@@ -54,7 +35,7 @@ public class TypeTranslatorImpl implements TypeTranslator {
 	public TypeTranslatorImpl(GridDialect dialect) {
 		this.dialect = dialect;
 
-		Map<JavaTypeDescriptor<?>, GridType> tmpMap = newHashMap( 17 );
+		Map<JavaTypeDescriptor<?>, GridType> tmpMap = newHashMap( 19 );
 		tmpMap.put( ClassTypeDescriptor.INSTANCE, ClassType.INSTANCE );
 		tmpMap.put( LongTypeDescriptor.INSTANCE, LongType.INSTANCE );
 		tmpMap.put( IntegerTypeDescriptor.INSTANCE, IntegerType.INSTANCE );
@@ -65,6 +46,8 @@ public class TypeTranslatorImpl implements TypeTranslator {
 		tmpMap.put( BigIntegerTypeDescriptor.INSTANCE, BigIntegerType.INSTANCE );
 		tmpMap.put( BooleanTypeDescriptor.INSTANCE, BooleanType.INSTANCE );
 		tmpMap.put( ByteTypeDescriptor.INSTANCE, ByteType.INSTANCE );
+		tmpMap.put( ShortTypeDescriptor.INSTANCE, ShortType.INSTANCE );
+		tmpMap.put( FloatTypeDescriptor.INSTANCE, FloatType.INSTANCE );
 		tmpMap.put( JdbcDateTypeDescriptor.INSTANCE, DateType.INSTANCE );
 		tmpMap.put( JdbcTimestampTypeDescriptor.INSTANCE, TimestampType.INSTANCE );
 		tmpMap.put( JdbcTimeTypeDescriptor.INSTANCE, TimeType.INSTANCE );
