@@ -94,7 +94,7 @@ public class BuiltInTypeTest extends OgmTestCase {
 		final Integer stockCount = Integer.valueOf( RANDOM.nextInt() );
 		b.setStockCount(stockCount);
 		final Short urlPort = Short.valueOf( (short) 80 );
-//		b.setUrlPort(urlPort);
+		b.setUrlPort(urlPort);
 		final Float visitRatio = Float.valueOf( (float) 10.4);
 		b.setVisitRatio(visitRatio);
 		b.setType( BookmarkType.URL );
@@ -114,7 +114,7 @@ public class BuiltInTypeTest extends OgmTestCase {
 		assertEquals( "serial number incorrect", serialNumber, b.getSerialNumber() );
 		assertEquals( "user id incorrect", userId, b.getUserId() );
 		assertEquals( "stock count incorrect", stockCount, b.getStockCount() );
-//		assertEquals( "url port incorrect", urlPort, b.getUrlPort() );
+		assertEquals( "url port incorrect", urlPort, b.getUrlPort() );
 		assertEquals( "visit ratio incorrect", visitRatio, b.getVisitRatio() );
 		assertEquals( "Tax percentage as double is incorrect", 0, b.getTaxPercentage().compareTo( 12.34d ) );
 		assertEquals( "Classifier as enum string is incorrect", Classifier.HOME, b.getClassifier() );

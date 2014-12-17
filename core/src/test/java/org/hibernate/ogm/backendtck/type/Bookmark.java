@@ -90,7 +90,6 @@ public class Bookmark {
 		this.url = url;
 	}
 
-	@Column(name = "url_port")
 	public Short getUrlPort() {
 		return urlPort;
 	}
@@ -179,7 +178,6 @@ public class Bookmark {
 	// private Calendar updateCalendar;
 
 
-	@Column(name = "visit_ratio")
 	public Float getVisitRatio() {
 		return visitRatio;
 	}
