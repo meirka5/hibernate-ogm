@@ -44,6 +44,7 @@ public class Bookmark {
 	private Boolean favourite;
 	private Float visitRatio;
 	private Double taxPercentage;
+	private Character delimiter;
 	private Classifier classifier;
 	private Classifier classifierAsOrdinal;
 
@@ -245,5 +246,13 @@ public class Bookmark {
 
 	public void setTaxPercentage(Double taxPercentage) {
 		this.taxPercentage = taxPercentage;
+	}
+
+	public Character getDelimiter() {
+		return delimiter;
+	}
+
+	public void setDelimiter(Character delimiter) {
+		this.delimiter = delimiter;
 	}
 }

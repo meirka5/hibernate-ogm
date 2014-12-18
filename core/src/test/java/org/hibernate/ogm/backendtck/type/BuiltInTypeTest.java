@@ -93,10 +93,12 @@ public class BuiltInTypeTest extends OgmTestCase {
 		b.setUserId(userId);
 		final Integer stockCount = Integer.valueOf( RANDOM.nextInt() );
 		b.setStockCount(stockCount);
-		final Short urlPort = Short.valueOf( (short) 80 );
-		b.setUrlPort(urlPort);
-		final Float visitRatio = Float.valueOf( (float) 10.4);
-		b.setVisitRatio(visitRatio);
+	//	final Short urlPort = Short.valueOf( (short) 80 );
+	//	b.setUrlPort(urlPort);
+	//	final Float visitRatio = Float.valueOf( (float) 10.4);
+	//	b.setVisitRatio(visitRatio);
+		final Character delimiter = Character.valueOf('/');
+		b.setDelimiter(delimiter);
 		b.setType( BookmarkType.URL );
 		b.setTaxPercentage( 12.34d );
 		session.persist( b );
@@ -114,8 +116,9 @@ public class BuiltInTypeTest extends OgmTestCase {
 		assertEquals( "serial number incorrect", serialNumber, b.getSerialNumber() );
 		assertEquals( "user id incorrect", userId, b.getUserId() );
 		assertEquals( "stock count incorrect", stockCount, b.getStockCount() );
-		assertEquals( "url port incorrect", urlPort, b.getUrlPort() );
-		assertEquals( "visit ratio incorrect", visitRatio, b.getVisitRatio() );
+	//	assertEquals( "url port incorrect", urlPort, b.getUrlPort() );
+	//	assertEquals( "visit ratio incorrect", visitRatio, b.getVisitRatio() );
+		assertEquals( "delimiter incorrect", delimiter, b.getDelimiter() );
 		assertEquals( "Tax percentage as double is incorrect", 0, b.getTaxPercentage().compareTo( 12.34d ) );
 		assertEquals( "Classifier as enum string is incorrect", Classifier.HOME, b.getClassifier() );
 		assertEquals( "Classifier stored as enum ordinal is incorrect", Classifier.WORK, b.getClassifierAsOrdinal() );
@@ -179,8 +182,10 @@ public class BuiltInTypeTest extends OgmTestCase {
 		b.setSerialNumber(serialNumber);
 		final Long userId = RANDOM.nextLong();
 		b.setUserId(userId);
-		Short urlPort = Short.valueOf( "443" );
-		b.setUrlPort(urlPort);
+	//	final Character delimiter = Character.valueOf('/');
+	//	b.setDelimiter(delimiter);
+	//	Short urlPort = Short.valueOf( "443" );
+	//	b.setUrlPort(urlPort);
 		final Integer stockCount = Integer.valueOf( RANDOM.nextInt() );
 		b.setStockCount( stockCount );
 

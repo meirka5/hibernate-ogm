@@ -35,7 +35,7 @@ public class TypeTranslatorImpl implements TypeTranslator {
 	public TypeTranslatorImpl(GridDialect dialect) {
 		this.dialect = dialect;
 
-		Map<JavaTypeDescriptor<?>, GridType> tmpMap = newHashMap( 19 );
+		Map<JavaTypeDescriptor<?>, GridType> tmpMap = newHashMap( 20 );
 		tmpMap.put( ClassTypeDescriptor.INSTANCE, ClassType.INSTANCE );
 		tmpMap.put( LongTypeDescriptor.INSTANCE, LongType.INSTANCE );
 		tmpMap.put( IntegerTypeDescriptor.INSTANCE, IntegerType.INSTANCE );
@@ -48,6 +48,7 @@ public class TypeTranslatorImpl implements TypeTranslator {
 		tmpMap.put( ByteTypeDescriptor.INSTANCE, ByteType.INSTANCE );
 		tmpMap.put( ShortTypeDescriptor.INSTANCE, ShortType.INSTANCE );
 		tmpMap.put( FloatTypeDescriptor.INSTANCE, FloatType.INSTANCE );
+		tmpMap.put( CharacterTypeDescriptor.INSTANCE, CharacterType.INSTANCE );
 		tmpMap.put( JdbcDateTypeDescriptor.INSTANCE, DateType.INSTANCE );
 		tmpMap.put( JdbcTimestampTypeDescriptor.INSTANCE, TimestampType.INSTANCE );
 		tmpMap.put( JdbcTimeTypeDescriptor.INSTANCE, TimeType.INSTANCE );
