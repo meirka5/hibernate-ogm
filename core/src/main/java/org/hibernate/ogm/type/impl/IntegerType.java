@@ -30,7 +30,7 @@ public class IntegerType extends AbstractGenericBasicType<Integer> {
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return new String[] { getName(), int.class.getName(), Integer.class.getName() };
+		return new String[] {getName(), int.class.getName(), Integer.class.getName()};
 	}
 
 	@Override

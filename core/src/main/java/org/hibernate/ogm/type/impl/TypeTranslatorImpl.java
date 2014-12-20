@@ -6,18 +6,40 @@
  */
 package org.hibernate.ogm.type.impl;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.hibernate.ogm.dialect.spi.GridDialect;
 import org.hibernate.ogm.type.spi.GridType;
 import org.hibernate.ogm.type.spi.TypeTranslator;
 import org.hibernate.ogm.util.impl.Log;
 import org.hibernate.ogm.util.impl.LoggerFactory;
-import org.hibernate.type.*;
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
-import org.hibernate.type.descriptor.java.*;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
+import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
+import org.hibernate.type.descriptor.java.CalendarDateTypeDescriptor;
+import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.java.ClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
+import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
+import org.hibernate.type.descriptor.java.LongTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
+import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
 import org.hibernate.usertype.UserType;
-
-import java.util.Collections;
-import java.util.Map;
 
 import static org.hibernate.ogm.util.impl.CollectionHelper.newHashMap;
 
@@ -60,7 +82,8 @@ public class TypeTranslatorImpl implements TypeTranslator {
 		typeConverter = Collections.unmodifiableMap( tmpMap );
 	}
 
-	@Override public GridType getType(Type type) {
+	@Override
+	public GridType getType(Type type) {
 		if ( type == null ) {
 			return null;
 		}
@@ -74,7 +97,7 @@ public class TypeTranslatorImpl implements TypeTranslator {
 		else if ( type instanceof AbstractStandardBasicType ) {
 			AbstractStandardBasicType<?> exposedType = (AbstractStandardBasicType<?>) type;
 			final GridType gridType = typeConverter.get( exposedType.getJavaTypeDescriptor() );
-			if (gridType == null) {
+			if ( gridType == null ) {
 				throw log.unableToFindGridType( exposedType.getJavaTypeDescriptor().getJavaTypeClass().getName() );
 			}
 			return gridType;
@@ -91,17 +114,17 @@ public class TypeTranslatorImpl implements TypeTranslator {
 		}
 		else if ( type instanceof org.hibernate.type.ComponentType ) {
 			org.hibernate.type.ComponentType componentType = (org.hibernate.type.ComponentType) type;
-			return new ComponentType(componentType, this);
+			return new ComponentType( componentType, this );
 		}
 		else if ( type instanceof org.hibernate.type.ManyToOneType ) {
 			//do some stuff
 			org.hibernate.type.ManyToOneType manyToOneType = (org.hibernate.type.ManyToOneType) type;
-			return new ManyToOneType(manyToOneType, this);
+			return new ManyToOneType( manyToOneType, this );
 		}
 		else if ( type instanceof org.hibernate.type.OneToOneType ) {
 			//do some stuff
 			org.hibernate.type.OneToOneType oneToOneType = (org.hibernate.type.OneToOneType) type;
-			return new OneToOneType(oneToOneType, this);
+			return new OneToOneType( oneToOneType, this );
 		}
 		else if ( type instanceof org.hibernate.type.CollectionType ) {
 			return new CollectionType( (org.hibernate.type.CollectionType) type );
