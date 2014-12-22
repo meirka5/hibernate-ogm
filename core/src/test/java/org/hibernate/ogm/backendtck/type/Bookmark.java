@@ -6,13 +6,23 @@
  */
 package org.hibernate.ogm.backendtck.type;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
+
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  * @author Nicolas Helleringer
@@ -159,7 +169,7 @@ public class Bookmark {
 		return destructionDate;
 	}
 
- 	public void setDestructionDate(Date destructionDate) {
+	public void setDestructionDate(Date destructionDate) {
 		this.destructionDate = destructionDate;
 	}
 
