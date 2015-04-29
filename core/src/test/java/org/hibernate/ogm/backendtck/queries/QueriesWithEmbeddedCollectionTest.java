@@ -8,6 +8,7 @@ package org.hibernate.ogm.backendtck.queries;
 
 import static org.hibernate.ogm.utils.OgmAssertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,11 +16,13 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.ogm.utils.OgmTestCase;
+import org.hibernate.ogm.utils.TestForIssue;
 import org.hibernate.ogm.utils.TestSessionFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -98,39 +101,58 @@ public class QueriesWithEmbeddedCollectionTest extends OgmTestCase {
 	}
 
 	@Test
+	@Ignore
+	@TestForIssue(jiraKey = "OGM-770")
 	public void testBetweenOperatorWithEmbeddedInEmbeddedCollection() throws Exception {
 		List<?> result = session.createQuery( "FROM WithEmbedded e JOIN e.anEmbeddedCollection c WHERE c.embedded.embeddedInteger BETWEEN -100 AND 100" ) .list();
 		assertThat( result ).onProperty( "id" ).containsOnly( 1L );
 	}
 
 	@Test
+	@Ignore
+	@TestForIssue(jiraKey = "OGM-770")
 	public void testLikeOperatorWithEmbeddedInEmbeddedCollection() throws Exception {
 		List<?> result = session.createQuery( "FROM WithEmbedded e JOIN e.anEmbeddedCollection c WHERE c.embedded.embeddedString LIKE 'string[1%'" ).list();
 		assertThat( result ).onProperty( "id" ).containsOnly( 1L );
 	}
 
 	@Test
+	@Ignore
+	@TestForIssue(jiraKey = "OGM-770")
 	public void testEqualOperatorWithEmbeddedInEmbeddedCollectionForString() throws Exception {
 		List<?> result = session.createQuery( "FROM WithEmbedded e JOIN e.anEmbeddedCollection c WHERE c.embedded.embeddedString = 'string[1][0]'" ).list();
 		assertThat( result ).onProperty( "id" ).containsOnly( 1L );
 	}
 
 	@Test
+	@Ignore
+	@TestForIssue(jiraKey = "OGM-770")
 	public void testEqualOperatorWithEmbeddedInEmbeddedCollectionForInteger() throws Exception {
 		List<?> result = session.createQuery( "FROM WithEmbedded e JOIN e.anEmbeddedCollection c WHERE c.embedded.embeddedInteger = 10" ).list();
 		assertThat( result ).onProperty( "id" ).containsOnly( 1L );
 	}
 
 	@Test
+	@Ignore
 	public void testConjunctionOperatorEqualOperatorWithEmbeddedInEmbeddedCollection() throws Exception {
 		List<?> result = session.createQuery( "FROM WithEmbedded e JOIN e.anEmbeddedCollection c WHERE c.item = 'item[1]' AND c.embedded.embeddedString IN ('string[1][0]')" ).list();
 		assertThat( result ).onProperty( "id" ).containsOnly( 1L );
 	}
 
 	@Test
+	@Ignore
+	@TestForIssue(jiraKey = "OGM-770")
 	public void testEqualOperatorWithEmbeddedInEmbeddedCollection() throws Exception {
 		List<?> result = session.createQuery( "from WithEmbedded e where e.anEmbeddable.embeddedString = 'string 20'" ).list();
 		assertThat( result ).onProperty( "id" ).containsOnly( 20L );
+	}
+
+	@Test
+	@Ignore
+	@TestForIssue(jiraKey = "OGM-770")
+	public void testProjectionWithEmbeddedCollection() throws Exception {
+		List<ProjectionResult> result = asProjectionResults( "SELECT e.id, c.item FROM WithEmbedded e JOIN e.anEmbeddedCollection c" );
+		assertThat( result ).containsOnly( new ProjectionResult( 1L, "item[0]" ), new ProjectionResult( 1L, "item[1]" ), new ProjectionResult( 20L, null ), new ProjectionResult( 300L, null ) );
 	}
 
 	@Test
