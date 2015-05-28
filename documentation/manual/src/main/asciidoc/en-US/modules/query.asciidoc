@@ -123,7 +123,8 @@ from Helicopter h order by h.make desc, h.name
 
 Inner `JOIN` on an embedded association is partially supported.
 In particular, filtering the elements of the association works for all the datastores
-but projecting properties won't work if you are using Hibernate Search queries.
+but projecting properties won’t work if your datastore provider implements JP-QL queries
+using Hibernate Search.
 
 This is better illustrated by the following example:
 
