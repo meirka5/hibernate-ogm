@@ -298,6 +298,35 @@ public class ManyToOneTest extends OgmTestCase {
 		session.close();
 	}
 
+
+	@Test
+	public void testBidirectionalManyToOne() throws Exception {
+		Employeer employeer = new Employeer();
+		employeer.setName( "Hibernate" );
+
+		Employee employee = new Employee();
+		employee.setName( "DNadar" );
+		employee.setEmployeer( employeer );
+		employeer.getEmployees().add( employee );
+
+
+		Session session = openSession();
+		Transaction transaction = session.beginTransaction();
+		session.persist( employeer );
+		session.persist( employee );
+		session.flush();
+		transaction.commit();
+		session.clear();
+
+		transaction = session.beginTransaction();
+		employeer = (Employeer) session.get( Employeer.class, employeer.getId() );
+		assertThat( employeer.getEmployees() ).hasSize( 1 );
+
+		session.delete( employeer );
+		transaction.commit();
+		session.close();
+	}
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
@@ -308,7 +337,9 @@ public class ManyToOneTest extends OgmTestCase {
 				Beer.class,
 				Brewery.class,
 				Game.class,
-				Court.class
+				Court.class,
+				Employeer.class,
+				Employee.class
 		};
 	}
 }
