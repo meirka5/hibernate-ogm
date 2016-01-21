@@ -28,6 +28,7 @@ import org.hibernate.ogm.dialect.multiget.spi.MultigetGridDialect;
 import org.hibernate.ogm.dialect.spi.AssociationContext;
 import org.hibernate.ogm.dialect.spi.AssociationTypeContext;
 import org.hibernate.ogm.dialect.spi.ModelConsumer;
+import org.hibernate.ogm.dialect.spi.TransactionContext;
 import org.hibernate.ogm.dialect.spi.TupleContext;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
 import org.hibernate.ogm.model.key.spi.AssociationKeyMetadata;
@@ -74,7 +75,7 @@ public class RedisJsonDialect extends AbstractRedisDialect implements MultigetGr
 	}
 
 	@Override
-	public Tuple getTuple(EntityKey key, TupleContext tupleContext) {
+	public Tuple getTuple(EntityKey key, TupleContext tupleContext, TransactionContext transactionContext) {
 		Entity entity = entityStorageStrategy.getEntity( entityId( key ) );
 
 		if ( entity != null ) {
@@ -86,7 +87,7 @@ public class RedisJsonDialect extends AbstractRedisDialect implements MultigetGr
 	}
 
 	@Override
-	public void insertOrUpdateTuple(EntityKey key, Tuple tuple, TupleContext tupleContext) {
+	public void insertOrUpdateTuple(EntityKey key, Tuple tuple, TupleContext tupleContext, TransactionContext transactionContext) {
 		Map<String, Object> map = ( (RedisTupleSnapshot) tuple.getSnapshot() ).getMap();
 		MapHelpers.applyTupleOpsOnMap( tuple, map );
 		storeEntity( key, map, tupleContext.getOptionsContext(), tuple.getOperations() );
@@ -115,7 +116,8 @@ public class RedisJsonDialect extends AbstractRedisDialect implements MultigetGr
 	@Override
 	public org.hibernate.ogm.model.spi.Association getAssociation(
 			AssociationKey key,
-			AssociationContext associationContext) {
+			AssociationContext associationContext,
+			TransactionContext transactionContext) {
 		RedisAssociation redisAssociation = null;
 
 		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
@@ -180,7 +182,8 @@ public class RedisJsonDialect extends AbstractRedisDialect implements MultigetGr
 	@Override
 	public void insertOrUpdateAssociation(
 			AssociationKey associationKey, org.hibernate.ogm.model.spi.Association association,
-			AssociationContext associationContext) {
+			AssociationContext associationContext,
+			TransactionContext transactionContext) {
 		Object rows = getAssociationRows( association, associationKey, associationContext );
 
 		RedisAssociation redisAssociation = ( (RedisAssociationSnapshot) association.getSnapshot() ).getRedisAssociation();
@@ -260,7 +263,7 @@ public class RedisJsonDialect extends AbstractRedisDialect implements MultigetGr
 	}
 
 	@Override
-	public void removeAssociation(AssociationKey key, AssociationContext associationContext) {
+	public void removeAssociation(AssociationKey key, AssociationContext associationContext, TransactionContext transactionContext) {
 		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
 			Entity owningEntity = getEmbeddingEntity( key );
 
@@ -351,7 +354,7 @@ public class RedisJsonDialect extends AbstractRedisDialect implements MultigetGr
 	// MultigetGridDialect
 
 	@Override
-	public List<Tuple> getTuples(EntityKey[] keys, TupleContext tupleContext) {
+	public List<Tuple> getTuples(EntityKey[] keys, TupleContext tupleContext, TransactionContext transactionContext) {
 		if ( keys.length == 0 ) {
 			return Collections.emptyList();
 		}

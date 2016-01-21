@@ -6,6 +6,8 @@
  */
 package org.hibernate.ogm.datastore.redis;
 
+import static org.hibernate.ogm.datastore.document.impl.DotPatternMapHelpers.getColumnSharedPrefixOfAssociatedEntityLink;
+
 import java.text.Collator;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,6 +23,7 @@ import org.hibernate.ogm.datastore.redis.options.impl.TTLOption;
 import org.hibernate.ogm.dialect.spi.AssociationContext;
 import org.hibernate.ogm.dialect.spi.BaseGridDialect;
 import org.hibernate.ogm.dialect.spi.NextValueRequest;
+import org.hibernate.ogm.dialect.spi.TransactionContext;
 import org.hibernate.ogm.dialect.spi.TupleContext;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
 import org.hibernate.ogm.model.key.spi.AssociationType;
@@ -31,8 +34,6 @@ import org.hibernate.ogm.model.spi.Tuple;
 import org.hibernate.ogm.options.spi.OptionsContext;
 
 import com.lambdaworks.redis.RedisConnection;
-
-import static org.hibernate.ogm.datastore.document.impl.DotPatternMapHelpers.getColumnSharedPrefixOfAssociatedEntityLink;
 
 /**
  * @author Mark Paluch
@@ -93,7 +94,7 @@ public abstract class AbstractRedisDialect extends BaseGridDialect {
 	}
 
 	@Override
-	public void removeTuple(EntityKey key, TupleContext tupleContext) {
+	public void removeTuple(EntityKey key, TupleContext tupleContext, TransactionContext transactionContext) {
 		remove( key );
 	}
 

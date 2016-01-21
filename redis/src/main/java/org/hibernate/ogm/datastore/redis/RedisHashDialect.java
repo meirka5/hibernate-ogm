@@ -21,6 +21,7 @@ import org.hibernate.ogm.datastore.redis.impl.hash.RedisHashTypeConverter;
 import org.hibernate.ogm.dialect.spi.AssociationContext;
 import org.hibernate.ogm.dialect.spi.AssociationTypeContext;
 import org.hibernate.ogm.dialect.spi.ModelConsumer;
+import org.hibernate.ogm.dialect.spi.TransactionContext;
 import org.hibernate.ogm.dialect.spi.TupleAlreadyExistsException;
 import org.hibernate.ogm.dialect.spi.TupleContext;
 import org.hibernate.ogm.model.key.spi.AssociationKey;
@@ -60,7 +61,7 @@ public class RedisHashDialect extends AbstractRedisDialect {
 	@Override
 	@SuppressWarnings({"unchecked", "rawtypes" })
 	public Tuple getTuple(
-			EntityKey key, TupleContext tupleContext) {
+			EntityKey key, TupleContext tupleContext, TransactionContext transactionContext) {
 		String entityIdString = entityId( key );
 		if ( !connection.exists( entityIdString ) ) {
 			return null;
@@ -97,7 +98,7 @@ public class RedisHashDialect extends AbstractRedisDialect {
 
 	@Override
 	public void insertOrUpdateTuple(
-			EntityKey key, Tuple tuple, TupleContext tupleContext) throws TupleAlreadyExistsException {
+			EntityKey key, Tuple tuple, TupleContext tupleContext, TransactionContext transactionContext) throws TupleAlreadyExistsException {
 
 		Map<String, Object> map = ( (RedisTupleSnapshot) tuple.getSnapshot() ).getMap();
 		MapHelpers.applyTupleOpsOnMap( tuple, map );
@@ -154,7 +155,7 @@ public class RedisHashDialect extends AbstractRedisDialect {
 
 	@Override
 	public Association getAssociation(
-			AssociationKey key, AssociationContext associationContext) {
+			AssociationKey key, AssociationContext associationContext, TransactionContext transactionContext) {
 		RedisAssociation redisAssociation;
 		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
 			if ( !connection.exists( entityId( key.getEntityKey() ) ) ) {
@@ -208,7 +209,7 @@ public class RedisHashDialect extends AbstractRedisDialect {
 
 	@Override
 	public void insertOrUpdateAssociation(
-			AssociationKey associationKey, Association association, AssociationContext associationContext) {
+			AssociationKey associationKey, Association association, AssociationContext associationContext, TransactionContext transactionContext) {
 		Object rows = getAssociationRows( association, associationKey );
 
 		RedisAssociation redisAssociation = ( (RedisAssociationSnapshot) association.getSnapshot() ).getRedisAssociation();
@@ -244,7 +245,7 @@ public class RedisHashDialect extends AbstractRedisDialect {
 
 	@Override
 	public void removeAssociation(
-			AssociationKey key, AssociationContext associationContext) {
+			AssociationKey key, AssociationContext associationContext, TransactionContext transactionContext) {
 		if ( isStoredInEntityStructure( key.getMetadata(), associationContext.getAssociationTypeContext() ) ) {
 			String entityId = entityId( key.getEntityKey() );
 			connection.hdel( entityId, key.getMetadata().getCollectionRole() );
