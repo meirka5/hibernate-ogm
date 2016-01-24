@@ -43,7 +43,7 @@
         <jbossNamingVersion>7.1.0.Final</jbossNamingVersion>
         <shrinkwrapVersion>1.2.2</shrinkwrapVersion>
         <arquillianVersion>1.1.5.Final</arquillianVersion>
-        <jmhVersion>1.0</jmhVersion>
+        <jmhVersion>1.11.3</jmhVersion>
         <jbossLoggingProcessorVersion>1.2.0.Final</jbossLoggingProcessorVersion>
 
         <!--

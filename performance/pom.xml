@@ -22,9 +22,73 @@
     <name>Hibernate Object Grid Mapper Performance tests</name>
     <description>Performance tests for Hibernate OGM based on JMH</description>
 
+    <prerequisites>
+        <maven>3.2</maven>
+    </prerequisites>
+
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
+        <uberjar.name>hibernate-ogm-benchmarks</uberjar.name>
+        <mainClass>org.hibernate.ogm.perftest.Launcher</mainClass>
     </properties>
+
+    <build>
+        <plugins>
+           <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+           </plugin>
+           <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>${uberjar.name}</finalName>
+                            <transformers>
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>${mainClass}</Main-Class>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.4.0</version>
+                <executions>
+                    <execution>
+                        <id>default-cli</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>java</executable>
+                            <!-- optional -->
+                            <mainClass>${mainClass}</mainClass>
+                            <workingDirectory>${project.build.directory}</workingDirectory>
+                            <arguments>
+                                <argument>-jar</argument>
+                                <argument>${project.build.directory}${file.separator}${uberjar.name}.jar</argument>
+                                <argument>-f</argument>
+                                <argument>1</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        </build>
 
 	<dependencies>
         <dependency>

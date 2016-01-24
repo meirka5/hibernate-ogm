@@ -126,6 +126,12 @@ If needed, the port to connect to can be configured through the environment vari
 
 ## Contact
 
+You can run performance test with JMH using:
+
+    mvn clean package -pl performance exec:exec
+
+## Contact
+
 Latest Documentation:
 
    <http://community.jboss.org/en/hibernate/ogm>
