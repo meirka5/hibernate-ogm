@@ -9,6 +9,8 @@ package org.hibernate.ogm.dialect.impl;
 import org.hibernate.resource.transaction.TransactionCoordinator.TransactionDriver;
 
 /**
+ * A {@link TransactionDriver} that can return an identifier for the underlying transaction.
+ *
  * @author Davide D'Alto
  */
 public interface IdentifiableDriver extends TransactionDriver {
