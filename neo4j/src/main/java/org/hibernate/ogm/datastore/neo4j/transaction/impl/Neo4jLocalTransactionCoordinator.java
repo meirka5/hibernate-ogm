@@ -6,8 +6,6 @@
  */
 package org.hibernate.ogm.datastore.neo4j.transaction.impl;
 
-import javax.transaction.Synchronization;
-
 import org.hibernate.ogm.datastore.neo4j.impl.Neo4jDatastoreProvider;
 import org.hibernate.ogm.transaction.impl.ForwardingTransactionCoordinator;
 import org.hibernate.ogm.transaction.impl.ForwardingTransactionDriver;
@@ -17,11 +15,6 @@ import org.neo4j.graphdb.Transaction;
 
 /**
  * A {@link TransactionCoordinator} for Neo4j.
- *
- * Note that during a JTA transaction Neo4j {@link Transaction} are
- * synchronized using the {@link Synchronization} interface. A commit to the Neo4j transaction will happen before the
- * end of the JTA transaction, meaning that it won't be possible to roll-back if an error happen after successful commit
- * to the db.
  *
  * @author Davide D'Alto
  */
