@@ -79,7 +79,7 @@ class QueriesBase {
 	}
 
 	protected static void appendEntityNode(String alias, EntityKeyMetadata entityKeyMetadata, StringBuilder queryBuilder, int offset) {
-		queryBuilder.append( "(");
+		queryBuilder.append( "(" );
 		queryBuilder.append( alias );
 		queryBuilder.append( ":" );
 		queryBuilder.append( ENTITY );

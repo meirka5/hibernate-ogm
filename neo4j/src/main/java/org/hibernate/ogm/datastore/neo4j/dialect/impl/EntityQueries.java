@@ -94,7 +94,7 @@ public class EntityQueries extends QueriesBase {
 		appendMatchOwnerEntityNode( queryBuilder, entityKeyMetadata );
 		queryBuilder.append( " -[r]-> (:" );
 		queryBuilder.append( NodeLabel.ENTITY );
-		queryBuilder.append( ") WHERE type(r) = {");
+		queryBuilder.append( ") WHERE type(r) = {" );
 		queryBuilder.append( entityKeyMetadata.getColumnNames().length );
 		queryBuilder.append( "} DELETE r" );
 		return queryBuilder.toString();
@@ -142,7 +142,7 @@ public class EntityQueries extends QueriesBase {
 		queryBuilder.append( ENTITY );
 		queryBuilder.append( ":" );
 		appendLabel( entityKeyMetadata, queryBuilder );
-		queryBuilder.append( ") ");
+		queryBuilder.append( ") " );
 		queryBuilder.append( " WHERE " );
 		if ( entityKeyMetadata.getColumnNames().length == 1 ) {
 			queryBuilder.append( "n." );
@@ -182,19 +182,19 @@ public class EntityQueries extends QueriesBase {
 					}
 					queryBuilder.append( "REMOVE e." );
 					escapeIdentifier( queryBuilder, path[path.length - 1] );
-					queryBuilder.append( " WITH e ");
-					queryBuilder.append( "MATCH (e)<-[erel]-(a) ");
-					queryBuilder.append( "WHERE length(keys(e))=0 AND NOT ((e)-->()) ");
-					queryBuilder.append( "DELETE e, erel ");
-					queryBuilder.append( "WITH a ");
-					queryBuilder.append( "OPTIONAL MATCH path=(a)<-[r*]-(b:EMBEDDED), (b)<-[brel]-(), (x) ");
-					queryBuilder.append( "WHERE a:EMBEDDED AND length(keys(a))=0 AND NOT((a)<-[*]-(:EMBEDDED)-->())  AND NOT ((a)<-[*]-(x)<-[*]-(b)) AND length(keys(b))>0 ");
-					queryBuilder.append( "FOREACH (r in relationships(path) | DELETE r) ");
-					queryBuilder.append( "FOREACH (n in nodes(path) | DELETE n) ");
-					queryBuilder.append( "WITH a ");
-					queryBuilder.append( "MATCH (a)<-[arel]-() ");
-					queryBuilder.append( "WHERE length(keys(a))=0 AND a:EMBEDDED ");
-					queryBuilder.append( "DELETE arel, a ");
+					queryBuilder.append( " WITH e " );
+					queryBuilder.append( "MATCH (e)<-[erel]-(a) " );
+					queryBuilder.append( "WHERE length(keys(e))=0 AND NOT ((e)-->()) " );
+					queryBuilder.append( "DELETE e, erel " );
+					queryBuilder.append( "WITH a " );
+					queryBuilder.append( "OPTIONAL MATCH path=(a)<-[r*]-(b:EMBEDDED), (b)<-[brel]-(), (x) " );
+					queryBuilder.append( "WHERE a:EMBEDDED AND length(keys(a))=0 AND NOT((a)<-[*]-(:EMBEDDED)-->())  AND NOT ((a)<-[*]-(x)<-[*]-(b)) AND length(keys(b))>0 " );
+					queryBuilder.append( "FOREACH (r in relationships(path) | DELETE r) " );
+					queryBuilder.append( "FOREACH (n in nodes(path) | DELETE n) " );
+					queryBuilder.append( "WITH a " );
+					queryBuilder.append( "MATCH (a)<-[arel]-() " );
+					queryBuilder.append( "WHERE length(keys(a))=0 AND a:EMBEDDED " );
+					queryBuilder.append( "DELETE arel, a " );
 					removeColumn.put( column, queryBuilder.toString() );
 				}
 			}
@@ -302,7 +302,7 @@ public class EntityQueries extends QueriesBase {
 	 */
 	private String completeFindAssociationQuery(String relationshipType) {
 		StringBuilder queryBuilder = findAssociationPartialQuery( relationshipType );
-		queryBuilder.append( "RETURN id(target), r, owner, target ORDER BY id(target) ");
+		queryBuilder.append( "RETURN id(target), r, owner, target ORDER BY id(target) " );
 		return queryBuilder.toString();
 	}
 
@@ -321,9 +321,9 @@ public class EntityQueries extends QueriesBase {
 	 */
 	protected String getFindAssociationTargetEmbeddedValues(String relationshipType) {
 		StringBuilder queryBuilder = findAssociationPartialQuery( relationshipType );
-		queryBuilder.append( "OPTIONAL MATCH (target) -[x*1..]->(e:EMBEDDED) ");
+		queryBuilder.append( "OPTIONAL MATCH (target) -[x*1..]->(e:EMBEDDED) " );
 		// Should we split this in two Queries?
-		queryBuilder.append( "RETURN id(target), extract(n IN x| type(n)), x, e ORDER BY id(target)");
+		queryBuilder.append( "RETURN id(target), extract(n IN x| type(n)), x, e ORDER BY id(target)" );
 		return queryBuilder.toString();
 	}
 

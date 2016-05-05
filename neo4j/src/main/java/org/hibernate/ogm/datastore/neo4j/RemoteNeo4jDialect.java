@@ -314,9 +314,9 @@ public class RemoteNeo4jDialect extends BaseNeo4jDialect {
 	private Relationship putAssociationOperation(AssociationKey associationKey, AssociationOperation action, AssociationContext associationContext) {
 		switch ( associationKey.getMetadata().getAssociationKind() ) {
 			case EMBEDDED_COLLECTION:
-				return createRelationshipWithEmbeddedNode( associationKey, associationContext, action);
+				return createRelationshipWithEmbeddedNode( associationKey, associationContext, action );
 			case ASSOCIATION:
-				return findOrCreateRelationshipWithEntityNode( associationKey, associationContext, action);
+				return findOrCreateRelationshipWithEntityNode( associationKey, associationContext, action );
 			default:
 				throw new AssertionFailure( "Unrecognized associationKind: " + associationKey.getMetadata().getAssociationKind() );
 		}

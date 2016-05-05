@@ -56,7 +56,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  */
 public class Neo4jTestHelper implements TestableGridDialect {
 
-	private static final  Map<String, String> hibernateProperties = readProperties();
+	private static final Map<String, String> hibernateProperties = readProperties();
 
 	private static final String ROOT_FOLDER = hibernateProperties.get( Neo4jProperties.DATABASE_PATH ) + File.separator + "NEO4J";
 
@@ -64,7 +64,8 @@ public class Neo4jTestHelper implements TestableGridDialect {
 	 * Query for counting all entities. This takes embedded entities and temporary nodes (which never should show up
 	 * actually) into account.
 	 */
-	private static final String ENTITY_COUNT_QUERY = "MATCH (n) WHERE n:" + NodeLabel.ENTITY.name() + " OR n:" + NodeLabel.EMBEDDED.name() + " RETURN COUNT(n) as count";
+	private static final String ENTITY_COUNT_QUERY = "MATCH (n) WHERE n:" + NodeLabel.ENTITY.name() + " OR n:" + NodeLabel.EMBEDDED.name()
+			+ " RETURN COUNT(n) as count";
 
 	private static final String ASSOCIATION_COUNT_QUERY = "MATCH (n) -[r]-> () RETURN COUNT(DISTINCT type(r)) as count";
 
@@ -88,7 +89,7 @@ public class Neo4jTestHelper implements TestableGridDialect {
 	}
 
 	private static boolean isNotNull(String neo4jHostName) {
-		return neo4jHostName != null && neo4jHostName.length() > 0 && ! "null".equals( neo4jHostName );
+		return neo4jHostName != null && neo4jHostName.length() > 0 && !"null".equals( neo4jHostName );
 	}
 
 	@Override
@@ -133,13 +134,13 @@ public class Neo4jTestHelper implements TestableGridDialect {
 
 	private long getNumberOfAssociations(Session session, BaseDatastoreProvider provider) {
 		if ( isRemote( provider ) ) {
-			Neo4jClient remoteNeo4j = ( (RemoteNeo4jDatastoreProvider) provider).getDataStore();
+			Neo4jClient remoteNeo4j = ( (RemoteNeo4jDatastoreProvider) provider ).getDataStore();
 			Statement statement = new Statement( ASSOCIATION_COUNT_QUERY );
 			statement.setResultDataContents( Arrays.asList( Statement.AS_ROW ) );
 			return readCountFromResponse( session, remoteNeo4j, statement );
 		}
 		else {
-			GraphDatabaseService graphDb = ( (Neo4jDatastoreProvider) provider).getDataBase();
+			GraphDatabaseService graphDb = ( (Neo4jDatastoreProvider) provider ).getDataBase();
 			ResourceIterator<Long> result = graphDb.execute( ASSOCIATION_COUNT_QUERY ).columnAs( "count" );
 			Long count = result.next();
 			result.close();
@@ -209,7 +210,7 @@ public class Neo4jTestHelper implements TestableGridDialect {
 		}
 	}
 
-	public static void deleteAllElements( DatastoreProvider provider) {
+	public static void deleteAllElements(DatastoreProvider provider) {
 		if ( isRemote( provider ) ) {
 			Neo4jClient remoteNeo4j = ( (RemoteNeo4jDatastoreProvider) provider ).getDataStore();
 			Statement statement = new Statement( DELETE_ALL );
@@ -226,7 +227,7 @@ public class Neo4jTestHelper implements TestableGridDialect {
 
 	@Override
 	public Map<String, String> getEnvironmentProperties() {
-		Map<String,String> envProps = new HashMap<String, String>(2);
+		Map<String, String> envProps = new HashMap<String, String>( 2 );
 		copyFromSystemPropertiesToLocalEnvironment( OgmProperties.HOST, envProps );
 		copyFromSystemPropertiesToLocalEnvironment( OgmProperties.USERNAME, envProps );
 		copyFromSystemPropertiesToLocalEnvironment( OgmProperties.PASSWORD, envProps );
