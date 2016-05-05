@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
 /**
  * @author Davide D'Alto
  */
-public class ByteArrayStringType extends AbstractGenericBasicType<Byte[]>  {
+public class ByteArrayStringType extends AbstractGenericBasicType<Byte[]> {
 
 	public static final ByteArrayStringType INSTANCE = new ByteArrayStringType();
 
