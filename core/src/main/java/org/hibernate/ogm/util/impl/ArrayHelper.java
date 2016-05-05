@@ -88,6 +88,14 @@ public class ArrayHelper {
 		return result;
 	}
 
+	/**
+	 * Given a list of arrays, it returns a single array obtained concatenating the ones in the list.
+	 * <p>
+	 * Example: given the list ([1, 2, 3], [4], [4, 5]), it returns the array [1, 2, 3, 4, 4, 5].
+	 *
+	 * @param arrays the list containing the arrays
+	 * @return a single array obtained concatenating the values in the initial list
+	 */
 	public static <T> T[] concat(List<T[]> arrays) {
 		int totSize = 0;
 		for ( int i = 0; i < arrays.size(); i++ ) {
@@ -98,7 +106,7 @@ public class ArrayHelper {
 		int currentLength = 0;
 		for ( int i = 0; i < arrays.size(); i++ ) {
 			T[] entry = arrays.get( i );
-			System.arraycopy( arrays.get( i ), 0, joined, currentLength, entry.length );
+			System.arraycopy( entry, 0, joined, currentLength, entry.length );
 			currentLength += entry.length;
 		}
 		return joined;
