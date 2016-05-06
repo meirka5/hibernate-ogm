@@ -22,7 +22,6 @@ import javax.persistence.Table;
 
 import org.hibernate.Transaction;
 import org.hibernate.ogm.OgmSession;
-import org.hibernate.ogm.backendtck.batchfetching.MultiGetEmbeddedIdTest.BoardGame;
 import org.hibernate.ogm.dialect.impl.TupleContextImpl;
 import org.hibernate.ogm.dialect.multiget.spi.MultigetGridDialect;
 import org.hibernate.ogm.dialect.spi.TupleContext;
@@ -45,7 +44,7 @@ import org.junit.Test;
  *
  * @author Davide D'Alto
  */
-@SkipByGridDialect(value = { GridDialectType.CASSANDRA, GridDialectType.COUCHDB, GridDialectType.INFINISPAN, GridDialectType.EHCACHE, GridDialectType.REDIS_HASH })
+@SkipByGridDialect(value = { GridDialectType.CASSANDRA, GridDialectType.COUCHDB, GridDialectType.INFINISPAN, GridDialectType.IGNITE, GridDialectType.EHCACHE, GridDialectType.REDIS_HASH })
 public class MultiGetMultiColumnsIdTest extends OgmTestCase {
 
 	private static final Map<String, AssociatedEntityKeyMetadata> EMPTY_ASSOCIATION_METADATA = Collections.emptyMap();

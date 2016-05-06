@@ -59,7 +59,8 @@ public class IgniteTestHelper implements TestableGridDialect {
 		int associationCount = 0;
 		Set<IgniteCache<?, ?>> processedCaches = Collections.newSetFromMap( new IdentityHashMap<IgniteCache<?, ?>, Boolean>() );
 		for ( CollectionPersister colleactionPersister : ( (SessionFactoryImplementor) sessionFactory ).getCollectionPersisters().values() ) {
-			IgniteCache<?, ?> associationCache = getAssociationCache( sessionFactory, ( (OgmCollectionPersister) colleactionPersister ).getAssociationKeyMetadata() );
+			IgniteCache<?, ?> associationCache = getAssociationCache( sessionFactory,
+					( (OgmCollectionPersister) colleactionPersister ).getAssociationKeyMetadata() );
 			if ( !processedCaches.contains( associationCache ) ) {
 				associationCount += associationCache.size( CachePeekMode.ALL );
 				processedCaches.add( associationCache );
@@ -81,9 +82,8 @@ public class IgniteTestHelper implements TestableGridDialect {
 		Map<String, Object> result = new HashMap<>();
 		Object po = cache.get( cacheKey );
 
-		IgniteDialect igniteDialect = (IgniteDialect) ((SessionFactoryImplementor) sessionFactory).getServiceRegistry().getService( GridDialect.class );
 		TupleSnapshot snapshot = new IgnitePortableTupleSnapshot( po );
-		for (String fieldName : snapshot.getColumnNames()) {
+		for ( String fieldName : snapshot.getColumnNames() ) {
 			result.put( fieldName, snapshot.get( fieldName ) );
 		}
 
@@ -97,18 +97,16 @@ public class IgniteTestHelper implements TestableGridDialect {
 
 	@Override
 	public void dropSchemaAndDatabase(SessionFactory sessionFactory) {
-		// TODO what to do here???
 	}
 
 	@Override
 	public Map<String, String> getEnvironmentProperties() {
-		// TODO and here?
 		return null;
 	}
 
 	@Override
 	public GridDialect getGridDialect(DatastoreProvider datastoreProvider) {
-		return new IgniteDialect((IgniteDatastoreProvider) datastoreProvider);
+		return new IgniteDialect( (IgniteDatastoreProvider) datastoreProvider );
 	}
 
 	public static IgniteCache<String, BinaryObject> getEntityCache(SessionFactory sessionFactory, EntityKeyMetadata entityKeyMetadata) {
@@ -134,5 +132,4 @@ public class IgniteTestHelper implements TestableGridDialect {
 	public Class<? extends DatastoreConfiguration<?>> getDatastoreConfigurationType() {
 		return Ignite.class;
 	}
-
 }
