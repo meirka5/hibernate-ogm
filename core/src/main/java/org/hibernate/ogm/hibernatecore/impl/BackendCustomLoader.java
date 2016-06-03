@@ -6,6 +6,7 @@
  */
 package org.hibernate.ogm.hibernatecore.impl;
 
+import static org.hibernate.ogm.util.impl.TransactionContextHelper.transactionContext;
 import static org.hibernate.ogm.util.impl.TupleContextHelper.tupleContext;
 
 import java.io.Serializable;
@@ -23,10 +24,12 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.Return;
 import org.hibernate.loader.custom.RootReturn;
 import org.hibernate.loader.custom.ScalarReturn;
+import org.hibernate.ogm.dialect.impl.QueryContextImpl;
 import org.hibernate.ogm.dialect.query.spi.BackendQuery;
 import org.hibernate.ogm.dialect.query.spi.ClosableIterator;
 import org.hibernate.ogm.dialect.query.spi.QueryParameters;
 import org.hibernate.ogm.dialect.query.spi.QueryableGridDialect;
+import org.hibernate.ogm.dialect.spi.TransactionContext;
 import org.hibernate.ogm.dialect.spi.TupleContext;
 import org.hibernate.ogm.loader.impl.OgmLoadingContext;
 import org.hibernate.ogm.loader.impl.TupleBasedEntityLoader;
@@ -187,7 +190,8 @@ public class BackendCustomLoader extends CustomLoader {
 
 		public ClosableIterator<Tuple> executeQuery(SessionImplementor session, QueryParameters queryParameters) {
 			TupleContext tupleContext = tupleContext( session, query.getSingleEntityMetadataInformationOrNull() );
-			return gridDialect.executeBackendQuery( query, queryParameters, tupleContext );
+			TransactionContext transactionContext = transactionContext( session );
+			return gridDialect.executeBackendQuery( query, queryParameters, new QueryContextImpl( tupleContext, transactionContext ) );
 		}
 	}
 }

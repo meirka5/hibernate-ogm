@@ -9,7 +9,7 @@ package org.hibernate.ogm.dialect.query.spi;
 import java.io.Serializable;
 
 import org.hibernate.ogm.dialect.spi.GridDialect;
-import org.hibernate.ogm.dialect.spi.TupleContext;
+import org.hibernate.ogm.dialect.spi.QueryContext;
 import org.hibernate.ogm.model.spi.Tuple;
 
 /**
@@ -31,7 +31,7 @@ public interface QueryableGridDialect<T extends Serializable> extends GridDialec
 	 * @param tupleContext the tuple context
 	 * @return an {@link ClosableIterator} with the result of the query
 	 */
-	ClosableIterator<Tuple> executeBackendQuery(BackendQuery<T> query, QueryParameters queryParameters, TupleContext tupleContext);
+	ClosableIterator<Tuple> executeBackendQuery(BackendQuery<T> query, QueryParameters queryParameters, QueryContext tupleContext);
 
 	/**
 	 * Returns the result of a native update query executed on the backend.
@@ -48,7 +48,7 @@ public interface QueryableGridDialect<T extends Serializable> extends GridDialec
 	 * @param tupleContext the tuple context
 	 * @return the number of elements that have been updated.
 	 */
-	int executeBackendUpdateQuery(BackendQuery<T> query, QueryParameters queryParameters, TupleContext tupleContext);
+	int executeBackendUpdateQuery(BackendQuery<T> query, QueryParameters queryParameters, QueryContext tupleContext);
 
 	/**
 	 * Returns a builder for retrieving parameter meta-data from native queries in this datastore's format.

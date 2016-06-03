@@ -6,6 +6,7 @@
  */
 package org.hibernate.ogm.query.impl;
 
+import static org.hibernate.ogm.util.impl.TransactionContextHelper.transactionContext;
 import static org.hibernate.ogm.util.impl.TupleContextHelper.tupleContext;
 
 import java.io.Serializable;
@@ -14,9 +15,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.custom.CustomQuery;
+import org.hibernate.ogm.dialect.impl.QueryContextImpl;
 import org.hibernate.ogm.dialect.query.spi.BackendQuery;
 import org.hibernate.ogm.dialect.query.spi.QueryParameters;
 import org.hibernate.ogm.dialect.query.spi.QueryableGridDialect;
+import org.hibernate.ogm.dialect.spi.TransactionContext;
 import org.hibernate.ogm.dialect.spi.TupleContext;
 import org.hibernate.ogm.loader.nativeloader.impl.BackendCustomQuery;
 import org.hibernate.ogm.type.spi.TypeTranslator;
@@ -50,6 +53,7 @@ class NativeNoSqlQueryPlan extends NativeSQLQueryPlan {
 		BackendCustomQuery<T> customQuery = (BackendCustomQuery<T>) getCustomQuery();
 		BackendQuery<T> backendQuery = new BackendQuery<T>( customQuery.getQueryObject(), customQuery.getSingleEntityMetadataInformationOrNull() );
 		TupleContext tupleContext = tupleContext( session, customQuery.getSingleEntityMetadataInformationOrNull() );
-		return gridDialect.executeBackendUpdateQuery( backendQuery, queryParameters, tupleContext );
+		TransactionContext transactionContext = transactionContext( session );
+		return gridDialect.executeBackendUpdateQuery( backendQuery, queryParameters, new QueryContextImpl( tupleContext, transactionContext ) );
 	}
 }
