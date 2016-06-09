@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.ogm.datastore.neo4j.Neo4jDialect;
 import org.hibernate.ogm.datastore.neo4j.Neo4jProperties;
-import org.hibernate.ogm.datastore.neo4j.embedded.dialect.impl.Neo4jSequenceGenerator;
+import org.hibernate.ogm.datastore.neo4j.embedded.dialect.impl.EmbeddedNeo4jSequenceGenerator;
 import org.hibernate.ogm.datastore.neo4j.embedded.transaction.impl.Neo4jTransactionCoordinatorBuilder;
 import org.hibernate.ogm.datastore.neo4j.logging.impl.Log;
 import org.hibernate.ogm.datastore.neo4j.logging.impl.LoggerFactory;
@@ -46,7 +46,7 @@ public class Neo4jDatastoreProvider extends BaseDatastoreProvider implements Sta
 
 	private ServiceRegistryImplementor registry;
 
-	private Neo4jSequenceGenerator sequenceGenerator;
+	private EmbeddedNeo4jSequenceGenerator sequenceGenerator;
 
 	private Integer sequenceCacheMaxSize;
 
@@ -78,7 +78,7 @@ public class Neo4jDatastoreProvider extends BaseDatastoreProvider implements Sta
 	public void start() {
 		try {
 			this.neo4jDb = graphDbFactory.create();
-			this.sequenceGenerator = new Neo4jSequenceGenerator( neo4jDb, sequenceCacheMaxSize );
+			this.sequenceGenerator = new EmbeddedNeo4jSequenceGenerator( neo4jDb, sequenceCacheMaxSize );
 			this.graphDbFactory = null;
 			this.sequenceCacheMaxSize = null;
 		}
@@ -96,7 +96,7 @@ public class Neo4jDatastoreProvider extends BaseDatastoreProvider implements Sta
 		return neo4jDb;
 	}
 
-	public Neo4jSequenceGenerator getSequenceGenerator() {
+	public EmbeddedNeo4jSequenceGenerator getSequenceGenerator() {
 		return this.sequenceGenerator;
 	}
 
