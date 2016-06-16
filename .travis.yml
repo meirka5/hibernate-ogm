@@ -18,6 +18,10 @@ cache:
     - $HOME/.m2
 env:
   - REDIS_HOSTNAME=localhost COUCHDB_HOSTNAME=localhost CASSANDRA_VERSION=2.2.5 CASSANDRA_HOSTNAME=localhost
+  - REDIS_HOSTNAME=localhost COUCHDB_HOSTNAME=localhost CASSANDRA_VERSION=2.2.5 CASSANDRA_HOSTNAME=localhost NEO4J_HOSTNAME=localhost NEO4J_PORT=7474 NEO4J_USERNAME=neo4j NEO4J_PASSWORD=hibernate NEO4J_VERSION=2.3.4
+before_install:
+  - curl http://dist.neo4j.org/neo4j-community-$NEO4J_VERSION-unix.tar.gz | tar xz
+  - neo4j-community-$NEO4J_VERSION/bin/neo4j start
 install:
   - sudo apt-get install -qq couchdb
   - bash travis/setup-cassandra.sh 2>&1 > cassandra.log
@@ -33,7 +37,10 @@ install:
   # we run checkstyle first to fail fast if there is a styling error
   - ./mvnw -s settings-example.xml -DskipDistro=true checkstyle:check
 before_script:
+  # When Neo4j is started the first time, it requires the change of the default password
+  - curl -vX POST http://neo4j:neo4j@$NEO4J_HOSTNAME:$NEO4J_PORT/user/neo4j/password -d"password=$NEO4J_PASSWORD"
 script:
   - ./mvnw -s settings-example.xml -Ptest clean install
+  - ./mvnw -s settings-example.xml -Pneo4j-remote -pl neo4j -am
 after_script:
   - rm -rf $HOME/.m2/repository/org/hibernate/ogm/
