@@ -40,6 +40,6 @@ before_script:
   - curl -vX POST http://neo4j:neo4j@$NEO4J_HOSTNAME:$NEO4J_PORT/user/neo4j/password -d"password=$NEO4J_PASSWORD"
 script:
   - ./mvnw -s settings-example.xml -Ptest clean install
-  - ./mvnw -s settings-example.xml -Pneo4j-remote -pl neo4j -am
+  - ./mvnw -s settings-example.xml -Pneo4j-remote -pl neo4j -am clean install
 after_script:
   - rm -rf $HOME/.m2/repository/org/hibernate/ogm/
