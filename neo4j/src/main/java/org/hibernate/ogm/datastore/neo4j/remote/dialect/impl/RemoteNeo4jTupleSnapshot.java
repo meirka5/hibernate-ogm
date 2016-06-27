@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.ogm.datastore.neo4j.Neo4jDialect;
+import org.hibernate.ogm.datastore.neo4j.EmbeddedNeo4jDialect;
 import org.hibernate.ogm.datastore.neo4j.remote.impl.RemoteNeo4jClient;
 import org.hibernate.ogm.datastore.neo4j.remote.json.impl.Graph.Node;
 import org.hibernate.ogm.model.key.spi.AssociatedEntityKeyMetadata;
@@ -74,7 +74,7 @@ public final class RemoteNeo4jTupleSnapshot implements TupleSnapshot {
 		if ( associatedEntityKeyMetadata.containsKey( column ) ) {
 			return readPropertyOnOtherNode( column );
 		}
-		else if ( Neo4jDialect.isPartOfRegularEmbedded( entityKeyMetadata.getColumnNames(), column ) ) {
+		else if ( EmbeddedNeo4jDialect.isPartOfRegularEmbedded( entityKeyMetadata.getColumnNames(), column ) ) {
 			return readEmbeddedProperty( column );
 		}
 		else {
