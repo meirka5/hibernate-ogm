@@ -63,7 +63,7 @@ This parameterized job automates step 5 from this section as well as steps 1 and
 
    ```
        mvn release:prepare -s settings-example.xml
-       mvn release:perform -s settings-example.xml
+       mvn release:perform
        git push upstream HEAD
        git push upstream <release-version>
    ```
