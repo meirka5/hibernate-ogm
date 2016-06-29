@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 
-PUSH_CHANGES=$1
-RELEASE_VERSION=$2
+if [ -z "$1" ]
+  then
+    echo "Release version not supplied"
+fi
+
+RELEASE_VERSION=$1
+BRANCH=${2:-'master'}
+PUSH_CHANGES=${3:-false}
 
 git commit -a -m "[Jenkins release job] Preparing next development iteration"
 
 if [ "$PUSH_CHANGES" = true ] ; then
     echo "Pushing changes to the upstream repository."
-    git push origin master
+    git push origin $BRANCH
     git push origin $RELEASE_VERSION
 fi
 if [ "$PUSH_CHANGES" != true ] ; then
