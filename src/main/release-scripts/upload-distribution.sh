@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
 
-DIST_PARENT_DIR=$1
-RELEASE_VERSION=$2
+if [ -z "$1" ]
+  then
+    echo "Release version not supplied"
+fi
+
+
+RELEASE_VERSION=$1
+DIST_PARENT_DIR=${2:-'/home/frs/project/hibernate/hibernate-ogm'}
+
+echo "##################################################"
+echo "# Hibernate OGM release $RELEASE_VERSION"
+echo "# `date`"
+echo "# Performing deployment, on folder:"
+echo "# $DIST_PARENT"
+echo "##################################################"
 
 (echo mkdir $DIST_PARENT_DIR/$RELEASE_VERSION; echo quit) | sftp -b - frs.sourceforge.net
 scp readme.md frs.sourceforge.net:$DIST_PARENT_DIR/$RELEASE_VERSION
