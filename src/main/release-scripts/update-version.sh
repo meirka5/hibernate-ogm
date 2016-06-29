@@ -3,14 +3,12 @@
 RELEASE_VERSION=$1
 WORKSPACE=${WORKSPACE:-'.'}
 
-echo "Version '$RELEASE_VERSION'"
-
 if [ -z "$RELEASE_VERSION" ];
 then
   echo "ERROR: Release version argument not supplied"
   exit 1
 else
-  echo "Version is set to '$RELEASE_VERSION'";
+  echo "Setting version to '$RELEASE_VERSION'";
 fi
 
 pushd $WORKSPACE
