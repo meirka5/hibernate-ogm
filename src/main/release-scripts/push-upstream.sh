@@ -3,10 +3,12 @@
 if [ -z "$1" ]
   then
     echo "Release version not supplied"
+    exit 1
 fi
 
 RELEASE_VERSION=$1
-PUSH_CHANGES=${2:-false}
+BRANCH=${2:-'master'}
+PUSH_CHANGES=${3:-false}
 
 git commit -a -m "[Jenkins release job] Preparing next development iteration"
 
