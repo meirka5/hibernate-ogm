@@ -16,7 +16,7 @@ echo "# Uploading Hibernate OGM $RELEASE_VEVISION on"
 echo "# $DIST_PARENT"
 echo "##################################################"
 
-echo "Worksapce: $WORKSPACE"
+echo "Workspace: $WORKSPACE"
 #(echo mkdir $DIST_PARENT_DIR/$RELEASE_VERSION; echo quit) | sftp -b - frs.sourceforge.net
 #scp readme.md frs.sourceforge.net:$DIST_PARENT_DIR/$RELEASE_VERSION
 #scp changelog.txt frs.sourceforge.net:$DIST_PARENT_DIR/$RELEASE_VERSION
