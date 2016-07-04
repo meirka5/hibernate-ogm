@@ -396,6 +396,23 @@ public class MongoDBSessionCLIQueryTest extends OgmTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "OGM-1024")
+	@SuppressWarnings("unchecked")
+	public void testAggregateSupport() throws Exception {
+		OgmSession session = openSession();
+		Transaction transaction = session.beginTransaction();
+
+		String nativeQuery = "db." + OscarWildePoem.TABLE_NAME + ".aggregate( '$match': {  'author': 'Oscar Wilde' }, { '$sort': { 'name': -1 } })";
+		List<OscarWildePoem> result = (List<OscarWildePoem>) session.createNativeQuery( nativeQuery ).addEntity( OscarWildePoem.class ).list();
+
+		assertThat( result.size() ).isEqualTo( 3 );
+
+		transaction.commit();
+		session.clear();
+		session.close();
+	}
+
+	@Test
 	@SuppressWarnings("unchecked")
 	@TestForIssue(jiraKey = "OGM-1027")
 	public void testInsertMultipleWithNumberLongThenRemove() throws Exception {
