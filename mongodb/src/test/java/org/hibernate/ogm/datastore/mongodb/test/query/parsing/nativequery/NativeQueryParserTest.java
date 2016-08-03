@@ -474,6 +474,20 @@ public class NativeQueryParserTest {
 		assertThat( queryDescriptor.getProjection() ).isNull();
 		assertThat( queryDescriptor.getOrderBy() ).isNull();
 	}
+        	@Test
+	@TestForIssue(jiraKey = "OGM-1024")
+	public void shouldSupportAggregate() {
+		NativeQueryParser parser = Parboiled.createParser( NativeQueryParser.class );
+ 		ParsingResult<MongoDBQueryDescriptorBuilder> run =  new RecoveringParseRunner<MongoDBQueryDescriptorBuilder>( parser.Query() )
+				//.run( "db.Order.aggregate( [{ '$match': {  'author': 'Oscar Wilde' }, { '$sort': { 'name': -1 }} }] )" );
+                        	.run( "db.Order.aggregate( [{'$match': {  'author': 'Oscar Wilde' }}])" );
+                	//.run( "db.Order.aggregate( { '$nor': [ { 'foo' : true }, { 'bar' : '42' } ] } )" );
+                MongoDBQueryDescriptor queryDescriptor = run.resultValue.build();
 
-
+		assertThat( queryDescriptor.getCollectionName() ).isEqualTo( "Order." );
+		assertThat( queryDescriptor.getOperation() ).isEqualTo( Operation.AGGREGATE );
+		assertThat( queryDescriptor.getCriteria() ).isEqualTo( JSON.parse( " { '$match': {  'author': 'Oscar Wilde' }}" ) );
+		assertThat( queryDescriptor.getProjection() ).isNull();
+		assertThat( queryDescriptor.getOrderBy() ).isNull();
+        }
 }
