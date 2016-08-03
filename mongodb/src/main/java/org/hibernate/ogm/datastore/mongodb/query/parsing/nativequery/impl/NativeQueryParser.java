@@ -57,12 +57,18 @@ public class NativeQueryParser extends BaseParser<MongoDBQueryDescriptorBuilder>
 		this.builder = new MongoDBQueryDescriptorBuilder();
 	}
 
-	public Rule Query() {
-		return Sequence( FirstOf( ParsedQuery(), CriteriaOnlyFindQuery() ), EOI, push( builder ) );
+
+        
+        public Rule Query() {
+		return Sequence( FirstOf(AggregateQuery(), ParsedQuery(), CriteriaOnlyFindQuery() ), EOI, push( builder ) );
 	}
 
+     //   public Rule Query() {
+     //       return Sequence(Db(),Collection(), Operation(), EOI, push( builder ) );
+     //   }
 	public Rule ParsedQuery() {
-		return Sequence( Db(),  Collection(),  Operation() );
+            
+	     return Sequence( Db(),  Collection(),  Operation());
 	}
 
 	/**
@@ -73,15 +79,57 @@ public class NativeQueryParser extends BaseParser<MongoDBQueryDescriptorBuilder>
 	public Rule CriteriaOnlyFindQuery() {
 		return Sequence( ZeroOrMore( ANY ), builder.setOperation( Operation.FIND ), builder.setCriteria( match() ) );
 	}
+        public Rule AggregateQuery(){
+            return Sequence(Db(),CollectionAggregate(), OperationAggregate(), EOI, push( builder ) );
+        }
 
+        public Rule Demo() {
+		Rule rule =  Sequence( ZeroOrMore( WhiteSpace() ), "gggOrder ",builder.setCollection( match() ));
+                return rule;
+	}
+        
+        public Rule ACollectionDemo() {
+		Rule rule =  Sequence( ZeroOrMore( WhiteSpace() ), "Order ", builder.setCollection( match() ),Separator() );
+                return rule;
+	}
+        public Rule Demo2() {
+		Rule rule =  Sequence( ZeroOrMore( WhiteSpace() ), "aggregate ",
+				"(",ZeroOrMore( WhiteSpace() ),"[", ZeroOrMore( WhiteSpace() ),
+				JsonObject(), builder.setCriteria( match() ),
+				Optional( Sequence( ", ", JsonObject(), builder.setProjection( match() ) ) ),
+                               ZeroOrMore( WhiteSpace() ), "]", ZeroOrMore( WhiteSpace() ),
+				") "
+                
+                
+                );
+                return rule;
+	}
+        
+        public Rule AggregateReversed() {
+		Rule rule =  Sequence( ZeroOrMore( WhiteSpace() ), "aggregate ");
+                return rule;
+	}
 	@SuppressNode
 	public Rule Db() {
-		return Sequence( ZeroOrMore( WhiteSpace() ), "db ", Separator() );
+		Rule rule =  Sequence( ZeroOrMore( WhiteSpace() ), "db", Separator() );
+                return rule;
 	}
 
-	@SuppressSubnodes
+	public Rule CollectionAggregate() {
+		Rule rule =  Sequence( OneOrMore( TestNot( ReservedAggregate() ), ANY ), builder.setCollection( match() ) );
+                if (rule!=null){
+                  //  throw new RuntimeException(builder.build().getCollectionName());
+                }
+                return rule;
+		//TODO OGM-949 it should not be just ANY matcher as they are some restrictions in the Collection naming in Mongo
+		// cf. https://docs.mongodb.org/manual/faq/developers/#are-there-any-restrictions-on-the-names-of-collections
+	}
 	public Rule Collection() {
-		return Sequence( OneOrMore( TestNot( Reserved() ), ANY ), builder.setCollection( match() ) );
+		Rule rule =  Sequence( OneOrMore( TestNot( Reserved() ), ANY ), builder.setCollection( match() ) );
+                if (rule!=null){
+                  //  throw new RuntimeException(builder.build().getCollectionName());
+                }
+                return rule;
 		//TODO OGM-949 it should not be just ANY matcher as they are some restrictions in the Collection naming in Mongo
 		// cf. https://docs.mongodb.org/manual/faq/developers/#are-there-any-restrictions-on-the-names-of-collections
 	}
@@ -92,12 +140,28 @@ public class NativeQueryParser extends BaseParser<MongoDBQueryDescriptorBuilder>
 	}
 
 	public Rule Reserved() {
-		return FirstOf( Find(), FindOne(), FindAndModify(), Insert(), Remove(), Update(), Count() );
+		return FirstOf( Find(), FindOne(), FindAndModify(), Insert(), Remove(), Update(), Count()
+                        ,Db());
 		//TODO There are many more query types than what we support.
 	}
-
+public Rule ReservedAggregate() {
+		return FirstOf( Demo(),AggregateReversed()
+                        //, FindOne(), FindAndModify(), Insert(), Remove(), Update(), Count()
+                        ,Db());
+		//TODO There are many more query types than what we support.
+	}
+        public Rule OperationAggregate() {
+            return FirstOf(Sequence( Demo2(),builder.setOperation( Operation.AGGREGATE ) ),
+             //       Sequence( Find(), builder.setOperation( Operation.FIND ) ),
+                    Sequence( Demo(), builder.setOperation( Operation.AGGREGATE ) )
+                    );
+              
+        }
+    
 	public Rule Operation() {
+                System.out.println("From operation*****************************************************************************************************************************************************");
 		return FirstOf(
+                               
 				Sequence( Find(), builder.setOperation( Operation.FIND ) ),
 				Sequence( FindOne(), builder.setOperation( Operation.FINDONE ) ),
 				Sequence( FindAndModify(), builder.setOperation( Operation.FINDANDMODIFY ) ),
@@ -105,9 +169,9 @@ public class NativeQueryParser extends BaseParser<MongoDBQueryDescriptorBuilder>
 				Sequence( Remove(), builder.setOperation( Operation.REMOVE ) ),
 				Sequence( Update(), builder.setOperation( Operation.UPDATE ) ),
 				Sequence( Count(), builder.setOperation( Operation.COUNT ) )
+                                
 		);
 	}
-
 	public Rule Find() {
 		return Sequence(
 				Separator(),
@@ -172,9 +236,18 @@ public class NativeQueryParser extends BaseParser<MongoDBQueryDescriptorBuilder>
 				Separator(),
 				"update ",
 				"( ",
-				JsonObject(), builder.setCriteria( match() ), ", ",
-				JsonObject(), builder.setUpdateOrInsert( match() ),
+				JsonComposite(), builder.setUpdateOrInsert( match() ),
 				Optional( Sequence( ", ", JsonObject(), builder.setOptions( match() ) ) ),
+				") "
+		);
+	}
+        
+        public Rule Aggregate() {
+		return Sequence(
+				Separator(),
+				"aggregate ",
+				"( ",
+				Sequence( JsonComposite(), ZeroOrMore( Sequence( ", ", Pair() ) ) ) ,
 				") "
 		);
 	}
@@ -189,10 +262,15 @@ public class NativeQueryParser extends BaseParser<MongoDBQueryDescriptorBuilder>
 		);
 	}
 
+        
+        
 	public Rule JsonComposite() {
 		return FirstOf( JsonObject(), JsonArray() );
 	}
-
+        public Rule JsonComposite2() {
+		return Sequence( SupportedTestFunction(),ZeroOrMore( WhiteSpace() ));
+                
+	}
 	public Rule JsonObject() {
 		return Sequence(
 				ZeroOrMore( WhiteSpace() ).skipNode(),
@@ -267,7 +345,9 @@ public class NativeQueryParser extends BaseParser<MongoDBQueryDescriptorBuilder>
 		return FirstOf( "BinData", "Date", "HexData", "ISODate", "NumberInt", "NumberLong", "ObjectId", "Timestamp", "RegExp", "DBPointer",
 				"UUID", "GUID", "CSUUID", "CSGUID", "JUUID", "JGUID", "PYUUID", "PYGUID" );
 	}
-
+        public Rule SupportedTestFunction() {
+		return FirstOf( "match", "Date" );
+	}
 	public Rule Character() {
 		return FirstOf( EscapedChar(), NormalChar() );
 	}
